@@ -434,7 +434,7 @@ Lottie istenirse aynı sahneler Lottie biçimine aktarılabilir. O durumda oynat
 - Başlık, açıklama, kalıcı adres ve paylaşım etiketleri var.
 - Sayfada dört yapısal veri vardır: kuruluş, site içi arama, ürün listesi ve sık sorulanlar.
 - Kategori bağlantıları canlı sitenin site haritasındaki adresi kullanır: `/kategori/<adres>`.
-- Dizin ve alt bölüm 130'dan fazla iç bağlantı taşır. Her birinin hedefi denetlenmiştir.
+- Dizin 54, alt bölüm 36 canlı site bağlantısı taşır. Her birinin hedefi denetlenmiştir.
 - Dil bağlantısı canlı sitedeki gibi yalnız Türkçe için bildirilir.
 - Önizleme derlemesi `noindex` taşır, çünkü bir tasarım önerisi dizine girmemelidir.
 - Yayın derlemesi `python3 build.py --yayin` komutuyla üretilir. Yayın derlemesi dizine açıktır.
@@ -536,15 +536,15 @@ Sayfadaki her istoc.com adresi iki yoldan biriyle denetlenir.
 
 ### Doğrulama durumu (11 Kasım 2026, ara durum)
 
-Bu tablo bir ara durumdur. Tam koşu ve bağımsız inceleme sürüyor.
+Bu tablo bir ara durumdur. Bağımsız inceleme sürüyor.
 
 | Denetim | Durum | Not |
 |---|---|---|
 | Kural kapısı | pass | 641 stil kuralı ve 1 sayfa denetlendi. |
 | Kapının kendini sınaması | pass | 81 ihlal örneğinin hepsi reddedildi. |
-| Chromium (Playwright) | fail | İlk tam koşuda 480 denetimin 477'si geçti. Üç hata düzeltildi, tam koşu yinelenecek. |
-| WebKit (Playwright, Safari ailesi) | fail | İlk tam koşuda 480 denetimin 477'si geçti. Üç hata düzeltildi, tam koşu yinelenecek. |
-| Testin kendini sınaması | not_run | Yeni bozulmalar eklendi. Sınama henüz çalıştırılmadı. |
+| Chromium (Playwright) | pass | 492 denetimin hepsi geçti. |
+| WebKit (Playwright, Safari ailesi) | pass | 492 denetimin hepsi geçti. |
+| Testin kendini sınaması | pass | 45 bozulmanın hepsi yakalandı. Sonra iki küçük değişiklik yapıldı, sınama yinelenecek. |
 | Kaynak denetimi | pass | 72 kaynaklı cümlenin hepsi canlı sitede bulundu. |
 | Bağlantı denetimi | pass | 34 canlı sayfa açıldı. Sayfadaki 240 canlı adres denetlendi. |
 | Bağımsız inceleme | not_run | İnceleme sürüyor. |

@@ -153,8 +153,9 @@ def times(amts, n):
 
 
 def money(cur, value):
-    # Yazım app.js ile aynıdır: simge, binlik ayırıcı ve iki ondalık. Örnek: "$1,234.50".
-    return PARA[cur][0] + "{:,.2f}".format(float(value))
+    # Yazım app.js ile aynıdır: simge ve Türkçe sayı biçimi. Binlik ayırıcı nokta, ondalık ayırıcı virgüldür.
+    # Örnek: "$1.234,50". Sayfadaki diğer sayılar da bu biçimdedir (2.412 ürün, 8,7 kg).
+    return PARA[cur][0] + "{:,.2f}".format(float(value)).replace(",", " ").replace(".", ",").replace(" ", ".")
 
 
 def para(amts):

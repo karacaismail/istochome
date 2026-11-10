@@ -51,7 +51,8 @@
     var on = $('[data-tercih="para"] [aria-checked="true"]');
     return { code: on ? on.dataset.deger : "USD", sym: on ? $(".pref__mark", on).textContent : "$" };
   })();
-  function money(n) { return para.sym + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  /* Tutar Türkçe sayı biçimiyle yazılır: binlik ayırıcı nokta, ondalık ayırıcı virgül. Örnek: $1.234,50. */
+  function money(n) { return para.sym + n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   /* Öğenin seçili para birimindeki birim fiyatı: data-unit-usd, data-unit-try gibi özniteliklerden okunur. */
   function unitOf(el) { return parseFloat(el.dataset["unit" + para.code.charAt(0) + para.code.slice(1).toLowerCase()]); }
   function paintPrices() {
@@ -412,7 +413,7 @@
     var bar = $("[data-cartbar]");
     var unitsEl = $("[data-cart-units]");
     var totalEl = $("[data-cart-total]");
-    function paint() {
+    function paint(instant) {
       var keys = Object.keys(lines);
       var units = 0, total = 0;
       keys.forEach(function (k) { units += lines[k].qty; total += lines[k].qty * unitOf(lines[k].src); });
@@ -426,6 +427,8 @@
       /* Sepet bağlantıları canlı sitedeki sepeti açar. Sayaç ise bu örnek sepeti sayar. Etiket ikisini de söyler. */
       links.forEach(function (l) { l.setAttribute("aria-label", "Canlı sepeti açın. Örnek sepette " + keys.length + " ürün var."); });
       unitsEl.textContent = keys.length ? keys.length + " ürün, " + tr(units) + " adet" : "Sepetiniz boş";
+      /* Para birimi değişince toplam geçişsiz yazılır. Yeni simgeyle görünen ara sayı gerçek bir tutar olmazdı. */
+      if (instant === true) totalEl._v = total;
       tween(totalEl, total, dur("--dur-3"), function (v) { totalEl.textContent = money(v); });
       bar.classList.toggle("is-on", keys.length > 0);
       bar.inert = keys.length === 0;
@@ -472,11 +475,12 @@
     var totalSr = $("[data-total-sr]", box);
     var dec = $("[data-dec]", box);
     total._v = qty * unitOf(box);
-    function paint() {
+    function paint(instant) {
       var sum = qty * unitOf(box);
       out.textContent = tr(qty);
       dec.setAttribute("aria-disabled", qty <= moq ? "true" : "false");
       totalSr.textContent = "Toplam " + money(sum);
+      if (instant === true) total._v = sum;
       tween(total, sum, dur("--dur-3"), function (v) { total.textContent = money(v); });
     }
     $("[data-inc]", box).addEventListener("click", function () { qty += moq; paint(); });
@@ -642,8 +646,8 @@
         if (kind === "para") {
           para = { code: radio.dataset.deger, sym: $(".pref__mark", radio).textContent };
           paintPrices();
-          cart.repaint();
-          order.repaint();
+          cart.repaint(true);
+          order.repaint(true);
           announce(radio.dataset.ad + " seçildi. Fiyatlar bu para biriminde gösteriliyor.");
         } else announce(radio.dataset.ad + " seçildi. Bu öneride dil seçimi sayfanın dilini değiştirmez.");
       }

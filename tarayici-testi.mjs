@@ -34,7 +34,8 @@ const expected = (slug) => {
   const f = facts.urunler[slug];
   return { unit: Number((f.fiyat_try * (1 + f.kdv / 100) * usdRate).toFixed(2)), moq: f.en_az_adet, lead: f.hazirlik };
 };
-const money = (n) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Tutarlar Türkçe sayı biçimiyle yazılır: binlik ayırıcı nokta, ondalık ayırıcı virgül.
+const money = (n) => "$" + n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const sizes = [[320, 568], [320, 700], [360, 740], [375, 760], [390, 844], [844, 390], [768, 1024], [1024, 768], [1440, 900]];
 const results = [];
 const notRun = [];
@@ -319,6 +320,13 @@ async function layout(page, engine, w, h) {
     return { search: document.querySelector(".header").dataset.search, hit: !!hit && (hit === b || b.contains(hit)) };
   });
   check(engine, size, "ani sıçramada üst arama durumu doğru kalır", down === "on" && up.search === "off" && up.hit, JSON.stringify({ down, ...up }));
+  // Sayaç yalnız sayılar ekrandayken başlar. Sayılar ekrana getirilir ve sayacın bitmesi beklenir.
+  // Böylece "sayaç gerçek değerde durur" denetimi çalışmış bir sayacı ölçer.
+  await page.evaluate(() => document.querySelector("[data-stats]").scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(1900);
+  const counted = await page.evaluate(() => [...document.querySelectorAll("[data-count]")].every((e) => typeof e._v === "number"));
+  check(engine, size, "sayaç sayılar ekrana girince çalışır", counted);
+  await page.evaluate(() => scrollTo(0, 0));
   // Beliren öğeler ölçümden önce görünür yapılır ki sayfanın tamamı ölçülsün.
   await page.evaluate(() => document.querySelectorAll("[data-reveal]").forEach((e) => e.classList.add("is-in")));
   await page.waitForTimeout(1300);
@@ -535,6 +543,9 @@ async function behavior(page, engine, w, h) {
   const back2 = await megaState();
   check(engine, size, "geri sekmeyle menüden çıkınca menü kapanır", back1.expanded === "true" && back1.focus.includes("nav__all--js") && back2.expanded === "false" && back2.inert === true, JSON.stringify({ a: back1.expanded, f: back1.focus, b: back2.expanded }));
   // Menüdeki teklif isteği bağlantısı menüyü kapatır ve sayfayı teklif kutusuna götürür.
+  // Önce menü kapatılır. Böylece denetim, önceki adımın menüyü açık bırakıp bırakmadığına bağlı kalmaz.
+  await page.mouse.click(5, 5);
+  if ((await megaState()).expanded === "true") await page.keyboard.press("Escape");
   await page.click(".nav__all--js");
   await page.waitForTimeout(800);
   await page.locator("[data-mega-kapat]").evaluate((el) => el.scrollIntoView({ block: "center" }));
@@ -635,7 +646,7 @@ async function behavior(page, engine, w, h) {
   // Para birimi: seçenekler bir radyo grubudur. Ok tuşu seçimi ve odağı birlikte taşır.
   // Seçim sayfadaki fiyatları gerçekten değiştirir. Beklenen tutar veri dosyasından hesaplanır.
   const firstSlug = await page.evaluate(() => document.querySelector(".pc").dataset.slug);
-  const tryPrice = "₺" + (facts.urunler[firstSlug].fiyat_try * (1 + facts.urunler[firstSlug].kdv / 100)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const tryPrice = "₺" + (facts.urunler[firstSlug].fiyat_try * (1 + facts.urunler[firstSlug].kdv / 100)).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   await page.focus('[data-tercih="para"] [aria-checked="true"]');
   // Klavye modu yalnız Tab ile açılır. Geri ve ileri sekme odağı yine seçili seçeneğe getirir.
   await page.keyboard.press(shiftTab);
@@ -1223,7 +1234,7 @@ const BREAKS = [
   { name: "Ubuntu ailesinde olmayan ara kalınlık", file: "styles.css", run: "layout:390x844", expect: "yazı kalınlığı Ubuntu ailesinde",
     apply: add(".btn { font-weight: 600; }") },
   { name: "para birimi seçimi fiyatları değiştirmiyor", file: "app.js", run: "behavior:390x844", expect: "para birimi seçimi fiyatları değiştirir",
-    apply: swap("          paintPrices();\n          cart.repaint();", "          cart.repaint();") },
+    apply: swap("          paintPrices();\n          cart.repaint(true);", "          cart.repaint(true);") },
   { name: "radyo grubunda ok tuşu çalışmıyor", file: "app.js", run: "behavior:1440x900", expect: "para birimi klavyeyle seçilir",
     apply: swap("          select(radios[(i + step + radios.length) % radios.length], true);", "") },
   { name: "dizin grubu dar ekranda açılmıyor", file: "app.js", run: "behavior:320x568", expect: "dizin grubu dar ekranda açılır",
