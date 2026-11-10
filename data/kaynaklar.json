@@ -1,0 +1,652 @@
+{
+ "alindi": "2026-11-10",
+ "paketler": {
+  "sayi": 3,
+  "komisyonlu": 0,
+  "dogrulama_rozetli": 3
+ },
+ "iddialar": [
+  {
+   "metin": "Şu an satış komisyonu yok",
+   "kaynak": "https://istoc.com/satici-ol",
+   "kanit": [
+    "komisyon alınmaz"
+   ],
+   "baglam": [
+    "abonelik paketinin ücretini</strong> alır. <strong>Şu an satışlardan komisyon alınmaz.</strong></p><p>iStoc veya Thoptan.com ileride yeni ücret ya da komis"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ücretler Satıcı Hizmet Sözleşmesi'ndeki ücret tablosuna göredir.",
+   "kaynak": "https://istoc.com/satici-ol",
+   "kanit": [
+    "Satıcı Hizmet Sözleşmesi",
+    "'ndeki ücret tablosuna göredir"
+   ],
+   "baglam": [
+    "ewProducts:\"Yeni Ürünler\",priceTable:\"Fiyat Tablosu\",sellerAgreement:\"Satıcı Hizmet Sözleşmesi\",corporate:\"Kurumsal\",aboutUs:\"Hakkımızda\",careers:\"Kariyer\",contact:",
+    "n komisyon alınmaz; ücretler {{open}}Satıcı Hizmet Sözleşmesi{{close}}'ndeki ücret tablosuna göredir.\",plansLoadFailed:\"Paketler şu anda yüklenemedi.\",plansLoadRetry:\"Bir"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Alıcıya aracısız ulaşırsınız",
+   "kaynak": "https://istoc.com/satici-ol",
+   "kanit": [
+    "aracısız buluşturur"
+   ],
+   "baglam": [
+    "itle:\"iStoc, üreticileri dünyanın dört bir yanındaki B2B alıcılarıyla aracısız buluşturur. Listele, sat, sevk et — şu an satışlardan komisyon alınmaz.\",heroIma"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Başvuru 4 dakika sürer",
+   "kaynak": "https://istoc.com/satici-ol",
+   "kanit": [
+    "Başvuru 4 dakikada biter"
+   ],
+   "baglam": [
+    ":\"Periyot\",yearlyToggle:\"Yıllık\",monthlyToggle:\"Aylık\",finalCtaTitle:\"Başvuru 4 dakikada biter.\",finalCtaDesc:\"Vergi numarası, üretim kategorisi ve bir iletişim — g"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Onay ortalama 2 iş günü sürer.",
+   "kaynak": "https://istoc.com/satici-ol",
+   "kanit": [
+    "Onay süresi ortalama 2 iş günü"
+   ],
+   "baglam": [
+    "sı, üretim kategorisi ve bir iletişim — gerisini birlikte hallederiz. Onay süresi ortalama 2 iş günü.\",letsTalkFirst:\"Önce konuşalım\",finalCtaNote:\"Başvuru ücretsiz. İpta"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Başvuru ücretsizdir.",
+   "kaynak": "https://istoc.com/satici-ol",
+   "kanit": [
+    "Başvuru ücretsiz"
+   ],
+   "baglam": [
+    "ame=\"description\" content=\"Ürünlerinizi binlerce B2B alıcısına satın. Başvuru ücretsiz: mağazanızı açın, toptan satışa bugün başlayın.\" /> <link rel=\"canoni"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "İşletme doğrulaması rozeti bütün paketlerde vardır.",
+   "kaynak": "https://istoc.com/api/method/tradehub_core.api.v1.public_pricing.get_pricing_plans",
+   "kanit": [
+    "Şirket Doğrulandı"
+   ],
+   "baglam": [
+    "r_badge_tier\", \"tooltip\": null, \"show_on_card\": false, \"text_value\": \"Şirket Doğrulandı\", \"coming_soon\": false}, {\"display_text\": \"Vitrin tipi\", \"icon\": \"che"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "iStoc ödemeyi tutmaz ve aracılık etmez"
+   ],
+   "baglam": [
+    "nden doğrudan satıcıya ya da, sunulduğunda, Thoptan.com'a yaparsınız. iStoc ödemeyi tutmaz ve aracılık etmez. Kabul edilen yöntemleri satıcı belirler: kredi/banka kartı, EFT (Ele"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ödemeyi satıcının sunduğu yöntemle doğrudan satıcıya yaparsınız.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "Ödemeyi satıcının sunduğu yöntemle",
+    "doğrudan satıcıya yapın"
+   ],
+   "baglam": [
+    "yle sipariş anlaşması yaptınız. 02 Satıcıya veya Thoptan.com'a ödeyin Ödemeyi satıcının sunduğu yöntemle (EFT (Electronic Funds Transfer), banka veya kredi kartı) doğrudan sa",
+    "ğu yöntemle (EFT (Electronic Funds Transfer), banka veya kredi kartı) doğrudan satıcıya yapın ya da sunulduğunda tüm sepeti tek ödemeyle Thoptan.com'a ödeyin. 03 S"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Tek ödeme seçeneği sunulursa bütün sepeti Thoptan.com'a ödersiniz.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "sunulduğunda tüm sepeti tek ödemeyle Thoptan.com'a ödeyin"
+   ],
+   "baglam": [
+    "unds Transfer), banka veya kredi kartı) doğrudan satıcıya yapın ya da sunulduğunda tüm sepeti tek ödemeyle Thoptan.com'a ödeyin. 03 Siparişiniz ve sözleşmeniz kayıt altına alınır iStoc kabul ettiği"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Geçerli yöntemi satıcı belirler.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "Kabul edilen yöntemleri satıcı belirler"
+   ],
+   "baglam": [
+    "da, Thoptan.com'a yaparsınız. iStoc ödemeyi tutmaz ve aracılık etmez. Kabul edilen yöntemleri satıcı belirler: kredi/banka kartı, EFT (Electronic Funds Transfer) ve satıcının kabu"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Visa, Mastercard, AMEX, PayPal, EFT.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "VISA",
+    "Mastercard",
+    "AMEX",
+    "PayPal",
+    "EFT"
+   ],
+   "baglam": [
+    "alıştığını öğrenin *Uygun alıcılar için Kabul edilen ödeme yöntemleri VISA Mastercard AMEX PayPal EFT (Electronic Funds Transfer) Desteklenen pa",
+    "ığını öğrenin *Uygun alıcılar için Kabul edilen ödeme yöntemleri VISA Mastercard AMEX PayPal EFT (Electronic Funds Transfer) Desteklenen para birimler",
+    "in *Uygun alıcılar için Kabul edilen ödeme yöntemleri VISA Mastercard AMEX PayPal EFT (Electronic Funds Transfer) Desteklenen para birimleri GBP",
+    "ygun alıcılar için Kabul edilen ödeme yöntemleri VISA Mastercard AMEX PayPal EFT (Electronic Funds Transfer) Desteklenen para birimleri GBP £ USD",
+    "atıcıya veya Thoptan.com'a ödeyin Ödemeyi satıcının sunduğu yöntemle (EFT (Electronic Funds Transfer), banka veya kredi kartı) doğrudan satıcıy"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Satıcı kredi kartı, banka kartı ya da EFT kabul edebilir.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "kredi/banka kartı, EFT"
+   ],
+   "baglam": [
+    "yi tutmaz ve aracılık etmez. Kabul edilen yöntemleri satıcı belirler: kredi/banka kartı, EFT (Electronic Funds Transfer) ve satıcının kabul ettiği diğer yöntemler"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Satıcı başka yöntemler de sunabilir.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "satıcının kabul ettiği diğer yöntemler"
+   ],
+   "baglam": [
+    "atıcı belirler: kredi/banka kartı, EFT (Electronic Funds Transfer) ve satıcının kabul ettiği diğer yöntemler. Destekleyici ürünleri tedarik edin Nasıl çalıştığını öğrenin *Uygun"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Kabul ettiğiniz sipariş koşullarının bir kopyasını iStoc saklar.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "sipariş koşullarının sürümlü bir kopyasını saklar"
+   ],
+   "baglam": [
+    "Siparişiniz ve sözleşmeniz kayıt altına alınır iStoc kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek al"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sipariş durumunu teslimata kadar iStoc izler.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "sipariş durumunu teslimata kadar izler"
+   ],
+   "baglam": [
+    "kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek alın Sipariş koşulları karşılanmazsa talep a"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sipariş koşulları karşılanmazsa talep açarsınız.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "Sipariş koşulları karşılanmazsa talep açın"
+   ],
+   "baglam": [
+    "sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek alın Sipariş koşulları karşılanmazsa talep açın; kabul edilen koşullar çerçevesinde satıcıyla (veya Thoptan.com ile)"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "İadeyi, ödeme yaptığınız taraf yapar.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "ödeme yaptığınız tarafça yapılır"
+   ],
+   "baglam": [
+    "lirse iade talebi oluşturun; iade, kabul edilen koşullar çerçevesinde ödeme yaptığınız tarafça yapılır. İade koşulları ve iade kargo ücreti, siparişte kabul ettiğiniz satış"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Teslimat süresini ve gönderim şeklini satıcı siparişte belirtir.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "satıcının siparişte belirttiği koşullara göredir"
+   ],
+   "baglam": [
+    "yın Gönderim ve lojistik hizmetleri Teslimat süresi ve gönderim şekli satıcının siparişte belirttiği koşullara göredir. Sevkiyat yapıldığında takip numarası ve kargo firması bilgisi sipari"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ürün gönderilince takip numarası sipariş ayrıntılarınıza eklenir.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "takip numarası ve kargo firması bilgisi sipariş detaylarınıza eklenir"
+   ],
+   "baglam": [
+    "tıcının siparişte belirttiği koşullara göredir. Sevkiyat yapıldığında takip numarası ve kargo firması bilgisi sipariş detaylarınıza eklenir; gönderiyi sipariş sayfanızdan izleyebilirsiniz. Nasıl çalıştığını öğ"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Türkçe, English, العربية, Русский",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "name:\"Türkçe\"",
+    "name:\"English\"",
+    "name:\"العربية\"",
+    "name:\"Русский\""
+   ],
+   "baglam": [
+    "r\",\"ru\"],er=[\"ar\"],oe=\"i18nextLng\",se=\"th-lang-source\",je=[{code:\"tr\",name:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العر",
+    "e=\"th-lang-source\",je=[{code:\"tr\",name:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русс",
+    "e:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русский\",flag:\"🇷🇺\"}];function Va(e){retur",
+    ":\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русский\",flag:\"🇷🇺\"}];function Va(e){return je.find(t=>t.code===e)?.name??e}fun"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Hesap açmak ücretsizdir.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Ücretsiz üyelik ile ürün arayabilir, tedarikçilere mesaj gönderebilir, teklif isteyebilir"
+   ],
+   "baglam": [
+    "sınırsız listeleme).\"},{q:\"Ücretsiz üyelik ile neler yapabilirim?\",a:\"Ücretsiz üyelik ile ürün arayabilir, tedarikçilere mesaj gönderebilir, teklif isteyebilir ve sınırlı sayıda ürün listeleyebilirsiniz. Temel ticaret güvencesi k"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Bir istek, birden fazla teklif",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Bir istek, birden fazla teklif"
+   ],
+   "baglam": [
+    "iniz!\",yourSearchHistory:\"Arama geçmişiniz\",oneRequestMultipleQuotes:\"Bir istek, birden fazla teklif\",rfqTitle:\"Fiyat Teklifi Talebi (RFQ)\",history:\"Geçmiş\",viewMore:\"Dah"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sepette bu adedin altında kalırsanız iStoc sizi uyarır.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Minimum sipariş adedi eksik ürünler var"
+   ],
+   "baglam": [
+    "satış koşullarına göre ödeme yaptığınız tarafça yapılır\",moqWarning:'Minimum sipariş adedi eksik ürünler var. \"Tümünü ekle\" ile tamamlayın.',stockError:\"Bu üründen bu kadar stok"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Rozet, mağazanın işletme doğrulamasının tamamlandığını gösterir.",
+   "kaynak": "https://istoc.com/api/method/tradehub_core.api.v1.public_pricing.get_pricing_plans",
+   "kanit": [
+    "Üretici kimliğinizin doğrulandığını gösteren rozet"
+   ],
+   "baglam": [
+    "brika Audit'li\", \"Fabrika Audit'li + Video\"], \"unit\": \"\", \"tooltip\": \"Üretici kimliğinizin doğrulandığını gösteren rozet; alıcı gözünde güvenilirliğinizi artırır.\", \"coming_soon\": false, \"va"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Doğrulanan mağaza rozet taşır",
+   "kaynak": "https://istoc.com/api/method/tradehub_core.api.v1.public_pricing.get_pricing_plans",
+   "kanit": [
+    "Üretici kimliğinizin doğrulandığını gösteren rozet"
+   ],
+   "baglam": [
+    "brika Audit'li\", \"Fabrika Audit'li + Video\"], \"unit\": \"\", \"tooltip\": \"Üretici kimliğinizin doğrulandığını gösteren rozet; alıcı gözünde güvenilirliğinizi artırır.\", \"coming_soon\": false, \"va"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Global B2B toptan satış ve ticaret pazaryeri.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Global B2B Toptan Satış ve Ticaret Pazaryeri"
+   ],
+   "baglam": [
+    ":type\" content=\"website\" /> <title data-i18n=\"pageTitle.home\">iStoc | Global B2B Toptan Satış ve Ticaret Pazaryeri</title> <script>(function(){try{var B={\"en\":\"iStoc | Global B2B Whole"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "iStoc üreticiyi alıcıyla aracısız buluşturur.",
+   "kaynak": "https://istoc.com/satici-ol",
+   "kanit": [
+    "aracısız buluşturur"
+   ],
+   "baglam": [
+    "itle:\"iStoc, üreticileri dünyanın dört bir yanındaki B2B alıcılarıyla aracısız buluşturur. Listele, sat, sevk et — şu an satışlardan komisyon alınmaz.\",heroIma"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "iStoc sizi toptan alıcıyla doğrudan buluşturur.",
+   "kaynak": "https://istoc.com/satici-ol",
+   "kanit": [
+    "aracısız buluşturur"
+   ],
+   "baglam": [
+    "itle:\"iStoc, üreticileri dünyanın dört bir yanındaki B2B alıcılarıyla aracısız buluşturur. Listele, sat, sevk et — şu an satışlardan komisyon alınmaz.\",heroIma"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ürünleri arar, üreticilere yazar ve teklif istersiniz.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Ücretsiz üyelik ile ürün arayabilir, tedarikçilere mesaj gönderebilir, teklif isteyebilir"
+   ],
+   "baglam": [
+    "sınırsız listeleme).\"},{q:\"Ücretsiz üyelik ile neler yapabilirim?\",a:\"Ücretsiz üyelik ile ürün arayabilir, tedarikçilere mesaj gönderebilir, teklif isteyebilir ve sınırlı sayıda ürün listeleyebilirsiniz. Temel ticaret güvencesi k"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Üreticiye mesaj yazar, teklif ister ve siparişi ekrandan verirsiniz.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "tedarikçilere mesaj gönderebilir, teklif isteyebilir"
+   ],
+   "baglam": [
+    "yelik ile neler yapabilirim?\",a:\"Ücretsiz üyelik ile ürün arayabilir, tedarikçilere mesaj gönderebilir, teklif isteyebilir ve sınırlı sayıda ürün listeleyebilirsiniz. Temel ticaret güvencesi k"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Teklifleri karşılaştırır ve uygun olanı seçersiniz.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "birden fazla tedarikçiden aynı anda teklif alabilir, fiyat ve koşulları karşılaştırabilirsiniz"
+   ],
+   "baglam": [
+    "a:\"Evet, özellikle büyük siparişlerde RFQ göndermek önerilir. RFQ ile birden fazla tedarikçiden aynı anda teklif alabilir, fiyat ve koşulları karşılaştırabilirsiniz. RFQ'nuz genellikle <strong>24 saat</strong> içinde yanıt alır.\"},{q:"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Siparişiniz teslimata kadar kayıt altında kalır.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "sipariş durumunu teslimata kadar izler"
+   ],
+   "baglam": [
+    "kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek alın Sipariş koşulları karşılanmazsa talep a"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sipariş koşullarınızı iStoc saklar ve siparişi teslimata kadar izler.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "sipariş koşullarının sürümlü bir kopyasını saklar",
+    "sipariş durumunu teslimata kadar izler"
+   ],
+   "baglam": [
+    "Siparişiniz ve sözleşmeniz kayıt altına alınır iStoc kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek al",
+    "kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek alın Sipariş koşulları karşılanmazsa talep a"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sipariş koşullarınızı iStoc saklar ve siparişinizi teslimata kadar izler.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "sipariş koşullarının sürümlü bir kopyasını saklar",
+    "sipariş durumunu teslimata kadar izler"
+   ],
+   "baglam": [
+    "Siparişiniz ve sözleşmeniz kayıt altına alınır iStoc kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek al",
+    "kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek alın Sipariş koşulları karşılanmazsa talep a"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "iStoc kabul ettiğiniz koşulları saklar.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "sipariş koşullarının sürümlü bir kopyasını saklar"
+   ],
+   "baglam": [
+    "Siparişiniz ve sözleşmeniz kayıt altına alınır iStoc kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek al"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Koşullar karşılanmazsa talep açarsınız.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "Sipariş koşulları karşılanmazsa talep açın"
+   ],
+   "baglam": [
+    "sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek alın Sipariş koşulları karşılanmazsa talep açın; kabul edilen koşullar çerçevesinde satıcıyla (veya Thoptan.com ile)"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sorunu, kabul ettiğiniz koşullara göre çözmenize iStoc yardım eder.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "çözüme ulaşmanıza yardımcı oluruz"
+   ],
+   "baglam": [
+    "; kabul edilen koşullar çerçevesinde satıcıyla (veya Thoptan.com ile) çözüme ulaşmanıza yardımcı oluruz. Kapsamdakiler Güvenli ve kolay ödemeler Para iade politikası Gönderi"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sipariş gönderilmezse ya da kaybolursa iade talebi oluşturursunuz.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "gönderilmezse, kaybolursa",
+    "iade talebi oluşturun"
+   ],
+   "baglam": [
+    "ra birimleri GBP £ USD $ EUR € TRY ₺ Para iade politikası Siparişiniz gönderilmezse, kaybolursa ya da kusurlu, yanlış veya hasarlı gelirse iade talebi oluşturun; iad",
+    "gönderilmezse, kaybolursa ya da kusurlu, yanlış veya hasarlı gelirse iade talebi oluşturun; iade, kabul edilen koşullar çerçevesinde ödeme yaptığınız tarafça ya"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ürün kusurlu, yanlış ya da hasarlı gelirse de iade talebi oluşturursunuz.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "kusurlu, yanlış veya hasarlı gelirse iade talebi oluşturun"
+   ],
+   "baglam": [
+    "RY ₺ Para iade politikası Siparişiniz gönderilmezse, kaybolursa ya da kusurlu, yanlış veya hasarlı gelirse iade talebi oluşturun; iade, kabul edilen koşullar çerçevesinde ödeme yaptığınız tarafça ya"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "İade, kabul ettiğiniz koşullara göre yapılır.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "kabul edilen koşullar çerçevesinde"
+   ],
+   "baglam": [
+    "Sorun çıkarsa destek alın Sipariş koşulları karşılanmazsa talep açın; kabul edilen koşullar çerçevesinde satıcıyla (veya Thoptan.com ile) çözüme ulaşmanıza yardımcı oluruz. K"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Kargo firmasının adı da eklenir.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "takip numarası ve kargo firması bilgisi sipariş detaylarınıza eklenir"
+   ],
+   "baglam": [
+    "tıcının siparişte belirttiği koşullara göredir. Sevkiyat yapıldığında takip numarası ve kargo firması bilgisi sipariş detaylarınıza eklenir; gönderiyi sipariş sayfanızdan izleyebilirsiniz. Nasıl çalıştığını öğ"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Her sipariş kayıt altında.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "her siparişe açık bir anlaşma, kayıtlı bir sözleşme"
+   ],
+   "baglam": [
+    "0M+ Ürünler iStoc'ta Ticaret Güvencesi nasıl işler? Ticaret Güvencesi her siparişe açık bir anlaşma, kayıtlı bir sözleşme ve destek süreci sağlar. iStoc ödemeleri tutmaz ve aktarmaz. Süreç şö"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Siparişiniz kayıt altındadır",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "her siparişe açık bir anlaşma, kayıtlı bir sözleşme"
+   ],
+   "baglam": [
+    "0M+ Ürünler iStoc'ta Ticaret Güvencesi nasıl işler? Ticaret Güvencesi her siparişe açık bir anlaşma, kayıtlı bir sözleşme ve destek süreci sağlar. iStoc ödemeleri tutmaz ve aktarmaz. Süreç şö"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sipariş koşullarında anlaşırsınız",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "bir tedarikçiyle sipariş anlaşması yaptınız"
+   ],
+   "baglam": [
+    "maz. Süreç şöyle işler: 01 Trade Assurance siparişini başlat iStoc'da bir tedarikçiyle sipariş anlaşması yaptınız. 02 Satıcıya veya Thoptan.com'a ödeyin Ödemeyi satıcının sunduğu yönt"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Satıcıyla sipariş koşullarında anlaşırsınız.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "bir tedarikçiyle sipariş anlaşması yaptınız"
+   ],
+   "baglam": [
+    "maz. Süreç şöyle işler: 01 Trade Assurance siparişini başlat iStoc'da bir tedarikçiyle sipariş anlaşması yaptınız. 02 Satıcıya veya Thoptan.com'a ödeyin Ödemeyi satıcının sunduğu yönt"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sonra siparişi başlatırsınız.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "Trade Assurance siparişini başlat"
+   ],
+   "baglam": [
+    "eci sağlar. iStoc ödemeleri tutmaz ve aktarmaz. Süreç şöyle işler: 01 Trade Assurance siparişini başlat iStoc'da bir tedarikçiyle sipariş anlaşması yaptınız. 02 Satıcıya vey"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ödemeyi yaparsınız",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "Satıcıya veya Thoptan.com'a ödeyin"
+   ],
+   "baglam": [
+    "işini başlat iStoc'da bir tedarikçiyle sipariş anlaşması yaptınız. 02 Satıcıya veya Thoptan.com'a ödeyin Ödemeyi satıcının sunduğu yöntemle (EFT (Electronic Funds Transfer),"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ödemeyi, sipariş koşullarında anlaşınca yaparsınız.",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "bir tedarikçiyle sipariş anlaşması yaptınız",
+    "Satıcıya veya Thoptan.com'a ödeyin"
+   ],
+   "baglam": [
+    "maz. Süreç şöyle işler: 01 Trade Assurance siparişini başlat iStoc'da bir tedarikçiyle sipariş anlaşması yaptınız. 02 Satıcıya veya Thoptan.com'a ödeyin Ödemeyi satıcının sunduğu yönt",
+    "işini başlat iStoc'da bir tedarikçiyle sipariş anlaşması yaptınız. 02 Satıcıya veya Thoptan.com'a ödeyin Ödemeyi satıcının sunduğu yöntemle (EFT (Electronic Funds Transfer),"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sipariş koşullarınız kaydedilir",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "Siparişiniz ve sözleşmeniz kayıt altına alınır"
+   ],
+   "baglam": [
+    "n ya da sunulduğunda tüm sepeti tek ödemeyle Thoptan.com'a ödeyin. 03 Siparişiniz ve sözleşmeniz kayıt altına alınır iStoc kabul ettiğiniz sipariş koşullarının sürümlü bir kopyasını sakl"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Sorun çıkarsa destek alırsınız",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "Sorun çıkarsa destek alın"
+   ],
+   "baglam": [
+    "lü bir kopyasını saklar ve sipariş durumunu teslimata kadar izler. 04 Sorun çıkarsa destek alın Sipariş koşulları karşılanmazsa talep açın; kabul edilen koşullar çer"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Üreticiler isteğinizi görür ve teklif verir.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "eşleşen tedarikçi tekliflerini alın"
+   ],
+   "baglam": [
+    "a teklif alın\",rfqText:\"Bir RFQ gönderin ve bir sonraki alımınız için eşleşen tedarikçi tekliflerini alın.\",createRfq:\"RFQ oluştur\"},heroSide:{bestDeals:\"En İyi Fırsatlar\",all"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "© 2026 iStoc Private Company Limited.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "iStoc Private Company Limited"
+   ],
+   "baglam": [
+    "ş koşulları: genel bilgi\",termsSummaryP1:\"iStoc, İngiltere'de kayıtlı iStoc Private Company Limited tarafından işletilen global bir B2B pazar yeridir. Satış sözleşmesi a"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Tüm hakları saklıdır.",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Tüm hakları saklıdır"
+   ],
+   "baglam": [
+    "d:\"Bağlantıda Kalın\",copyright:\"© 2026 iStoc Private Company Limited. Tüm hakları saklıdır.\",legalNotice:\"Yasal Bildirim\",privacyPolicy:\"Gizlilik Politikası\",pr"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Global B2B toptan pazaryeri",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Global B2B Toptan Satış ve Ticaret Pazaryeri"
+   ],
+   "baglam": [
+    ":type\" content=\"website\" /> <title data-i18n=\"pageTitle.home\">iStoc | Global B2B Toptan Satış ve Ticaret Pazaryeri</title> <script>(function(){try{var B={\"en\":\"iStoc | Global B2B Whole"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Ücretsiz kaydolun",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Ücretsiz Kaydolun"
+   ],
+   "baglam": [
+    "ulama Kodu Gönder\",backToType:\"← Hesap türü seçimine dön\",freeSignUp:\"Ücretsiz Kaydolun\"},forgot:{findAccount:\"Hesabınızı bulun\",findAccountDesc:\"Hesabınızla"
+   ],
+   "bulundu": true
+  }
+ ]
+}

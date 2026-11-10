@@ -1,0 +1,204 @@
+{
+ "alindi": "2026-11-10",
+ "urun_toplami": 2412,
+ "magaza_toplami": 19,
+ "dogrulanmis_magaza": 18,
+ "para_birimleri": [
+  "GBP",
+  "USD",
+  "EUR",
+  "TRY"
+ ],
+ "urunler": {
+  "suzgecli-ve-bolmeli-organizer-5-lt": {
+   "ad": "Süzgeçli Ve Bölmeli Organizer 5 LT",
+   "fiyat_try": 180.0,
+   "kdv": 20.0,
+   "en_az_adet": 12,
+   "birim": "Adet",
+   "katlarla_satilir": true,
+   "hazirlik": "1 iş günü",
+   "uretici": "Alkan Plastik",
+   "uretici_adres": "alkan-plastik",
+   "uretici_sehir": "İstanbul",
+   "uretici_dogrulanmis": true,
+   "uretici_tur": "Manufacturer",
+   "ozellikler": {
+    "Materyal": "Plastik",
+    "Kapasite": "5 LT",
+    "Koli Net Ağırlığı": "8.7 KG",
+    "Koli m3": "0.11"
+   }
+  },
+  "miknatisli-baharatlik": {
+   "ad": "Mıknatıslı Baharatlık",
+   "fiyat_try": 229.16,
+   "kdv": 20.0,
+   "en_az_adet": 24,
+   "birim": "Adet",
+   "katlarla_satilir": true,
+   "hazirlik": "1 iş günü",
+   "uretici": "Solingen Bıçak",
+   "uretici_adres": "solingen-bicak",
+   "uretici_sehir": "İstanbul",
+   "uretici_dogrulanmis": true,
+   "uretici_tur": "Manufacturer",
+   "ozellikler": {
+    "Materyal": "Paslanmaz Çelik",
+    "Taban": "Mıknatıslı Taban"
+   }
+  },
+  "kristal-slim-aski-10-lu": {
+   "ad": "Kristal Slim Askı 10'lu",
+   "fiyat_try": 104.17,
+   "kdv": 20.0,
+   "en_az_adet": 36,
+   "birim": "Adet",
+   "katlarla_satilir": true,
+   "hazirlik": "1 iş günü",
+   "uretici": "Avcılar Plastik",
+   "uretici_adres": "avcilar-plastik",
+   "uretici_sehir": "İstanbul",
+   "uretici_dogrulanmis": true,
+   "uretici_tur": "Manufacturer",
+   "ozellikler": {
+    "Materyal": "Plastik"
+   }
+  },
+  "softline-lavabo-ve-kuvet-fircasi": {
+   "ad": "Softline Lavabo Ve Küvet Fırçası",
+   "fiyat_try": 54.52,
+   "kdv": 20.0,
+   "en_az_adet": 48,
+   "birim": "Adet",
+   "katlarla_satilir": true,
+   "hazirlik": "1 iş günü",
+   "uretici": "Çetin Plastik",
+   "uretici_adres": "cetin-plastik",
+   "uretici_sehir": "İstanbul",
+   "uretici_dogrulanmis": true,
+   "uretici_tur": "Manufacturer",
+   "ozellikler": {
+    "Materyal": "Plastik",
+    "Koli m3": "0,089"
+   }
+  },
+  "renkli-sapli-meyve-bicagi": {
+   "ad": "Renkli Saplı Meyve Bıçağı",
+   "fiyat_try": 18.75,
+   "kdv": 20.0,
+   "en_az_adet": 250,
+   "birim": "Adet",
+   "katlarla_satilir": true,
+   "hazirlik": "1 iş günü",
+   "uretici": "Solingen Bıçak",
+   "uretici_adres": "solingen-bicak",
+   "uretici_sehir": "İstanbul",
+   "uretici_dogrulanmis": true,
+   "uretici_tur": "Manufacturer",
+   "ozellikler": {
+    "Materyal": "Paslanmaz Çelik, Plastik"
+   }
+  },
+  "fresh-box-kilitli-organizer-5-lt": {
+   "ad": "Fresh Box Kilitli Organizer 5 LT",
+   "fiyat_try": 90.0,
+   "kdv": 20.0,
+   "en_az_adet": 12,
+   "birim": "Adet",
+   "katlarla_satilir": true,
+   "hazirlik": "1 iş günü",
+   "uretici": "Alkan Plastik",
+   "uretici_adres": "alkan-plastik",
+   "uretici_sehir": "İstanbul",
+   "uretici_dogrulanmis": true,
+   "uretici_tur": "Manufacturer",
+   "ozellikler": {
+    "Materyal": "Plastik",
+    "Koli Net Ağırlık": "5,483 KG",
+    "Koli m3": "0,1",
+    "Kapasite": "5 LT"
+   }
+  },
+  "mikrofiber-kurulama-bezi-5-li-paket": {
+   "ad": "Mikrofiber Kurulama Bezi (5'li Paket)",
+   "fiyat_try": 125.0,
+   "kdv": 20.0,
+   "en_az_adet": 110,
+   "birim": "Adet",
+   "katlarla_satilir": true,
+   "hazirlik": "1 iş günü",
+   "uretici": "Solingen Bıçak",
+   "uretici_adres": "solingen-bicak",
+   "uretici_sehir": "İstanbul",
+   "uretici_dogrulanmis": true,
+   "uretici_tur": "Manufacturer",
+   "ozellikler": {
+    "Materyal": "Mikrofiber",
+    "Çamaşır Makinesi": "Evet",
+    "Kimyasal": "Hayır"
+   }
+  },
+  "ayarlanabilir-paslanmaz-kek-kalibi": {
+   "ad": "Ayarlanabilir Paslanmaz Kek Kalıbı",
+   "fiyat_try": 140.63,
+   "kdv": 20.0,
+   "en_az_adet": 12,
+   "birim": "Adet",
+   "katlarla_satilir": true,
+   "hazirlik": "1 iş günü",
+   "uretici": "Solingen Bıçak",
+   "uretici_adres": "solingen-bicak",
+   "uretici_sehir": "İstanbul",
+   "uretici_dogrulanmis": true,
+   "uretici_tur": "Manufacturer",
+   "ozellikler": {
+    "Materyal": "Paslanmaz Çelik",
+    "Çap": "16 - 30 CM (Ayarlanabilir)"
+   }
+  }
+ },
+ "ureticiler": {
+  "cetin-plastik": {
+   "ad": "Çetin Plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "1988",
+   "fabrika_m2": "15000",
+   "dogrulanmis": true,
+   "urun_sayisi": 230
+  },
+  "avcilar-plastik": {
+   "ad": "Avcılar Plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "1989",
+   "fabrika_m2": "",
+   "dogrulanmis": true,
+   "urun_sayisi": 91
+  },
+  "alkan-plastik": {
+   "ad": "Alkan Plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "2009",
+   "fabrika_m2": "",
+   "dogrulanmis": true,
+   "urun_sayisi": 52
+  },
+  "solingen-bicak": {
+   "ad": "Solingen Bıçak",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "",
+   "fabrika_m2": "",
+   "dogrulanmis": true,
+   "urun_sayisi": 15,
+   "not": {
+    "etiket": "Faaliyet",
+    "deger": "1992'den beri",
+    "kanit": "1992'den bu yana"
+   }
+  }
+ }
+}

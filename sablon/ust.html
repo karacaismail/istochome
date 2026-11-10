@@ -1,0 +1,75 @@
+
+<!-- Yardımcı şerit: yalnız geniş ekranda. Solda dil ve para birimi, sağda hizmet bağlantıları. -->
+<div class="util on-ink">
+  <div class="wrap util__in">
+    <ul class="util__l">
+      <li><a href="#dil">{{i_kure}}<span data-dil-deger data-veri>Türkçe, USD</span></a></li>
+    </ul>
+    <ul class="util__r">
+      <li><a href="{{u}}/hesabim/siparisler">Sipariş takibi</a></li>
+      <li><a href="{{u}}/ticaret-guvencesi">Ticaret güvencesi</a></li>
+      <li><a href="{{u}}/yardim-merkezi">Yardım Merkezi</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Ana satır: logo, arama, hesap eylemleri, teklif isteği. -->
+<header class="header" data-search="off">
+  <div class="wrap header__main">
+    <a class="logo" href="./" aria-label="iStoc ana sayfa"><img src="img/logo.png" alt="iStoc" width="87" height="32"></a>
+    <div class="header__search" inert><div>
+        <form class="search" role="search" action="{{u}}/urunler" method="get" data-search>
+          <label class="sr-only" for="q-ust">Ürün veya üretici arayın</label>
+          <div class="search__box"><input id="q-ust" type="search" name="q" placeholder="Ürün veya üretici arayın" autocomplete="off" enterkeyhint="search"></div>
+          <button type="submit" aria-label="Arayın">{{i_ara}}<span>Arayın</span></button>
+        </form>
+    </div></div>
+    <nav class="actions" aria-label="Hesap">
+      <a class="action action--desk" href="{{u}}/hesabim/mesajlar">{{i_mesaj}}<span class="action__label">Mesajlar</span></a>
+      <a class="action action--desk" href="{{u}}/pages/cart.html" data-cart-link aria-label="Canlı sepeti açın. Örnek sepette 0 ürün var.">{{i_sepet}}<span class="count" data-cart aria-hidden="true" hidden>0</span><span class="action__label">Sepet</span></a>
+      <a class="action action--label" href="{{u}}/pages/auth/login.html">{{i_kisi}}<span class="action__label">Giriş yapın</span></a>
+      <!-- Dar ekranda teklif eylemi alt menüdedir. Aynı eylem ekranda iki kez durmaz. -->
+      <a class="btn btn--brand btn--sm header__cta" href="#teklif">Teklif isteyin</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Gezinme satırı: kategori menüsü, kayan bölüm bağlantıları, sabit satıcı bağlantısı. -->
+<div class="nav">
+  <div class="wrap nav__inner">
+    <!-- JavaScript yoksa düğme yerine sayfadaki kategori bölümüne giden bağlantı görünür. -->
+    <button class="nav__all nav__all--js" type="button" aria-expanded="false" aria-controls="mega">{{i_izgara}}Tüm kategoriler{{i_chev}}</button>
+    <a class="nav__all nav__all--nojs" href="#kategoriler">{{i_izgara}}Tüm kategoriler</a>
+    <!-- Kategori menüsü: üst kategori düğmeleri ve alt menü öğeleri. Düğmeyle açılır, üzerine gelmeyle açılmaz. -->
+    <div class="mega" id="mega" data-open="false" inert>
+      <div class="wrap mega__clip">
+        <nav class="mega__panel" aria-label="Kategori menüsü">
+          <div class="mega__cols">
+            {{mega_items}}
+          </div>
+          <div class="mega__foot">
+            <p>{{n_cats}} üst kategori ve {{n_child}} alt kategori var.</p>
+            <a class="lnk" href="{{u}}/kategoriler"><span>{{n_cats}} kategorinin tümü</span>{{i_ok18}}</a>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <span class="nav__sep" aria-hidden="true"></span>
+    <div class="rail">
+      <button class="rail__btn rail__btn--prev" type="button" data-rail-btn="-1" aria-label="Bölümleri geri kaydırın" hidden>{{i_sol}}</button>
+      <nav class="rail-x" data-scroller aria-label="Bölümler">
+        <a href="{{u}}/ureticiler">Üreticiler</a>
+        <a href="{{u}}/firsatlar">Fırsatlar</a>
+        <a href="{{u}}/cok-satanlar">Çok satanlar</a>
+        <a href="{{u}}/urunler?sort=newest">Yeni ürünler</a>
+        <a href="#teklif">Teklif isteği</a>
+        <a href="{{u}}/ticaret-guvencesi">Ticaret güvencesi</a>
+      </nav>
+      <button class="rail__btn rail__btn--next" type="button" data-rail-btn="1" aria-label="Bölümleri ileri kaydırın" hidden>{{i_sag}}</button>
+    </div>
+    <span class="nav__sep nav__sep--desk" aria-hidden="true"></span>
+    <nav class="nav__aside" aria-label="Satıcılar">
+      <a href="{{u}}/satici-ol"><span class="nav__ask">Üretici misiniz?</span><b>Satışa başlayın</b></a>
+    </nav>
+  </div>
+</div>
