@@ -1,4 +1,4 @@
-/* iStoc ana sayfa tasarım önerisi, 4. sürüm. Davranış katmanı.
+/* iStoc ana sayfa tasarım önerisi, 5. sürüm. Davranış katmanı.
    İlke: durum (değer, ARIA, odak) anında güncellenir. Yalnız sunum yumuşak geçer. */
 (function () {
   "use strict";
@@ -45,7 +45,18 @@
       requestAnimationFrame(frame);
     })(t0);
   }
-  function usd(n) { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  /* Para birimi. Tutarlar sayfada dört para biriminde hazır durur (build.py yazar).
+     Betik yalnız seçili para birimindeki hazır değeri gösterir, kendi kur hesabı yapmaz. */
+  var para = (function () {
+    var on = $('[data-tercih="para"] [aria-checked="true"]');
+    return { code: on ? on.dataset.deger : "USD", sym: on ? $(".pref__mark", on).textContent : "$" };
+  })();
+  function money(n) { return para.sym + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  /* Öğenin seçili para birimindeki birim fiyatı: data-unit-usd, data-unit-try gibi özniteliklerden okunur. */
+  function unitOf(el) { return parseFloat(el.dataset["unit" + para.code.charAt(0) + para.code.slice(1).toLowerCase()]); }
+  function paintPrices() {
+    $$("[data-para]").forEach(function (el) { el.textContent = money(parseFloat(el.dataset[para.code.toLowerCase()])); });
+  }
   function tr(n) { return Math.round(n).toLocaleString("tr-TR"); }
   var status = $("#durum");
   function announce(text) { if (status) status.textContent = text; }
@@ -144,9 +155,19 @@
     var header = $(".header");
     var slot = $(".header__search", header);
     var heroSearch = $(".hero .search");
-    function stuck() { header.classList.toggle("is-stuck", window.scrollY > 8); }
+    var bar = $("[data-progress]", header);
+    var ticking = false;
+    /* Konum çubuğu sayfanın ne kadarının geçildiğini gösterir. Değer kaydırmaya bağlıdır, geçiş kullanmaz. */
+    function stuck() {
+      ticking = false;
+      header.classList.toggle("is-stuck", window.scrollY > 8);
+      var max = root.scrollHeight - window.innerHeight;
+      if (bar) bar.style.setProperty("--p", (max > 0 ? Math.min(1, window.scrollY / max) : 0).toFixed(4));
+    }
+    function request() { if (!ticking) { ticking = true; requestAnimationFrame(stuck); } }
     stuck();
-    window.addEventListener("scroll", stuck, { passive: true });
+    window.addEventListener("scroll", request, { passive: true });
+    window.addEventListener("resize", request);
     /* Gözlemci yoksa üst arama kapalı kalır. Karşılama araması sayfada durur. */
     if (!("IntersectionObserver" in window) || !heroSearch) return;
     var past = false;
@@ -316,6 +337,8 @@
       });
     });
     btn.addEventListener("click", function () { set(!isOpen(), false); });
+    /* Menüdeki sayfa içi bağlantı (teklif isteği) menüyü kapatır. Sayfa hedefe gider, menü üstünde kalmaz. */
+    $$("[data-mega-kapat]", panel).forEach(function (a) { a.addEventListener("click", function () { set(false, false); }); });
     wide.addEventListener("change", ensureOne);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && isOpen()) set(false, true); });
     /* Menü yüzeyinin dışına dokunmak menüyü kapatır. Yüzeyin yanındaki saydam pay da dışarıdır. */
@@ -392,7 +415,7 @@
     function paint() {
       var keys = Object.keys(lines);
       var units = 0, total = 0;
-      keys.forEach(function (k) { units += lines[k].qty; total += lines[k].qty * lines[k].unit; });
+      keys.forEach(function (k) { units += lines[k].qty; total += lines[k].qty * unitOf(lines[k].src); });
       badges.forEach(function (b) {
         b.textContent = keys.length;
         b.hidden = keys.length === 0;
@@ -403,7 +426,7 @@
       /* Sepet bağlantıları canlı sitedeki sepeti açar. Sayaç ise bu örnek sepeti sayar. Etiket ikisini de söyler. */
       links.forEach(function (l) { l.setAttribute("aria-label", "Canlı sepeti açın. Örnek sepette " + keys.length + " ürün var."); });
       unitsEl.textContent = keys.length ? keys.length + " ürün, " + tr(units) + " adet" : "Sepetiniz boş";
-      tween(totalEl, total, dur("--dur-3"), function (v) { totalEl.textContent = usd(v); });
+      tween(totalEl, total, dur("--dur-3"), function (v) { totalEl.textContent = money(v); });
       bar.classList.toggle("is-on", keys.length > 0);
       bar.inert = keys.length === 0;
       /* Çubuk açıkken sayfanın alt payı çubuğun yüksekliği kadar büyür (--dock).
@@ -423,42 +446,45 @@
     window.addEventListener("resize", function () { root.style.setProperty("--cartbar-h", bar.offsetHeight + "px"); });
     return {
       /* Sepet bu öneride canlı siteye bağlı değildir. Duyuru da bunu söyler. */
-      set: function (slug, name, unit, qty) { lines[slug] = { name: name, unit: unit, qty: qty }; paint(); announce(name + ": " + tr(qty) + " adet örnek sepette. Ürün canlı sepete eklenmedi."); },
+      /* src: birim fiyatı taşıyan öğe. Fiyat, seçili para birimine göre bu öğeden okunur. */
+      set: function (slug, name, src, qty) { lines[slug] = { name: name, src: src, qty: qty }; paint(); announce(name + ": " + tr(qty) + " adet örnek sepette. Ürün canlı sepete eklenmedi."); },
       remove: function (slug, name) { delete lines[slug]; paint(); announce(name + " örnek sepetten çıkarıldı."); },
-      has: function (slug) { return !!lines[slug]; }
+      has: function (slug) { return !!lines[slug]; },
+      repaint: paint
     };
   })();
   $$(".pc").forEach(function (card) {
     $(".pc__add", card).addEventListener("click", function () {
       var d = card.dataset;
       if (cart.has(d.slug)) cart.remove(d.slug, d.name);
-      else cart.set(d.slug, d.name, parseFloat(d.unit), parseInt(d.moq, 10));
+      else cart.set(d.slug, d.name, card, parseInt(d.moq, 10));
     });
   });
 
   /* 6. Örnek sipariş paneli: adet en az sipariş adedinin katlarıyla artar. */
-  (function () {
+  var order = (function () {
     var box = $("[data-order]");
-    if (!box) return;
-    var unit = parseFloat(box.dataset.unit);
+    if (!box) return { repaint: function () {} };
     var moq = parseInt(box.dataset.moq, 10);
     var qty = moq;
     var out = $("[data-qty]", box);
     var total = $("[data-total]", box);
     var totalSr = $("[data-total-sr]", box);
     var dec = $("[data-dec]", box);
-    total._v = qty * unit;
+    total._v = qty * unitOf(box);
     function paint() {
+      var sum = qty * unitOf(box);
       out.textContent = tr(qty);
       dec.setAttribute("aria-disabled", qty <= moq ? "true" : "false");
-      totalSr.textContent = "Toplam " + usd(qty * unit);
-      tween(total, qty * unit, dur("--dur-3"), function (v) { total.textContent = usd(v); });
+      totalSr.textContent = "Toplam " + money(sum);
+      tween(total, sum, dur("--dur-3"), function (v) { total.textContent = money(v); });
     }
     $("[data-inc]", box).addEventListener("click", function () { qty += moq; paint(); });
     dec.addEventListener("click", function () { if (qty > moq) { qty -= moq; paint(); } });
     $("[data-order-add]").addEventListener("click", function () {
-      cart.set(box.dataset.slug, box.dataset.name, unit, qty);
+      cart.set(box.dataset.slug, box.dataset.name, box, qty);
     });
+    return { repaint: paint };
   })();
 
   /* 7. Kaydırınca beliren öğeler ve sayaçlar. */
@@ -565,83 +591,117 @@
     });
   });
 
-  /* 11. Mobilde alt bölüm grupları kapalı başlar, masaüstünde hep açıktır. */
+  /* 11. Katlanan gruplar: alt bölüm sütunları ve dizin grupları.
+     Dar ekranda grup kapalı başlar ve başlığına dokununca açılır. Geniş ekranda hep açıktır.
+     Sınır genişliği grubun kendi özniteliğinde yazar (data-fold). İlk dizin grubu dar ekranda da açık başlar. */
   (function () {
-    var mq = window.matchMedia("(min-width: 1024px)");
-    var groups = $$(".fgroup");
-    function sync() {
-      groups.forEach(function (g) {
-        g.open = mq.matches;
-        /* Masaüstünde başlık bir düğme değildir. Klavyeyle de kapatılamaz. */
-        $("summary", g).tabIndex = mq.matches ? -1 : 0;
-      });
-    }
-    groups.forEach(function (g) {
-      $("summary", g).addEventListener("click", function (e) { if (mq.matches) e.preventDefault(); });
+    var groups = $$("details[data-fold]").map(function (el) {
+      return { el: el, mq: window.matchMedia("(min-width: " + el.dataset.fold + "px)"), first: el.hasAttribute("data-ilk") };
     });
-    sync();
-    mq.addEventListener("change", sync);
+    function sync(g) {
+      g.el.open = g.mq.matches || g.first;
+      /* Geniş ekranda başlık bir düğme değildir. Klavyeyle de kapatılamaz. */
+      $("summary", g.el).tabIndex = g.mq.matches ? -1 : 0;
+    }
+    function syncAll() { groups.forEach(sync); }
+    groups.forEach(function (g) {
+      $("summary", g.el).addEventListener("click", function (e) { if (g.mq.matches) e.preventDefault(); });
+      g.mq.addEventListener("change", function () { sync(g); });
+    });
+    syncAll();
     /* Kâğıtta kapalı grup basılmaz. Yazdırırken bütün gruplar açılır, sonra eski haline döner. */
     var paper = window.matchMedia("print");
-    function openAll() { groups.forEach(function (g) { g.open = true; }); }
-    paper.addEventListener("change", function () { if (paper.matches) openAll(); else sync(); });
+    function openAll() { groups.forEach(function (g) { g.el.open = true; }); }
+    paper.addEventListener("change", function () { if (paper.matches) openAll(); else syncAll(); });
     window.addEventListener("beforeprint", openAll);
-    window.addEventListener("afterprint", sync);
+    window.addEventListener("afterprint", syncAll);
   })();
 
-  /* 12. Dil seçici: erişilebilir liste kutusu. */
+  /* 12. Dil ve para birimi: her grup bir radyo grubudur. Ok tuşları seçimi ve odağı birlikte taşır.
+     Para birimi seçimi sayfadaki fiyatları gerçekten değiştirir. Dil seçimi bu öneride sayfayı çevirmez,
+     duyuru bunu açıkça söyler. */
   (function () {
-    var box = $(".select");
-    if (!box) return;
-    var btn = $(".select__btn", box);
-    var list = $(".select__list", box);
-    var value = $("#dil-deger", box);
-    var opts = $$('[role="option"]', list);
-    var active = 0;
-    function setActive(i) {
-      active = (i + opts.length) % opts.length;
-      opts.forEach(function (o, n) { o.classList.toggle("is-active", n === active); });
-      list.setAttribute("aria-activedescendant", opts[active].id);
+    var labels = $$("[data-tercih-deger]");
+    function chosen(kind) { return $('[data-tercih="' + kind + '"] [aria-checked="true"]'); }
+    function writeLabel() {
+      var lang = chosen("dil"), cur = chosen("para");
+      if (!lang || !cur) return;
+      labels.forEach(function (el) { el.textContent = lang.dataset.ad + ", " + cur.dataset.deger; });
     }
-    function open() {
-      btn.setAttribute("aria-expanded", "true");
-      list.classList.add("is-open");
-      list.removeAttribute("aria-hidden");
-      setActive(opts.findIndex(function (o) { return o.getAttribute("aria-selected") === "true"; }));
-      list.focus();
-    }
-    function close(returnFocus) {
-      btn.setAttribute("aria-expanded", "false");
-      list.classList.remove("is-open");
-      list.setAttribute("aria-hidden", "true");
-      if (returnFocus) btn.focus();
-    }
-    function choose(i) {
-      opts.forEach(function (o, n) { o.setAttribute("aria-selected", n === i ? "true" : "false"); });
-      value.textContent = opts[i].dataset.value;
-      /* Yardımcı şeritteki etiket de aynı değeri gösterir. */
-      $$("[data-dil-deger]").forEach(function (el) { el.textContent = opts[i].dataset.value; });
-      /* Seçici bu öneride yalnız bileşeni gösterir. Duyuru bunu açıkça söyler. */
-      announce(opts[i].dataset.value + " seçildi. Bu öneride seçim sayfanın dilini değiştirmez.");
-      close(true);
-    }
-    btn.addEventListener("click", function () { btn.getAttribute("aria-expanded") === "true" ? close(false) : open(); });
-    btn.addEventListener("keydown", function (e) {
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); open(); }
+    $$("[data-tercih]").forEach(function (group) {
+      var kind = group.dataset.tercih;
+      var radios = $$('[role="radio"]', group);
+      function select(radio, focus) {
+        radios.forEach(function (r) {
+          var on = r === radio;
+          r.setAttribute("aria-checked", on ? "true" : "false");
+          r.tabIndex = on ? 0 : -1;
+        });
+        if (focus) radio.focus();
+        writeLabel();
+        if (kind === "para") {
+          para = { code: radio.dataset.deger, sym: $(".pref__mark", radio).textContent };
+          paintPrices();
+          cart.repaint();
+          order.repaint();
+          announce(radio.dataset.ad + " seçildi. Fiyatlar bu para biriminde gösteriliyor.");
+        } else announce(radio.dataset.ad + " seçildi. Bu öneride dil seçimi sayfanın dilini değiştirmez.");
+      }
+      radios.forEach(function (r, i) {
+        r.addEventListener("click", function () { if (r.getAttribute("aria-checked") !== "true") select(r, false); });
+        r.addEventListener("keydown", function (e) {
+          var step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+          if (!step) return;
+          e.preventDefault();
+          select(radios[(i + step + radios.length) % radios.length], true);
+        });
+      });
     });
-    list.addEventListener("keydown", function (e) {
-      if (e.key === "ArrowDown") { e.preventDefault(); setActive(active + 1); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); setActive(active - 1); }
-      else if (e.key === "Home") { e.preventDefault(); setActive(0); }
-      else if (e.key === "End") { e.preventDefault(); setActive(opts.length - 1); }
-      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(active); }
-      else if (e.key === "Escape") { e.preventDefault(); close(true); }
-      else if (e.key === "Tab") { close(false); }
-    });
-    opts.forEach(function (o, i) {
-      o.addEventListener("click", function () { choose(i); });
-      o.addEventListener("pointermove", function () { setActive(i); });
-    });
-    document.addEventListener("pointerdown", function (e) { if (!box.contains(e.target)) close(false); });
+  })();
+
+  /* 13. İşaretçi ışığı. Koyu bantta ışık işaretçiyi izler, kartın üstünde yumuşak bir ışık belirir.
+     Betik yalnız işaretçinin yerini yazar (--mx, --my, --gx, --gy). Geçişi CSS, merkezi eğriyle yapar.
+     Dokunmatik ekranda ve hareket azaltma tercihinde ışık sabit durur. */
+  (function () {
+    var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
+    var last = null;
+    var ticking = false;
+    function place(el, e, x, y) {
+      var r = el.getBoundingClientRect();
+      el.style.setProperty(x, Math.round(e.clientX - r.left) + "px");
+      el.style.setProperty(y, Math.round(e.clientY - r.top) + "px");
+    }
+    function flush() {
+      ticking = false;
+      var e = last;
+      if (!e || !e.target || !e.target.closest) return;
+      var band = e.target.closest("[data-spot]");
+      var card = e.target.closest("[data-glow]");
+      if (band) place(band, e, "--mx", "--my");
+      if (card) place(card, e, "--gx", "--gy");
+    }
+    document.addEventListener("pointermove", function (e) {
+      if (e.pointerType === "touch" || !fine.matches || reduce.matches) return;
+      last = e;
+      if (!ticking) { ticking = true; requestAnimationFrame(flush); }
+    }, { passive: true });
+  })();
+
+  /* 14. Koyu bandın ızgarası. Yatay çizgiler sayfa kaydıkça içerikten yavaş kayar (--sy).
+     Değer kaydırmaya bağlıdır, geçiş kullanmaz. Hareket azaltma tercihinde ızgara sabit durur. */
+  (function () {
+    var bands = $$(".band--ink");
+    if (!bands.length || reduce.matches) return;
+    var ticking = false;
+    function update() {
+      ticking = false;
+      bands.forEach(function (b) {
+        var r = b.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > window.innerHeight) return;
+        b.style.setProperty("--sy", Math.round(r.top * -0.12) + "px");
+      });
+    }
+    window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    update();
   })();
 })();

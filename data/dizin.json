@@ -1,0 +1,761 @@
+{
+ "alindi": "2026-11-10",
+ "urun_gruplari": [
+  {
+   "ad": "Saklama Kabı",
+   "adres": "saklama-kabi-0fb59c8c",
+   "sayi": 310,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Mutfak Düzeni"
+   ]
+  },
+  {
+   "ad": "Banyo ve Çamaşır Gereçleri",
+   "adres": "banyo-ve-camasir-gerecleri-638fdea0",
+   "sayi": 41,
+   "yol": [
+    "Ev ve Mutfak Gereçleri"
+   ]
+  },
+  {
+   "ad": "Temizlik Kovaları, Arabaları ve Organizasyon Ekipmanları",
+   "adres": "temizlik-kovalari-arabalari-ve-organizasyon-ekipmanlari-991bc0ad",
+   "sayi": 32,
+   "yol": [
+    "Temizlik ve Hijyen Ürünleri"
+   ]
+  },
+  {
+   "ad": "Grup Priz",
+   "adres": "grup-priz-98ff56f2",
+   "sayi": 31,
+   "yol": [
+    "Elektrik Malzemeleri",
+    "Anahtar, Priz ve Fiş"
+   ]
+  },
+  {
+   "ad": "Elbise Askısı",
+   "adres": "elbise-askisi-7e4ccf61",
+   "sayi": 31,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Banyo ve Çamaşır Gereçleri",
+    "Çamaşır Kurutma Gereçleri"
+   ]
+  },
+  {
+   "ad": "Kiler Organizer",
+   "adres": "kiler-organizer-47f1b85b",
+   "sayi": 25,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Mutfak Düzeni"
+   ]
+  },
+  {
+   "ad": "Ev Mobilyası",
+   "adres": "ev-mobilyasi-1593a430",
+   "sayi": 24,
+   "yol": [
+    "Mobilya"
+   ]
+  },
+  {
+   "ad": "Ev Tipi Çöp Kutusu",
+   "adres": "ev-tipi-cop-kutusu-5f602d8c",
+   "sayi": 19,
+   "yol": [
+    "Temizlik ve Hijyen Ürünleri",
+    "Atık Toplama, Çöp ve Geri Dönüşüm",
+    "Çöp Kutuları"
+   ]
+  },
+  {
+   "ad": "Saksılar, Planterler ve Peyzaj Bitki Kapları",
+   "adres": "saksilar-planterler-ve-peyzaj-bitki-kaplari-90076021",
+   "sayi": 17,
+   "yol": [
+    "Tarım ve Hayvancılık",
+    "Bahçecilik ve Peyzaj",
+    "Dikim, Toprak ve Bitki Destek Malzemeleri"
+   ]
+  },
+  {
+   "ad": "Mutfak Eşyası",
+   "adres": "mutfak-esyasi-bf17a42a",
+   "sayi": 15,
+   "yol": [
+    "Ev ve Mutfak Gereçleri"
+   ]
+  },
+  {
+   "ad": "Baharatlık Seti",
+   "adres": "baharatlik-seti-ff975f96",
+   "sayi": 10,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Mutfak Düzeni"
+   ]
+  },
+  {
+   "ad": "Banyo Taburesi",
+   "adres": "banyo-taburesi-240b18b3",
+   "sayi": 9,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Banyo ve Çamaşır Gereçleri"
+   ]
+  },
+  {
+   "ad": "Oto Temizlik Fırçası",
+   "adres": "oto-temizlik-fircasi-e04732ef",
+   "sayi": 8,
+   "yol": [
+    "Otomotiv",
+    "Oto Bakım ve Temizlik",
+    "Oto Bakım ve Temizlik Aletleri"
+   ]
+  },
+  {
+   "ad": "Mutfak Düzeni",
+   "adres": "mutfak-duzeni-1cc45988",
+   "sayi": 8,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası"
+   ]
+  },
+  {
+   "ad": "Mop, Süpürme ve Zemin Temizlik Araçları",
+   "adres": "mop-supurme-ve-zemin-temizlik-araclari-f5ae6c16",
+   "sayi": 6,
+   "yol": [
+    "Temizlik ve Hijyen Ürünleri"
+   ]
+  },
+  {
+   "ad": "Temizlik Kovası",
+   "adres": "temizlik-kovasi-d989f1ec",
+   "sayi": 6,
+   "yol": [
+    "Temizlik ve Hijyen Ürünleri",
+    "Temizlik Kovaları, Arabaları ve Organizasyon Ekipmanları",
+    "Temizlik Kovaları"
+   ]
+  },
+  {
+   "ad": "Ayakkabılık",
+   "adres": "ayakkabilik-cd6720c5",
+   "sayi": 5,
+   "yol": [
+    "Mobilya",
+    "Ev Mobilyası",
+    "Antre ve Koridor Mobilyası"
+   ]
+  },
+  {
+   "ad": "Kesim Tahtası",
+   "adres": "kesim-tahtasi-610ba6f4",
+   "sayi": 5,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Mutfak Gereçleri"
+   ]
+  },
+  {
+   "ad": "Sofra ve Servis",
+   "adres": "sofra-ve-servis-4c7726ae",
+   "sayi": 5,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası"
+   ]
+  },
+  {
+   "ad": "Kavanoz",
+   "adres": "kavanoz-699b416c",
+   "sayi": 4,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Mutfak Düzeni"
+   ]
+  },
+  {
+   "ad": "Çamaşır Kurutma Gereçleri",
+   "adres": "camasir-kurutma-gerecleri-8b075d5f",
+   "sayi": 4,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Banyo ve Çamaşır Gereçleri"
+   ]
+  },
+  {
+   "ad": "Kamp ve Piknik Mobilyası",
+   "adres": "kamp-ve-piknik-mobilyasi-3593b752",
+   "sayi": 3,
+   "yol": [
+    "Mobilya"
+   ]
+  },
+  {
+   "ad": "Çocuk Sandalyesi",
+   "adres": "cocuk-sandalyesi-ae716230",
+   "sayi": 3,
+   "yol": [
+    "Mobilya",
+    "Ev Mobilyası",
+    "Çocuk ve Bebek Mobilyası",
+    "Çocuk Odası Mobilyası"
+   ]
+  },
+  {
+   "ad": "Doğrayıcı ve Dilimleyici",
+   "adres": "dograyici-ve-dilimleyici-7e334d02",
+   "sayi": 3,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Mutfak Gereçleri"
+   ]
+  },
+  {
+   "ad": "Kamp Piknik Masası",
+   "adres": "kamp-piknik-masasi-bca56e68",
+   "sayi": 2,
+   "yol": [
+    "Mobilya",
+    "Kamp ve Piknik Mobilyası"
+   ]
+  },
+  {
+   "ad": "Sıvı ve Köpük Sabunluk",
+   "adres": "sivi-ve-kopuk-sabunluk-0770cca2",
+   "sayi": 2,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Banyo ve Çamaşır Gereçleri",
+    "Sabunluk"
+   ]
+  },
+  {
+   "ad": "Yatak Odası Mobilyası",
+   "adres": "yatak-odasi-mobilyasi-21c98d8a",
+   "sayi": 2,
+   "yol": [
+    "Mobilya",
+    "Ev Mobilyası"
+   ]
+  },
+  {
+   "ad": "Faraş",
+   "adres": "faras-a6d34c7b",
+   "sayi": 2,
+   "yol": [
+    "Temizlik ve Hijyen Ürünleri",
+    "Mop, Süpürme ve Zemin Temizlik Araçları",
+    "Süpürme Araçları"
+   ]
+  },
+  {
+   "ad": "Sürahi",
+   "adres": "surahi-d8285bc0",
+   "sayi": 2,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Sofra ve Servis"
+   ]
+  },
+  {
+   "ad": "Elek Zımpara",
+   "adres": "elek-zimpara-f3d08159",
+   "sayi": 1,
+   "yol": [
+    "Hırdavat",
+    "Kesici, Delici Ve Aşındırıcı Sarf Malzemeleri",
+    "Zımpara Ürünleri",
+    "Zımpara Kağıdı"
+   ]
+  },
+  {
+   "ad": "Zemin Kaplama ve Zemin Yapı Malzemeleri",
+   "adres": "zemin-kaplama-ve-zemin-yapi-malzemeleri-548bba06",
+   "sayi": 1,
+   "yol": [
+    "İnşaat ve Yapı Malzemeleri"
+   ]
+  },
+  {
+   "ad": "Makyaj Organizeri",
+   "adres": "makyaj-organizeri-d8bdb665",
+   "sayi": 1,
+   "yol": [
+    "Kozmetik, Makyaj ve Kişisel Bakım",
+    "Makyaj",
+    "Makyaj Aksesuarları"
+   ]
+  },
+  {
+   "ad": "Bahçe Depolama Mobilyası",
+   "adres": "bahce-depolama-mobilyasi-12d6f2aa",
+   "sayi": 1,
+   "yol": [
+    "Mobilya",
+    "Bahçe ve Dış Mekan Mobilyası"
+   ]
+  },
+  {
+   "ad": "Çocuk Masası",
+   "adres": "cocuk-masasi-dcf7f792",
+   "sayi": 1,
+   "yol": [
+    "Mobilya",
+    "Ev Mobilyası",
+    "Çocuk ve Bebek Mobilyası",
+    "Çocuk Odası Mobilyası"
+   ]
+  },
+  {
+   "ad": "Bardak",
+   "adres": "bardak-e9d58431",
+   "sayi": 1,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Sofra ve Servis"
+   ]
+  },
+  {
+   "ad": "Kamp Piknik Taburesi",
+   "adres": "kamp-piknik-taburesi-f57a643f",
+   "sayi": 1,
+   "yol": [
+    "Mobilya",
+    "Kamp ve Piknik Mobilyası"
+   ]
+  },
+  {
+   "ad": "Ekmek Kutusu",
+   "adres": "ekmek-kutusu-974f4b52",
+   "sayi": 1,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Mutfak Düzeni"
+   ]
+  },
+  {
+   "ad": "Salon ve Oturma Odası Mobilyası",
+   "adres": "salon-ve-oturma-odasi-mobilyasi-ce4ac775",
+   "sayi": 1,
+   "yol": [
+    "Mobilya",
+    "Ev Mobilyası"
+   ]
+  },
+  {
+   "ad": "Masaüstü Düzenleme",
+   "adres": "masaustu-duzenleme-0a5352ea",
+   "sayi": 1,
+   "yol": [
+    "Kırtasiye ve Ofis Sarf Malzemeleri"
+   ]
+  },
+  {
+   "ad": "Bahçe ve Dış Mekan Mobilyası",
+   "adres": "bahce-ve-dis-mekan-mobilyasi-57f4645a",
+   "sayi": 1,
+   "yol": [
+    "Mobilya"
+   ]
+  },
+  {
+   "ad": "Peçetelik",
+   "adres": "pecetelik-e9529323",
+   "sayi": 1,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Sofra ve Servis"
+   ]
+  },
+  {
+   "ad": "Tabak",
+   "adres": "tabak-09830521",
+   "sayi": 1,
+   "yol": [
+    "Ev ve Mutfak Gereçleri",
+    "Mutfak Eşyası",
+    "Sofra ve Servis",
+    "Tabak ve Kase"
+   ]
+  }
+ ],
+ "markalar": [
+  {
+   "ad": "Özgen Plastik",
+   "adres": "ozgen-plastik",
+   "sayi": 18
+  }
+ ],
+ "aramalar": {
+  "saklama kabı": 356,
+  "çöp kovası": 86,
+  "elbise askısı": 20,
+  "temizlik fırçası": 28,
+  "baharatlık": 24,
+  "plastik": 547,
+  "bambu": 57,
+  "paslanmaz": 32,
+  "metal": 24,
+  "akrilik": 13,
+  "silikon": 12,
+  "mikrofiber": 9,
+  "banyo": 369,
+  "mutfak": 300,
+  "otel": 192,
+  "ofis": 138,
+  "kafe": 57,
+  "restoran": 43,
+  "kiler": 44,
+  "kapaklı": 305,
+  "bölmeli": 70,
+  "kilitli": 58,
+  "tekerlekli": 42,
+  "çekmeceli": 30,
+  "pedallı": 28,
+  "katlanır": 18,
+  "şeffaf": 103,
+  "desenli": 94,
+  "krom": 56,
+  "rattan görünümlü": 24,
+  "bambu görünümlü": 12,
+  "mermer desenli": 8,
+  "set": 306,
+  "takım": 78,
+  "3'lü": 80,
+  "4'lü": 51,
+  "2'li": 44,
+  "6'lı": 35,
+  "plastik saklama kabı": 129,
+  "kapaklı saklama kabı": 112,
+  "plastik sepet": 50,
+  "plastik kova": 39,
+  "kilitli saklama kabı": 33,
+  "pedallı çöp kovası": 27,
+  "plastik tabure": 29
+ },
+ "adetler": {
+  "100": 120,
+  "12": 1871
+ },
+ "magazalar": [
+  {
+   "ad": "Acero Home",
+   "adres": "acero-home",
+   "sehir": "",
+   "tur": "Manufacturer",
+   "kurulus": "",
+   "fabrika_m2": "",
+   "urun_sayisi": 378
+  },
+  {
+   "ad": "Alkan Plastik",
+   "adres": "alkan-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "2009",
+   "fabrika_m2": "",
+   "urun_sayisi": 52
+  },
+  {
+   "ad": "Asel Elektrik",
+   "adres": "asel-elektrik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "1985",
+   "fabrika_m2": "",
+   "urun_sayisi": 32
+  },
+  {
+   "ad": "Avcılar Plastik",
+   "adres": "avcilar-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "1989",
+   "fabrika_m2": "",
+   "urun_sayisi": 91
+  },
+  {
+   "ad": "Bursev Plastik",
+   "adres": "bursev-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "1982",
+   "fabrika_m2": "30000",
+   "urun_sayisi": 387
+  },
+  {
+   "ad": "Çankaya Plastik",
+   "adres": "cankaya-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "",
+   "fabrika_m2": "16000",
+   "urun_sayisi": 242
+  },
+  {
+   "ad": "Çetin Plastik",
+   "adres": "cetin-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "1988",
+   "fabrika_m2": "15000",
+   "urun_sayisi": 230
+  },
+  {
+   "ad": "Egemen Plastik",
+   "adres": "egemen-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "2002",
+   "fabrika_m2": "",
+   "urun_sayisi": 90
+  },
+  {
+   "ad": "Harman Hırdavat",
+   "adres": "harman-hirdavat",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "",
+   "fabrika_m2": "",
+   "urun_sayisi": 0
+  },
+  {
+   "ad": "Kastamonu Plastik",
+   "adres": "kastamonu-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "1980",
+   "fabrika_m2": "30.000",
+   "urun_sayisi": 239
+  },
+  {
+   "ad": "Lalezar Mutfak Eşyaları",
+   "adres": "lalezar-mutfak-esyalari",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "",
+   "fabrika_m2": "",
+   "urun_sayisi": 0
+  },
+  {
+   "ad": "Moi Plastik",
+   "adres": "moi-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "",
+   "fabrika_m2": "",
+   "urun_sayisi": 47
+  },
+  {
+   "ad": "Mugiss",
+   "adres": "mugiss",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "2009",
+   "fabrika_m2": "",
+   "urun_sayisi": 37
+  },
+  {
+   "ad": "Özgen Plastik",
+   "adres": "ozgen-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "1961",
+   "fabrika_m2": "",
+   "urun_sayisi": 18
+  },
+  {
+   "ad": "Solingen Bıçak",
+   "adres": "solingen-bicak",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "",
+   "fabrika_m2": "",
+   "urun_sayisi": 15
+  },
+  {
+   "ad": "Thoptan",
+   "adres": "thoptan",
+   "sehir": "İstanbul",
+   "tur": "Wholesaler",
+   "kurulus": "2021",
+   "fabrika_m2": "",
+   "urun_sayisi": 1
+  },
+  {
+   "ad": "Timex Plastik",
+   "adres": "timex-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "",
+   "fabrika_m2": "",
+   "urun_sayisi": 98
+  },
+  {
+   "ad": "Urve Plastik",
+   "adres": "urve-plastik",
+   "sehir": "İstanbul",
+   "tur": "Manufacturer",
+   "kurulus": "2003",
+   "fabrika_m2": "2500",
+   "urun_sayisi": 455
+  }
+ ],
+ "sayfalar": {
+  "/": {
+   "durum": 200,
+   "son": "/"
+  },
+  "/urunler": {
+   "durum": 200,
+   "son": "/urunler"
+  },
+  "/ureticiler": {
+   "durum": 200,
+   "son": "/ureticiler"
+  },
+  "/kategoriler": {
+   "durum": 200,
+   "son": "/kategoriler"
+  },
+  "/firsatlar": {
+   "durum": 200,
+   "son": "/firsatlar"
+  },
+  "/cok-satanlar": {
+   "durum": 200,
+   "son": "/cok-satanlar"
+  },
+  "/cok-satanlar/kategori": {
+   "durum": 200,
+   "son": "/cok-satanlar/kategori"
+  },
+  "/ticaret-guvencesi": {
+   "durum": 200,
+   "son": "/ticaret-guvencesi"
+  },
+  "/ticaret-guvencesi-detay": {
+   "durum": 200,
+   "son": "/ticaret-guvencesi-detay"
+  },
+  "/odeme-secenekleri": {
+   "durum": 200,
+   "son": "/odeme-secenekleri"
+  },
+  "/kargo-lojistik": {
+   "durum": 200,
+   "son": "/kargo-lojistik"
+  },
+  "/satis-sonrasi": {
+   "durum": 200,
+   "son": "/satis-sonrasi"
+  },
+  "/iade-politikasi": {
+   "durum": 200,
+   "son": "/iade-politikasi"
+  },
+  "/iade-kosullari": {
+   "durum": 200,
+   "son": "/iade-kosullari"
+  },
+  "/yardim-merkezi": {
+   "durum": 200,
+   "son": "/yardim-merkezi"
+  },
+  "/yardim/merkez": {
+   "durum": 200,
+   "son": "/yardim/merkez"
+  },
+  "/sss": {
+   "durum": 200,
+   "son": "/sss"
+  },
+  "/satici-ol": {
+   "durum": 200,
+   "son": "/satici-ol"
+  },
+  "/satici-hizmet-sozlesmesi": {
+   "durum": 200,
+   "son": "/satici-hizmet-sozlesmesi"
+  },
+  "/urun-listeleme-kurallari": {
+   "durum": 200,
+   "son": "/urun-listeleme-kurallari"
+  },
+  "/erisilebilirlik": {
+   "durum": 200,
+   "son": "/erisilebilirlik"
+  },
+  "/kullanim-kosullari": {
+   "durum": 200,
+   "son": "/kullanim-kosullari"
+  },
+  "/gizlilik": {
+   "durum": 200,
+   "son": "/gizlilik"
+  },
+  "/cerezler": {
+   "durum": 200,
+   "son": "/cerezler"
+  },
+  "/panel/": {
+   "durum": 200,
+   "son": "/panel/"
+  },
+  "/hesabim/siparisler": {
+   "durum": 200,
+   "son": "/hesabim/siparisler"
+  },
+  "/hesabim/mesajlar": {
+   "durum": 200,
+   "son": "/hesabim/mesajlar"
+  },
+  "/destek/taleplerim": {
+   "durum": 200,
+   "son": "/destek/taleplerim"
+  },
+  "/destek/yeni": {
+   "durum": 200,
+   "son": "/destek/yeni"
+  },
+  "/pages/dashboard/rfq.html": {
+   "durum": 200,
+   "son": "/pages/dashboard/rfq.html"
+  },
+  "/pages/dashboard/kyc.html": {
+   "durum": 200,
+   "son": "/pages/dashboard/kyc.html"
+  },
+  "/pages/cart.html": {
+   "durum": 200,
+   "son": "/pages/cart.html"
+  },
+  "/pages/auth/login.html": {
+   "durum": 200,
+   "son": "/pages/auth/login.html"
+  },
+  "/pages/auth/register.html": {
+   "durum": 200,
+   "son": "/pages/auth/register.html"
+  }
+ }
+}

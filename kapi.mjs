@@ -35,6 +35,8 @@ const BORDER_OK = /^(0|none|transparent|(\d*\.?\d+px )?(solid )?var\(--(field-li
 const LOCAL_VAR = /^--(bleed|fade|dock|i|x|w|p|size|pos|focus-bg|focus-fg)$/;
 // Küçülten ölçek yalnız simge, görsel ve süs çubuğunda kullanılır. Metni küçültmek için kullanılamaz.
 const SCALE_OK = /(\ssvg|\simg|\.i-(on|off)|__fill|__bar)$/;
+// Ubuntu ailesinin kalınlıkları
+const WEIGHTS = ["300", "400", "500", "700"];
 const NAMED_ORANGE = /\b(orange|darkorange|orangered|coral|tomato|gold|goldenrod|darkgoldenrod|chocolate|sandybrown|peru|sienna|salmon|lightsalmon|darksalmon)\b/i;
 
 // Virgülle ayrılmış değeri üst düzey parçalara böler. Parantez içindeki virgül ayırmaz.
@@ -167,10 +169,12 @@ function checkCss(source) {
         if (prop === "filter") fail("odak", r.selector, "odakta filter yasak");
       }
 
-      // 4. Metin: en küçük boyut 14 CSS px, en ince ağırlık 300, font Outfit
+      // 4. Metin: en küçük boyut 14 CSS px, font Ubuntu. Ubuntu ailesinde dört kalınlık vardır: 300, 400, 500 ve 700.
+      //    Ara bir değer (örneğin 600) yazılırsa tarayıcı onu sessizce 700'e yuvarlar. Bu yüzden ara değer reddedilir.
       if (prop === "font" && value !== "inherit") fail("metin", r.selector, `font kısaltması denetlenemez: ${value}`);
       if (prop === "font-family" && !/^(var\(--font\)|inherit|ui-monospace, "SF Mono", Menlo, monospace)$/.test(value)) fail("metin", r.selector, `font-family tokenı kullanılmalı: ${value}`);
-      if (prop === "--font" && !/^"Outfit"/.test(value)) fail("metin", r.selector, "font ailesi Outfit ile başlamalı");
+      if (prop === "--font" && !/^"Ubuntu"/.test(value)) fail("metin", r.selector, "font ailesi Ubuntu ile başlamalı");
+      if (/^--w-/.test(prop) && !WEIGHTS.includes(value)) fail("metin", r.selector, `kalınlık tokenı Ubuntu ailesinde yok: ${prop}: ${value}`);
       if (prop === "font-size" || /^--t-/.test(prop)) {
         const first = value.startsWith("clamp(") ? value.slice(6).split(",")[0].trim() : value;
         if (!/^(inherit|var\(--t-[a-z0-9]+\))$/.test(first)) {
@@ -179,7 +183,7 @@ function checkCss(source) {
           else if (parseFloat(m[1]) * (m[2] === "rem" ? 16 : 1) < 14) fail("metin", r.selector, `${prop}: ${value} 14 px altında`);
         }
       }
-      if (prop === "font-weight" && !/^(inherit|normal|bold|var\(--[a-z0-9-]+\))$/.test(value) && !(parseFloat(value) >= 300)) fail("metin", r.selector, `font-weight: ${value}`);
+      if (prop === "font-weight" && !/^(inherit|normal|bold|var\(--w-[a-z]+\))$/.test(value) && !WEIGHTS.includes(value)) fail("metin", r.selector, `font-weight: ${value}`);
       // Metin, ölçekle ya da yakınlaştırmayla dolaylı yoldan küçültülemez.
       if (prop === "zoom") fail("metin", r.selector, "zoom yasak");
       if (/text-size-adjust$/.test(prop) && value !== "100%") fail("metin", r.selector, `${prop}: ${value}`);
@@ -304,7 +308,7 @@ function checkJs(js, scriptCopy) {
 }
 
 // Ana sayfa (index.html)
-function checkHtml(html, yayin, ledger, classes) {
+function checkHtml(html, yayin, ledger, classes, site) {
   const f = "index.html";
   const fails = [];
   const fail = (rule, where, detail) => fails.push({ rule, where, detail });
@@ -315,13 +319,14 @@ function checkHtml(html, yayin, ledger, classes) {
   if (/<select\b/.test(html)) fail("açılır menü", f, "native select yasak");
   for (const m of html.matchAll(/style="([^"]*)"/g)) {
     for (const part of m[1].split(";").map((x) => x.trim()).filter(Boolean)) {
-      if (!/^(--i:\d+|view-transition-name:[a-z0-9-]+)$/.test(part)) fail("satır içi stil", f, part);
+      // İzinli satır içi değerler: sıra (--i), geçiş adı ve veriden gelen oran (--p, 0 ile 1 arası).
+      if (!/^(--i:\d+|view-transition-name:[a-z0-9-]+|--p:(0|1|[01]?\.\d+))$/.test(part)) fail("satır içi stil", f, part);
     }
   }
   if (/<style\b/.test(html)) fail("satır içi stil", f, "sayfada stil bloğu yasak");
   for (const m of html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)) {
     const href = (m[0].match(/href="([^"]*)"/) || [])[1] || "";
-    if (href !== "styles.css" && !href.startsWith("https://fonts.googleapis.com/css2?family=Outfit")) fail("satır içi stil", f, `ek stil dosyası: ${href}`);
+    if (href !== "styles.css" && !href.startsWith("https://fonts.googleapis.com/css2?family=Ubuntu:")) fail("satır içi stil", f, `ek stil dosyası: ${href}`);
   }
   const BAD_MARK = /[;—–→←↑↓⇒]/;
   if (BAD_MARK.test(strip(html))) fail("yazım", f, "noktalı virgül, çizgi ya da ok işareti");
@@ -351,7 +356,44 @@ function checkHtml(html, yayin, ledger, classes) {
   }
   // Menü öğeleri: kategori menüsü gerçek bağlantılardan oluşur.
   if (count(/class="mega__cat"/g) < 8) fail("menü", f, `üst kategori sayısı ${count(/class="mega__cat"/g)}`);
-  if (count(/<a (class="[^"]*" )?href="https:\/\/istoc\.com\/urunler\?category=/g) < 60) fail("menü", f, "kategori bağlantısı az");
+  if (count(/<a (class="[^"]*" )?href="https:\/\/istoc\.com\/kategori\//g) < 60) fail("menü", f, "kategori bağlantısı az");
+  // Dizin: programatik arama motoru stratejileri. Her grup bir başlık ve en az üç bağlantı taşır.
+  // Sayısı olan bağlantıda sayı yazıyla da durur. Çubuk tek başına bilgi taşımaz.
+  const groups = [...html.matchAll(/<details class="dgroup"[\s\S]*?<\/details>/g)].map((m) => m[0]);
+  if (groups.length < 6) fail("dizin", f, `dizin grubu sayısı ${groups.length}`);
+  for (const g of groups) {
+    const links = (g.match(/class="dlink"/g) || []).length;
+    const title = (g.match(/<h3>([^<]*)<\/h3>/) || [])[1] || "adsız";
+    if (!/<h3>[^<]+<\/h3>/.test(g)) fail("dizin", f, "dizin grubunun başlığı yok");
+    if (links < 3) fail("dizin", f, `dizin grubunda bağlantı az: ${title} (${links})`);
+    if ((g.match(/dlink__bar/g) || []).length !== (g.match(/dlink__n/g) || []).length) fail("dizin", f, `sayısı yazmayan çubuk: ${title}`);
+  }
+  if (count(/class="dlink"/g) < 30) fail("dizin", f, `dizin bağlantısı az: ${count(/class="dlink"/g)}`);
+  // Alt bölüm: bağlantı sütunları, ödeme yöntemleri ve tercih grupları. Her tercih grubunda tek seçenek seçilidir.
+  if (count(/<details class="fgroup"/g) < 8) fail("alt bölüm", f, `bağlantı sütunu az: ${count(/<details class="fgroup"/g)}`);
+  if (count(/<li class="ptile"[^>]*><span class="picto/g) < 4) fail("alt bölüm", f, "ödeme yöntemi piktogramsız ya da az");
+  const prefs = [...html.matchAll(/role="radiogroup"[^>]*>([\s\S]*?)<\/div>/g)].map((m) => m[1]);
+  if (prefs.length !== 2) fail("tercih", f, `tercih grubu sayısı ${prefs.length}`);
+  for (const p of prefs) {
+    const on = (p.match(/aria-checked="true"/g) || []).length;
+    const zero = (p.match(/tabindex="0"/g) || []).length;
+    if (on !== 1 || zero !== 1) fail("tercih", f, `grupta seçili seçenek sayısı ${on}, klavye durağı ${zero}`);
+  }
+  // Bağlantılar: sayfadaki her istoc.com adresi ya açıldığı denetlenmiş bir sayfadır ya da veride var olan bir kayıttır.
+  if (site) {
+    const pages = new Set(Object.entries(site.sayfalar).filter(([, v]) => v.durum === 200).map(([p]) => p.replace(/\/$/, "")));
+    for (const m of html.matchAll(/(?:href|action|data-urun|data-uretici)="(https:\/\/istoc\.com[^"]*)"/g)) {
+      const u = new URL(m[1].replace(/&amp;/g, "&"));
+      const path = decodeURIComponent(u.pathname).replace(/\/$/, "");
+      const part = path.split("/")[2];
+      const ok = path.startsWith("/kategori/") ? site.kategori.has(part)
+        : path.startsWith("/urun/") ? site.urun.has(part)
+        : path.startsWith("/magaza/") ? site.magaza.has(part)
+        : path.startsWith("/marka/") ? site.marka.has(part)
+        : pages.has(path) && [...u.searchParams.keys()].every((k) => path === "/urunler" && ["q", "sort", "min_order"].includes(k));
+      if (!ok) fail("bağlantı", f, `açıldığı denetlenmemiş adres: ${m[1].slice(0, 70)}`);
+    }
+  }
   // Arama motoru için ana sayfa yapısı
   const title = pick(/<title>([^<]*)<\/title>/);
   const desc = pick(/<meta name="description" content="([^"]*)"/);
@@ -417,6 +459,17 @@ const htmlSource = readFileSync(join(here, "index.html"), "utf8");
 const ledgerSource = JSON.parse(readFileSync(join(here, "data", "kaynaklar.json"), "utf8"));
 const classSource = JSON.parse(readFileSync(join(here, "data", "metin.json"), "utf8"));
 const yayin = flags.has("--yayin");
+// Bağlantı denetiminin dayanağı: açıldığı denetlenen sayfalar ve veride var olan kayıtlar (veri.py yazar).
+const readData = (name) => JSON.parse(readFileSync(join(here, "data", name), "utf8"));
+const dizinData = readData("dizin.json");
+const catData = readData("kategoriler.json");
+const siteSource = {
+  sayfalar: dizinData.sayfalar,
+  kategori: new Set([...catData.flatMap((c) => [c.slug, ...c.children.flatMap((k) => [k.slug, ...k.children.map((g) => g.slug)])]), ...dizinData.urun_gruplari.map((g) => g.adres)]),
+  urun: new Set(Object.keys(readData("ana-sayfa.json").urunler)),
+  magaza: new Set(dizinData.magazalar.map((m) => m.adres)),
+  marka: new Set(dizinData.markalar.map((b) => b.adres)),
+};
 
 if (flags.has("--sinama")) {
   // Kapı kendini sınar. Önce temiz kaynak geçmelidir. Sonra her ihlal örneği beklenen kuralla reddedilmelidir.
@@ -437,6 +490,9 @@ if (flags.has("--sinama")) {
     ["font kısaltması", ".b7 { font: 500 11px/1 Arial; }", "metin"],
     ["çözümlenemeyen yazı boyutu", ".b8 { font-size: min(1rem, 3vw); }", "metin"],
     ["300 altı yazı ağırlığı", ".b9 { font-weight: 200; }", "metin"],
+    ["Ubuntu ailesinde olmayan ara kalınlık", ".b12 { font-weight: 600; }", "metin"],
+    ["kalınlık tokenı ara değerde", ":root { --w-ara: 600; }", "metin"],
+    ["yazı tipi Ubuntu değil", ':root { --font: "Outfit", sans-serif; }', "metin"],
     ["odakta kenarlık rengi", ".b10:focus-within { border-color: blue; }", "odak"],
     ["odakta çevreleyen sözde öğe", '.b11:focus-visible::after { content: ""; position: absolute; inset: 0; }', "odak"],
     // İkinci incelemenin bulduğu kör noktalar
@@ -491,6 +547,12 @@ if (flags.has("--sinama")) {
     ["etikette noktalı virgül", '<button aria-label="Kaydedin; kapatın">x</button>', "yazım"],
     ["metinde ok işareti", "<p>Ürün → sepet</p>", "yazım"],
     ["metinde kısa çizgi", "<p>Ürün – sepet</p>", "yazım"],
+    // Beşinci sürümün yeni kuralları
+    ["izinsiz satır içi oran", '<a href="./" style="--p:2">Ana sayfa</a>', "satır içi stil"],
+    ["bağlantısız dizin grubu", '<details class="dgroup"><summary><h3>Dizin</h3></summary><ul></ul></details>', "dizin"],
+    ["açıldığı denetlenmemiş adres", '<a href="https://istoc.com/olmayan-sayfa">Ana sayfa</a>', "bağlantı"],
+    ["veride olmayan mağaza adresi", '<a href="https://istoc.com/magaza/olmayan-magaza">Ana sayfa</a>', "bağlantı"],
+    ["izinsiz adres değişkeni", '<a href="https://istoc.com/urunler?max_price=1">Ana sayfa</a>', "bağlantı"],
     // Dördüncü incelemenin bulduğu boşluk: şablona eklenen kaynaksız cümle
     ["sınıfı bilinmeyen cümle", "<p>iStoc bölgenin en büyük toptan pazaryeridir.</p>", "olgu"],
     ["sınıfı bilinmeyen başlık", "<h3>En düşük fiyat garantisi</h3>", "olgu"],
@@ -498,7 +560,7 @@ if (flags.has("--sinama")) {
     ["sayısı değişmiş kaynaklı cümle", "<p>Başvuru 9 dakika sürer</p>", "olgu"],
   ];
   const lines = [];
-  const base = [...checkCss(cssSource).fails, ...checkJs(jsSource, classSource.betik), ...checkHtml(htmlSource, yayin, ledgerSource, classSource)];
+  const base = [...checkCss(cssSource).fails, ...checkJs(jsSource, classSource.betik), ...checkHtml(htmlSource, yayin, ledgerSource, classSource, siteSource)];
   if (base.length) lines.push(`FAIL temiz kaynak reddedildi: ${base.length} ihlal. Önce "node kapi.mjs" çıktısını düzeltin.`);
   let caught = 0;
   for (const [name, snippet, rule] of cssCases) {
@@ -510,12 +572,12 @@ if (flags.has("--sinama")) {
     if (ok) caught++; else lines.push(`FAIL kapı kaçırdı [${rule}] ${name}: ${snippet}`);
   }
   for (const [name, snippet, rule] of htmlCases) {
-    const ok = checkHtml(htmlSource.replace("</main>", snippet + "</main>"), yayin, ledgerSource, classSource).some((x) => x.rule === rule);
+    const ok = checkHtml(htmlSource.replace("</main>", snippet + "</main>"), yayin, ledgerSource, classSource, siteSource).some((x) => x.rule === rule);
     if (ok) caught++; else lines.push(`FAIL kapı kaçırdı [${rule}] ${name}: ${snippet}`);
   }
   // Kaynak sınıfına kanıtsız eklenen cümle de reddedilmelidir.
   const forged = { ...classSource, kaynak: [...classSource.kaynak, "Kanıtı olmayan cümle."] };
-  if (checkHtml(htmlSource, yayin, ledgerSource, forged).some((x) => x.rule === "olgu")) caught++;
+  if (checkHtml(htmlSource, yayin, ledgerSource, forged, siteSource).some((x) => x.rule === "olgu")) caught++;
   else lines.push("FAIL kapı kaçırdı [olgu] kaynak sınıfına kanıtsız eklenen cümle");
   const ledgerCases = [
     ["kaynağında bulunamayan cümle", { ...ledgerSource, iddialar: [{ ...ledgerSource.iddialar[0], bulundu: false }] }],
@@ -523,17 +585,21 @@ if (flags.has("--sinama")) {
     ["günü olmayan kanıt defteri", { ...ledgerSource, alindi: "" }],
   ];
   for (const [name, bad] of ledgerCases) {
-    const ok = checkHtml(htmlSource, yayin, bad, classSource).some((x) => x.rule === "olgu");
+    const ok = checkHtml(htmlSource, yayin, bad, classSource, siteSource).some((x) => x.rule === "olgu");
     if (ok) caught++; else lines.push(`FAIL kapı kaçırdı [olgu] ${name}`);
   }
-  const total = cssCases.length + jsCases.length + htmlCases.length + ledgerCases.length + 1;
+  // Tercih grubunda iki seçenek birden seçili olamaz.
+  const twoOn = htmlSource.replace('aria-checked="false"', 'aria-checked="true"');
+  if (twoOn !== htmlSource && checkHtml(twoOn, yayin, ledgerSource, classSource, siteSource).some((x) => x.rule === "tercih")) caught++;
+  else lines.push("FAIL kapı kaçırdı [tercih] grupta iki seçili seçenek");
+  const total = cssCases.length + jsCases.length + htmlCases.length + ledgerCases.length + 2;
   if (lines.length) console.log(lines.join("\n"));
   console.log(`Kapı sınaması: ${total} ihlal örneğinden ${caught} tanesi reddedildi. Sonuç: ${lines.length ? "FAIL" : "PASS"}`);
   process.exit(lines.length ? 1 : 0);
 }
 
 const cssResult = checkCss(cssSource);
-const fails = [...cssResult.fails, ...checkJs(jsSource, classSource.betik), ...checkHtml(htmlSource, yayin, ledgerSource, classSource)];
+const fails = [...cssResult.fails, ...checkJs(jsSource, classSource.betik), ...checkHtml(htmlSource, yayin, ledgerSource, classSource, siteSource)];
 const kind = yayin ? "yayın" : "önizleme";
 if (fails.length) {
   console.log(fails.map((x) => `FAIL [${x.rule}] ${x.where}: ${x.detail}`).join("\n"));

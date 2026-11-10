@@ -3,9 +3,12 @@
 <div class="util on-ink">
   <div class="wrap util__in">
     <ul class="util__l">
-      <li><a href="#dil">{{i_kure}}<span data-dil-deger data-veri>Türkçe, USD</span></a></li>
+      <li><a href="#dil">{{i_kure}}<span data-tercih-deger data-veri>{{tercih}}</span></a></li>
+      <!-- Güven bilgisi sayfanın en başında durur. Sayı veriden gelir. -->
+      <li class="util__fact">{{i_onayli}}<span>{{n_verified}} doğrulanmış mağaza</span></li>
     </ul>
     <ul class="util__r">
+      <li><a href="{{u}}/panel/">Satıcı Merkezi</a></li>
       <li><a href="{{u}}/hesabim/siparisler">Sipariş takibi</a></li>
       <li><a href="{{u}}/ticaret-guvencesi">Ticaret güvencesi</a></li>
       <li><a href="{{u}}/yardim-merkezi">Yardım Merkezi</a></li>
@@ -13,7 +16,7 @@
   </div>
 </div>
 
-<!-- Ana satır: logo, arama, hesap eylemleri, teklif isteği. -->
+<!-- Ana satır: logo, arama, hesap eylemleri, teklif isteği. Altında sayfanın neresinde olunduğunu gösteren çubuk durur. -->
 <header class="header" data-search="off">
   <div class="wrap header__main">
     <a class="logo" href="./" aria-label="iStoc ana sayfa"><img src="img/logo.png" alt="iStoc" width="87" height="32"></a>
@@ -32,6 +35,7 @@
       <a class="btn btn--brand btn--sm header__cta" href="#teklif">Teklif isteyin</a>
     </nav>
   </div>
+  <span class="header__bar" aria-hidden="true" data-progress></span>
 </header>
 
 <!-- Gezinme satırı: kategori menüsü, kayan bölüm bağlantıları, sabit satıcı bağlantısı. -->
@@ -50,6 +54,8 @@
           <div class="mega__foot">
             <p>{{n_cats}} üst kategori ve {{n_child}} alt kategori var.</p>
             <a class="lnk" href="{{u}}/kategoriler"><span>{{n_cats}} kategorinin tümü</span>{{i_ok18}}</a>
+            <!-- Menüde aradığını bulamayan ziyaretçi huniden çıkmaz, teklif isteğine gider. -->
+            <p class="mega__ask">Aradığınızı bulamadınız mı?<a class="lnk" href="#teklif" data-mega-kapat><span>Teklif isteyin</span>{{i_ok18}}</a></p>
           </div>
         </nav>
       </div>

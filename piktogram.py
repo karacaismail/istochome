@@ -27,6 +27,12 @@ PICTO = {
     "takip": ("Sipariş takibi", '<path class="f" d="M3 7h11v9H3z"/><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7.5" cy="17.5" r="1.7"/><circle cx="17.5" cy="17.5" r="1.7"/>'),
     "destek": ("Destek", '<rect class="f" x="3.5" y="12.5" width="3.5" height="5.5" rx="1.5"/><rect class="f" x="17" y="12.5" width="3.5" height="5.5" rx="1.5"/><path d="M5 13.5V12a7 7 0 0 1 14 0v1.500"/><rect x="3.5" y="12.5" width="3.5" height="5.5" rx="1.5"/><rect x="17" y="12.5" width="3.5" height="5.5" rx="1.5"/><path d="M18.8 18c0 1.900-1.700 2.800-4.300 2.800"/><circle cx="13.3" cy="20.800" r="1"/>'),
     "iade": ("İade", '<path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4.5 5v4h4"/><path class="f" d="M9.5 10.800 12 9.500l2.500 1.300v3L12 15.100l-2.500-1.300z"/><path d="M9.5 10.800 12 9.500l2.500 1.300v3L12 15.100l-2.500-1.300z"/><path d="M9.5 10.800 12 12.100l2.500-1.300M12 12.100v3"/>'),
+    # Ödeme yöntemleri. Marka logosu kullanılmaz. Piktogram yöntemin türünü gösterir.
+    "banka": ("Banka havalesi (EFT)", '<path class="f" d="M4 9.500 12 4l8 5.500z"/><path d="M4 9.500 12 4l8 5.500z"/><path d="M6.500 12.500v5M10.200 12.500v5M13.800 12.500v5M17.500 12.500v5"/><path d="M3.500 20.500h17"/>'),
+    "cuzdan": ("Dijital cüzdan", '<path class="f" d="M4 7.500h14.500A1.500 1.500 0 0 1 20 9v9.500a1.500 1.500 0 0 1-1.500 1.500h-13A1.500 1.500 0 0 1 4 18.500z"/><path d="M4 7.500V6.300a1.800 1.800 0 0 1 1.800-1.800H17v3"/><path d="M4 7.500h14.500A1.500 1.500 0 0 1 20 9v9.500a1.500 1.500 0 0 1-1.500 1.500h-13A1.500 1.500 0 0 1 4 18.500z"/><circle cx="16" cy="13.800" r="1.200"/>'),
+    "cek": ("Çek ve senet", '<rect class="f" x="3" y="6.500" width="18" height="11" rx="1.800"/><rect x="3" y="6.500" width="18" height="11" rx="1.800"/><path d="M6.500 10.500h6M6.500 14h3"/><path d="M13.500 14.200c1-1.600 1.800-1.600 2.300 0s1.300 1.300 2.200-.400"/>'),
+    "taksit": ("Taksitli ödeme", '<rect class="f" x="4" y="5.500" width="16" height="14.500" rx="2"/><rect x="4" y="5.500" width="16" height="14.500" rx="2"/><path d="M4 10h16M8.500 3.500v4M15.500 3.500v4"/><path d="M8 14.500h.010M12 14.500h.010M16 14.500h.010"/>'),
+    "tek-odeme": ("Tek ödeme", '<path d="M3 6h3.500c3 0 3.500 6 6.500 6M3 18h3.500c3 0 3.500-6 6.500-6M3 12h18M17.500 8.500 21 12l-3.500 3.500"/>'),
     # Ticari koşullar
     "fiyat": ("Birim fiyat", '<path class="f" d="M4 4h7.5L20 12.5 12.5 20 4 11.5z"/><path d="M4 4h7.5L20 12.5 12.5 20 4 11.5z"/><circle cx="8.3" cy="8.3" r="1.3"/>'),
     "adet": ("En az sipariş adedi", '<rect class="f" x="8" y="5" width="8" height="7" rx="1"/><rect x="3.5" y="13" width="8" height="7" rx="1"/><rect x="12.5" y="13" width="8" height="7" rx="1"/><rect x="8" y="5" width="8" height="7" rx="1"/><path d="M7.5 13v2.500M16.500 13v2.500M12 5v2.500"/>'),
@@ -55,6 +61,18 @@ PICTO = {
     "filiz": ("Tarım ve hayvancılık", '<path class="f" d="M12 13c0-3-2-5-6-5 0 3.500 2 5 6 5z"/><path d="M12 21v-8"/><path d="M12 13c0-3-2-5-6-5 0 3.500 2 5 6 5z"/><path d="M12 11c0-3.500 2.500-6 6.500-6 0 4-2.500 6-6.500 6z"/>'),
     "araba": ("Otomotiv", '<path class="f" d="M3.500 17v-4l2-5h13l2 5v4z"/><path d="M3.500 17v-4l2-5h13l2 5v4z"/><path d="M5 12.500h14"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="16.5" cy="17" r="1.6"/>'),
     "kalem": ("Kırtasiye ve ofis", '<path class="f" d="m4 20 1-4L16 5l3 3L8 19z"/><path d="m4 20 1-4L16 5l3 3L8 19zM14 7l3 3"/>'),
+    # Dizin ve içerik türleri
+    "malzeme": ("Malzeme", '<path class="f" d="m12 4 8 4-8 4-8-4z"/><path d="m12 4 8 4-8 4-8-4z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/>'),
+    "kullanim": ("Kullanım yeri", '<circle class="f" cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.500"/><path d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3"/>'),
+    "ozellik": ("Özellik", '<path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle class="f" cx="15" cy="7" r="2"/><circle cx="15" cy="7" r="2"/><circle class="f" cx="9" cy="12" r="2"/><circle cx="9" cy="12" r="2"/><circle class="f" cx="17" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>'),
+    "gorunum": ("Desen ve görünüm", '<rect class="f" x="4" y="4" width="16" height="16" rx="2.500"/><rect x="4" y="4" width="16" height="16" rx="2.500"/><path d="M4.500 12 12 4.500M4.500 19 19 4.500M12 19.500l7.500-7.500"/>'),
+    "matris": ("İki özellik birlikte", '<rect class="f" x="9.500" y="9.500" width="5" height="5"/><rect x="3.500" y="3.500" width="11" height="11" rx="2"/><rect x="9.500" y="9.500" width="11" height="11" rx="2"/>'),
+    "liste": ("Sıralı liste", '<path d="M4.500 6.500h.010M4.500 12h.010M4.500 17.500h.010"/><path d="M9 6.500h11M9 12h8M9 17.500h5"/>'),
+    "rehber": ("Rehber", '<path class="f" d="M3.500 6c3-1 5.500-.800 8.500.800v12c-3-1.600-5.500-1.800-8.500-.800z"/><path d="M12 6.800C9 5.200 6.500 5 3.500 6v12c3-1 5.500-.800 8.500.800 3-1.600 5.500-1.800 8.500-.800V6c-3-1-5.500-.800-8.500.800zM12 6.800v12"/>'),
+    "soru": ("Soru ve yanıt", '<path class="f" d="M4 5h16v11H9.500L5 19.500V16H4z"/><path d="M4 5h16v11H9.500L5 19.500V16H4z"/><path d="M10 9.200a2 2 0 1 1 2.800 1.900c-.500.300-.800.700-.800 1.200M12 14.200v.100"/>'),
+    "dizin": ("Dizin", '<rect class="f" x="8.500" y="3.500" width="7" height="4.500" rx="1"/><rect x="8.500" y="3.500" width="7" height="4.500" rx="1"/><rect x="3" y="15.500" width="6" height="4.500" rx="1"/><rect x="15" y="15.500" width="6" height="4.500" rx="1"/><path d="M12 8v4M6 15.500V12h12v3.500"/>'),
+    "kural": ("Kural ve sözleşme", '<path d="M12 4v16M7.500 20h9M5 7.500h14"/><path class="f" d="M2.500 13.500 5 7.500l2.500 6a2.500 2.500 0 0 1-5 0z"/><path d="M2.500 13.500 5 7.500l2.500 6a2.500 2.500 0 0 1-5 0zM16.500 13.500 19 7.500l2.500 6a2.500 2.500 0 0 1-5 0z"/>'),
+    "arac": ("Araç", '<rect class="f" x="5" y="3" width="14" height="18" rx="2.200"/><rect x="5" y="3" width="14" height="18" rx="2.200"/><path d="M8.500 7h7"/><path d="M8.500 11.500h.010M12 11.500h.010M15.500 11.500h.010M8.500 14.800h.010M12 14.800h.010M15.500 14.800h.010M8.500 18h.010M12 18h.010M15.500 18h.010"/>'),
     # Arayüz simgeleri
     "ara": ("Ara", '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.500-3.500"/>'),
     "sepet": ("Sepet", '<path d="M3 4h2.500l2.200 11h10.600L20.500 7H7"/><circle cx="9.500" cy="19" r="1.400"/><circle cx="17" cy="19" r="1.400"/>'),
@@ -71,6 +89,7 @@ PICTO = {
     "onay": ("Tamam", '<path d="m5 12.500 4.500 4.500L19 7.500"/>'),
     "arti": ("Ekle", '<path d="M12 5v14M5 12h14"/>'),
     "eksi": ("Azalt", '<path d="M5 12h14"/>'),
+    "yukari": ("Başa dön", '<path d="M12 19V5M6 11l6-6 6 6"/>'),
 }
 
 
@@ -108,10 +127,12 @@ def picto(name, size="md", tone=""):
 GROUPS = [
     ("Güven ve doğrulama", ["kalkan", "isletme", "kimlik", "kilit", "gizlilik"]),
     ("Belge ve kayıt", ["belge-yukle", "belge-onay", "kayit", "fatura"]),
-    ("Sipariş süreci", ["teklif", "mesaj", "siparis", "guvenli-odeme", "kart", "takip", "destek", "iade"]),
+    ("Sipariş süreci", ["teklif", "mesaj", "siparis", "guvenli-odeme", "takip", "destek", "iade"]),
+    ("Ödeme yöntemleri", ["kart", "cuzdan", "banka", "cek", "taksit", "tek-odeme"]),
     ("Ticari koşullar", ["fiyat", "adet", "sure", "koli"]),
     ("Taraflar", ["uretici", "magaza", "ekran-carsi"]),
     ("Durum", ["onay-daire", "uyari", "bilgi"]),
+    ("Dizin ve içerik türleri", ["malzeme", "kullanim", "ozellik", "gorunum", "matris", "liste", "rehber", "soru", "dizin", "kural", "arac"]),
     ("Kategoriler", ["tencere", "fincan", "sprey", "bina", "hediye", "simsek", "anahtar", "damla", "alev", "zil", "koltuk", "filiz", "araba", "kalem"]),
 ]
 
@@ -139,8 +160,8 @@ def sheet():
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" lang="tr" xml:lang="tr" width="%d" height="%d" viewBox="0 0 %d %d" role="img" aria-labelledby="t d">'
         '<title id="t">iStoc piktogram seti</title><desc id="d">Her piktogram anlamı ve adıyla birlikte gösterilir.</desc>'
-        "<style>text{font-family:Outfit,system-ui,-apple-system,'Segoe UI',sans-serif;fill:#0a1829}"
-        ".h{font-size:28px;font-weight:600}.s{font-size:16px;fill:#3b4a5d}.g{font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;fill:#255d9d}"
+        "<style>text{font-family:Ubuntu,system-ui,-apple-system,'Segoe UI',sans-serif;fill:#0a1829}"
+        ".h{font-size:28px;font-weight:700}.s{font-size:16px;fill:#3b4a5d}.g{font-size:14px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;fill:#255d9d}"
         ".n{font-size:15px;font-weight:500}.k{font-size:14px;fill:#586679}.f{fill:currentColor;fill-opacity:.16;stroke:none}</style>"
         '<rect width="100%%" height="100%%" fill="#ffffff"/>'
         '<text x="%d" y="%d" class="h">iStoc piktogram seti</text>'

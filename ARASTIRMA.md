@@ -64,7 +64,7 @@ Bu yüzden "turuncu ucuz gösterir" ya da "turuncu güveni düşürür" demiyoru
 4. Başlık vurgusu
 5. Mobil alt menüdeki teklif eylemi
 
-Bir modülde en çok bir turuncu düğme olur. `kapi.mjs` ve `tarayici-testi.mjs` bu kuralı denetler.
+Bir bileşende en çok bir turuncu düğme olur. `kapi.mjs` ve `tarayici-testi.mjs` bu kuralı denetler.
 
 ## 4. Güveni renk ve simge dışında ne kurar?
 
@@ -144,7 +144,8 @@ Bu konuda bağımsız bir terk oranı sayısı bulunamadı.
 | Karşıdaki gerçek bir işletmedir. | Üretici kartında işletme doğrulaması, kuruluş yılı ve şehir yazar. |
 | Söylenen doğrudur. | Sayılar canlı veriden gelir. Sahte sayaç ve uydurma yorum yoktur. |
 | Veri gerektiği kadar istenir. | Teklif isteği yalnız ürünü ve adedi sorar. |
-| Ödemeyi kimin aldığı açıktır. | Sayfa beş yerde şunu yazar: alıcı ödemeyi doğrudan satıcıya yapar. |
+| Ödemeyi kimin aldığı açıktır. | Sayfa iki ödeme yolunu da yazar: doğrudan satıcıya ya da, sunulursa, Thoptan.com'a. |
+| Ödeme doğru hesaba gider. | Sayfa şunu yazar: alıcı yalnız sipariş sayfasında gösterilen hesaba ödeme yapar. |
 | Kilit simgesi boşa harcanmaz. | Kilit yalnız gerçek ödeme ve belge adımında kullanılır. Ana sayfada kilit yoktur. |
 
 ## 5. Piktogramlar
@@ -209,6 +210,9 @@ Bu bölüm bir uyumluluk beyanı değildir. Sayfa ekran okuyucuyla ve gerçek ci
 - ISO, piktogramlar için belirli bir anlaşılırlık yüzdesi ister.
 - "Von Restorff etkisi" az kullanılan rengin dikkat çektiğini kanıtlar. Bu etki dikkatle değil, hatırlamayla ilgilidir.
 - Güven Damgası güveni ya da satışı artırır.
+- Bu sayfadaki bölüm sırası dönüşümü ölçülebilir biçimde artırır. Sıra bir tasarım gerekçesidir, bir deneyle ölçülmedi.
+- Ubuntu yazı tipi güveni artırır. Yazı tipi kullanıcının kararıdır, bir araştırmaya dayanmaz.
+- İşaretçi ışığı ve kart ışığı dönüşümü artırır. Bu etkileşimler ölçülmedi.
 
 ## 9. Kaynaklar
 

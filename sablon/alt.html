@@ -1,32 +1,53 @@
 
-<!-- Alt bölüm: bağlantı sütunları, ticari bilgiler, araçlar, yasal satır. -->
-<footer class="footer on-ink" id="alt">
-  <div class="wrap footer__top">
-    <div class="footer__brand">
-      <img src="img/logo.png" alt="iStoc" width="87" height="32">
-      <p>Global B2B toptan satış ve ticaret pazaryeri.</p>
-      <small>iStoc üreticiyi alıcıyla aracısız buluşturur. Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.</small>
-    </div>
-    {{fgroups}}
-  </div>
+<!-- Alt bölüm. Beş katman: marka ile dil ve para birimi, kişiye göre bağlantılar,
+     içerik türüne göre bağlantılar, ödeme yöntemleri, yasal satır. -->
+<footer class="footer on-ink" id="alt" data-spot>
+  <span class="spot" aria-hidden="true"><i></i></span>
   <div class="wrap">
-    <dl class="footer__facts">
-      <div><dt>Ödeme yöntemleri</dt><dd>{{odeme}}</dd></div>
-      <div><dt>Para birimleri</dt><dd data-veri>{{para_birimleri}}</dd></div>
-      <div><dt>Diller</dt><dd>{{diller}}</dd></div>
-    </dl>
-    <div class="footer__tools">
-      <div class="select" id="dil">
-        <span class="select__label" id="dil-etiket">Dil ve para birimi</span>
-        <button class="select__btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="dil-etiket dil-deger" aria-controls="dil-liste">{{i_kure}}<span id="dil-deger" data-veri>Türkçe, USD</span>{{i_asagi}}</button>
-        <ul class="select__list" id="dil-liste" role="listbox" aria-labelledby="dil-etiket" aria-hidden="true" tabindex="-1">
-          {{langs}}
-        </ul>
-        <!-- Seçici bu öneride yalnız bileşeni gösterir. Sahte bir dil değişimi izlenimi verilmez. -->
-        <p class="select__note">Bu öneride seçim sayfanın dilini değiştirmez.</p>
+    <!-- 1. Marka, sosyal hesaplar, dil ve para birimi -->
+    <div class="footer__lead">
+      <div class="footer__brand">
+        <img src="img/logo.png" alt="iStoc" width="87" height="32">
+        <p>Global B2B toptan satış ve ticaret pazaryeri.</p>
+        <small>iStoc üreticiyi alıcıyla aracısız buluşturur. Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.</small>
+        <div class="socials">{{soc}}</div>
       </div>
-      <div class="socials">{{soc}}</div>
+      <!-- Dil ve para birimi: seçenekler görsel kutulardır. Her grup bir radyo grubudur.
+           Para birimi seçimi sayfadaki fiyatları gerçekten değiştirir. Dil seçimi bu öneride sayfayı çevirmez. -->
+      <div class="prefs" id="dil">
+        <p class="footer__label" id="tercih-baslik">Dil ve para birimi</p>
+        <div class="prefs__group" role="radiogroup" aria-label="Dil" data-tercih="dil">{{dil_tiles}}</div>
+        <div class="prefs__group" role="radiogroup" aria-label="Para birimi" data-tercih="para">{{para_tiles}}</div>
+        <p class="prefs__note">Fiyatlar seçtiğiniz para biriminde gösterilir. Bu öneride dil seçimi sayfanın dilini değiştirmez.</p>
+      </div>
     </div>
+
+    <!-- 2. Kişiye göre bağlantılar -->
+    <nav class="footer__nav" aria-labelledby="kisi-etiket">
+      <p class="footer__label" id="kisi-etiket">Kişiye göre</p>
+      <div class="footer__cols">
+        {{fgroups}}
+      </div>
+    </nav>
+
+    <!-- 3. İçerik türüne göre bağlantılar. Günlük yazısı dışındaki içerik türleri: rehber, soru ve yanıt,
+         liste, dizin, kural ve araç. Her öğe canlı sitede var olan bir sayfaya gider. -->
+    <nav class="footer__nav" aria-labelledby="tur-etiket">
+      <p class="footer__label" id="tur-etiket">İçerik türüne göre</p>
+      <div class="footer__cols footer__cols--types">
+        {{tgroups}}
+      </div>
+      {{planlanan}}
+    </nav>
+
+    <!-- 4. Ödeme yöntemleri -->
+    <div class="footer__pay">
+      <p class="footer__label" id="alt-odeme">Ödeme yöntemleri</p>
+      <ul class="paylist" aria-labelledby="alt-odeme">{{odeme_chips}}</ul>
+      <p class="footer__note">Geçerli yöntemi satıcı belirler.</p>
+    </div>
+
+    <!-- 5. Yasal satır -->
     <div class="footer__legal">
       <p>© 2026 iStoc Private Company Limited. Tüm hakları saklıdır.</p>
       <ul>
@@ -34,6 +55,7 @@
         <li><a href="{{u}}/gizlilik">Gizlilik politikası</a></li>
         <li><a href="{{u}}/cerezler">Çerez tercihleri</a></li>
       </ul>
+      <a class="lnk" href="#icerik"><span>Başa dönün</span>{{i_yukari}}</a>
     </div>
   </div>
 </footer>
@@ -41,7 +63,7 @@
 <!-- Sipariş özeti çubuğu ve mobil alt gezinme -->
 <div class="cartbar on-ink" data-cartbar inert>
   <!-- Sepet bu öneride canlı siteye bağlı değildir. Çubuk bunu açıkça yazar. -->
-  <div><small data-cart-units>Sepetiniz boş</small><b data-cart-total>$0.00</b></div>
+  <div><small data-cart-units>Sepetiniz boş</small><b data-cart-total>{{sifir}}</b></div>
   <a class="btn btn--light btn--sm" href="{{u}}/pages/cart.html">Canlı sepet{{i_ok18}}</a>
   <small class="cartbar__note">Bu sepet bir örnektir. Ürünler canlı sepete eklenmez.</small>
 </div>
