@@ -583,7 +583,7 @@ OP_IMG = dict((s, img) for s, img, _c in URUNLER)[ORNEK_SIPARIS]
 ONERI_NOTU = (
     '<aside class="demo" aria-label="Öneri notu"><div class="wrap demo__in">'
     "<p>Bu sayfa bir tasarım önerisidir.</p>"
-    '<a class="lnk" href="%s/"><span>Canlı siteye gidin</span>%s</a>'
+    '<a class="lnk" href="%s/"><span>istoc.com\'a gidin</span>%s</a>'
     "</div></aside>"
 ) % (U, OK18)
 # --- Planlanan hizmetler ve içerik (yalnız önizleme) -------------------------------
@@ -606,7 +606,7 @@ def degerler_html():
             '<section class="mod band%s" id="%s" aria-labelledby="%s-baslik" data-plan>%s<div class="wrap">%s%s'
             '<ul class="vals" role="list">%s</ul><p class="plan-note">Hizmetlerin koşulları henüz belirlenmedi.</p></div></section>'
             % (" band--tint" if n % 2 else "", sid, sid, surface("nokta" if n % 2 else "ag", 1),
-               head(NO[sid], kicker, sid + "-baslik", title, "Bu hizmetler öneridir. Canlı sitede henüz yoktur."), plan_tag("hizmet"), cards)
+               head(NO[sid], kicker, sid + "-baslik", title, "Bu hizmetler öneridir. Bu hizmetler istoc.com'da henüz yoktur."), plan_tag("hizmet"), cards)
         )
     return "\n".join(out)
 
@@ -645,7 +645,7 @@ def araclar_html():
     return (
         '<section class="mod band band--ink on-ink" id="araclar" aria-labelledby="arac-baslik" data-plan>%s<div class="wrap">%s%s'
         '<div class="tgroups">%s</div><div class="band__cta">%s</div></div></section>'
-    ) % (surface("nokta"), head(NO["araclar"], "Araçlar", "arac-baslik", "Siparişten önce hesabı görün.", "Bu araçlar öneridir. Canlı sitede henüz yoktur."),
+    ) % (surface("nokta"), head(NO["araclar"], "Araçlar", "arac-baslik", "Maliyetinizi, kârınızı ve stok ihtiyacınızı hesaplayın.", "Bu araçlar öneridir. Bu araçlar istoc.com'da henüz yoktur."),
          plan_tag("hizmet"), "".join(groups), lnk("İçerik kütüphanesini görün", "#kutuphane"))
 
 
@@ -657,11 +657,11 @@ def kutuphane_html():
             '<div class="faq__panel libq__panel" id="lib-%d-%d" role="region" aria-labelledby="lib-b%d-%d" data-open="false"><div><p>%s</p></div></div></li>'
             % (n, k, n, k, esc(t), icon("asagi", 18, "chev"), n, k, n, k, esc(d)) for k, (t, d) in enumerate(items, 1)
         )
-        extra = lnk("Hesaplama araçlarına gidin", "#araclar") if name == "Hesaplayıcılar" else ""
+        extra = lnk("Hesaplama araçlarını görün", "#araclar") if name == "Hesaplayıcılar" else ""
         types.append('<div class="lib__type">%s<h3>%s</h3><p class="lib__d">%s</p><ul class="lib__list" role="list">%s</ul>%s</div>' % (picto(p, "sm"), esc(name), esc(desc), rows, extra))
     return (
         '<section class="lib" id="kutuphane" aria-labelledby="lib-baslik" data-plan><div class="lib__head">%s<h2 id="lib-baslik">İçerik kütüphanesi</h2>'
-        '<p class="lib__note">Bu içerikler öneridir. Canlı sitede henüz yoktur. Ayrı sayfaları henüz yoktur.</p></div><div class="lib__grid">%s</div></section>'
+        '<p class="lib__note">Bu içerikler öneridir. Bu içerikler istoc.com\'da henüz yoktur. Her içeriğin kısa açıklaması burada açılır.</p></div><div class="lib__grid">%s</div></section>'
     ) % (plan_tag("icerik"), "".join(types))
 
 
@@ -688,12 +688,12 @@ CTX = {
     "b_araclar": "" if YAYIN else araclar_html(),
     "nav_plan": NAV_PLAN,
     # Alıcının ve satıcının bölümünden araçlara giden kısa yol. Yalnız önizlemede.
-    "arac_alici": "" if YAYIN else lnk("Alıcının hesaplama araçları", "#araclar"),
-    "arac_satici": "" if YAYIN else lnk("Satıcının hesaplama araçları", "#araclar"),
+    "arac_alici": "" if YAYIN else lnk("Hesaplama araçlarını görün", "#araclar"),
+    "arac_satici": "" if YAYIN else lnk("Hesaplama araçlarını görün", "#araclar"),
     # Hareketli yüzeyler
     "s_ag": surface("ag"), "s_ag2": surface("ag", 2), "s_rota": surface("rota"), "s_nokta": surface("nokta"),
     "title": "iStoc: Üreticiden toptan alım | B2B toptan pazaryeri",
-    "description": "Doğrulanmış üreticilerin birim fiyatlarını karşılaştırın. En az sipariş adedini ve hazırlık süresini görün. Teklif isteyin, toptan alımı yerinizden yapın.",
+    "description": "Doğrulanmış üreticilerin birim fiyatlarını karşılaştırın. En az sipariş adedini ve hazırlık süresini görün. Teklif isteyin ve bulunduğunuz yerden alın.",
     "canonical": U + "/",
     # Paylaşım görseli canlı sitedeki görseldir. veri.py açıldığını denetler.
     "og_image": U + GORSELLER["paylasim"],
@@ -721,20 +721,20 @@ CTX = {
     "p_fatura": picto("fatura"), "p_uretici": picto("uretici"), "p_sure": picto("sure"), "p_kalkan": picto("kalkan"),
     "p_odeme": picto("banka"), "p_destek": picto("destek"), "p_sepet": picto("sepet", "sm"), "p_magaza": picto("magaza", "sm"),
     # Bölüm başlıkları
-    "h_alici": head(NO["alici"], "Alıcılar için", "alici-baslik", "Söze değil, kayda güvenin.", "İşletmenizin toptan alımını yerinizden yaparsınız. Altı nedeni var."),
-    "h_kat": head(NO["kat"], "Kategoriler", "kat-baslik", "Sektörünüzü seçin. Üreticiyi bulun.",
+    "h_alici": head(NO["alici"], "Alıcılar için", "alici-baslik", "Sipariş koşullarınızı kayıtta tutun.", "İşletmenizin toptan alımını bulunduğunuz yerden yaparsınız. Buradan almanın altı faydası aşağıda yazıyor."),
+    "h_kat": head(NO["kat"], "Kategoriler", "kat-baslik", "Ürün kategorinizi seçin. O kategorideki ürünleri ve üreticileri bulun.",
                   "%d üst kategori ve %s alt kategori var. Ürünü en çok olan kategoriler önde durur." % (len(CATS), tr_num(N_CHILD)), lnk("%d kategorinin tümü" % len(CATS), U + "/kategoriler")),
-    "h_urun": head(NO["urun"], "Ürünler", "urun-baslik", "Fiyatı sormayın. Kartta yazıyor.",
+    "h_urun": head(NO["urun"], "Ürünler", "urun-baslik", "Fiyatları ve sipariş şartlarını birlikte görün.",
                    # Para birimi yalnız betikle değişir. Betik yoksa bu cümle görünmez.
-                   'Büyük yazan fiyata KDV dahildir. <span class="js-only">Para birimini sayfanın altından değiştirirsiniz.</span>', lnk("%s ürünün tümü" % tr_num(FACTS["urun_toplami"]), U + "/urunler")),
-    "h_uretici": head(NO["uretici"], "Üreticiler", "uretici-baslik", "Kiminle çalıştığınızı bilin.",
+                   'Fiyat sormanıza gerek yok çünkü ürünlerin fiyatları aşağıda yazıyor. Büyük yazan fiyata KDV dahildir. <span class="js-only">Para birimini sayfanın altından değiştirirsiniz.</span>', lnk("%s ürünün tümü" % tr_num(FACTS["urun_toplami"]), U + "/urunler")),
+    "h_uretici": head(NO["uretici"], "Üreticiler", "uretici-baslik", "Çalışacağınız üreticiyi önceden tanıyın.",
                       "iStoc'ta %d mağaza var. %d mağazanın işletme doğrulaması tamamlandı." % (FACTS["magaza_toplami"], FACTS["dogrulanmis_magaza"]), lnk("Tüm üreticiler", U + "/ureticiler")),
     "h_surec": head(NO["surec"], "Sipariş süreci", "surec-baslik", "Her sipariş kayıt altında.",
                     "Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez. Sipariş koşullarınızı iStoc saklar ve siparişinizi teslimata kadar izler.", split=False),
-    "h_sss": head(NO["sss"], "Sık sorulanlar", "sss-baslik", "Sormadan sipariş vermeyin.", link=lnk("Yardım Merkezi", U + "/yardim-merkezi"), split=False),
-    "h_satici": head(NO["satici"], "Satıcılar için", "satici-baslik", "Aracıya pay bırakmayın.", "iStoc sizi toptan alıcıyla doğrudan buluşturur. Şu an satışlardan komisyon alınmaz."),
-    "h_dizin": head(NO["dizin"], "Dizin", "dizin-baslik", "Aradığınıza kısa yoldan gidin.",
-                    "Ürünleri %d ayrı yoldan bulursunuz. Bağlantının yanındaki sayı, canlı sitedeki sonuç sayısıdır." % len(DIZIN)),
+    "h_sss": head(NO["sss"], "Sık sorulanlar", "sss-baslik", "Sipariş vermeden önce sorularınıza yanıt bulun.", link=lnk("Yardım Merkezi", U + "/yardim-merkezi"), split=False),
+    "h_satici": head(NO["satici"], "Satıcılar için", "satici-baslik", "Ürünlerinizi doğrudan alıcılara sunun.", "iStoc sizi toptan alıcıyla doğrudan buluşturur. Şu an satışlardan komisyon alınmaz."),
+    "h_dizin": head(NO["dizin"], "Dizin", "dizin-baslik", "Ürünü aradığınız özelliğe göre bulun.",
+                    "Ürünleri %d farklı ölçüte göre bulursunuz. Her bağlantının yanındaki sayı, istoc.com'da kaç sonuç çıktığını gösterir." % len(DIZIN)),
     # İçerik
     "kyb_sayi": "%d mağazanın %d tanesi doğrulandı." % (FACTS["magaza_toplami"], FACTS["dogrulanmis_magaza"]),
     "quick": "".join('<li><a class="chip" href="%s">%s%s</a></li>' % (esc(search_url(w)), icon("ara", 18), esc(w)) for w in ORNEK_URUN),

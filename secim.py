@@ -50,26 +50,26 @@ DIZIN_OGE = 6  # bir grupta gösterilen en çok öğe
 #      "arama" öğeler aşağıdaki arama kelimeleridir: (etiket, arama kelimesi)
 #      "liste" öğeler canlı sitedeki hazır listelerdir: (etiket, adres) ve sipariş adedi süzgeçleridir: (etiket, en az adet)
 DIZIN = [
-    {"anahtar": "grup", "tur": "veri", "piktogram": "izgara", "baslik": "Ürün grubuna göre", "aciklama": "Kategori ağacındaki ürün grupları."},
-    {"anahtar": "malzeme", "tur": "arama", "piktogram": "malzeme", "baslik": "Malzemeye göre", "aciklama": "Ürünün yapıldığı malzeme.",
+    {"anahtar": "grup", "tur": "veri", "piktogram": "izgara", "baslik": "Ürün grubuna göre", "aciklama": "Ürünleri kategori grubuna göre bulun."},
+    {"anahtar": "malzeme", "tur": "arama", "piktogram": "malzeme", "baslik": "Malzemeye göre", "aciklama": "Ürünleri yapıldığı malzemeye göre bulun.",
      "ogeler": [("Plastik ürünler", "plastik"), ("Bambu ürünler", "bambu"), ("Paslanmaz ürünler", "paslanmaz"), ("Metal ürünler", "metal"),
                 ("Akrilik ürünler", "akrilik"), ("Silikon ürünler", "silikon"), ("Mikrofiber ürünler", "mikrofiber")]},
-    {"anahtar": "yer", "tur": "arama", "piktogram": "kullanim", "baslik": "Kullanım yerine göre", "aciklama": "Ürünün kullanıldığı yer.",
+    {"anahtar": "yer", "tur": "arama", "piktogram": "kullanim", "baslik": "Kullanım yerine göre", "aciklama": "Ürünleri kullanılacağı yere göre bulun.",
      "ogeler": [("Banyo ürünleri", "banyo"), ("Mutfak ürünleri", "mutfak"), ("Otel ürünleri", "otel"), ("Ofis ürünleri", "ofis"),
                 ("Kafe ürünleri", "kafe"), ("Restoran ürünleri", "restoran"), ("Kiler ürünleri", "kiler")]},
-    {"anahtar": "ozellik", "tur": "arama", "piktogram": "ozellik", "baslik": "Özelliğe göre", "aciklama": "Ürünü ayıran özellik.",
+    {"anahtar": "ozellik", "tur": "arama", "piktogram": "ozellik", "baslik": "Özelliğe göre", "aciklama": "Ürünleri kapak ya da bölme gibi bir özelliğe göre bulun.",
      "ogeler": [("Kapaklı ürünler", "kapaklı"), ("Bölmeli ürünler", "bölmeli"), ("Kilitli ürünler", "kilitli"), ("Tekerlekli ürünler", "tekerlekli"),
                 ("Çekmeceli ürünler", "çekmeceli"), ("Pedallı ürünler", "pedallı"), ("Katlanır ürünler", "katlanır")]},
-    {"anahtar": "gorunum", "tur": "arama", "piktogram": "gorunum", "baslik": "Görünüme göre", "aciklama": "Ürünün deseni ve görünümü.",
+    {"anahtar": "gorunum", "tur": "arama", "piktogram": "gorunum", "baslik": "Görünüme göre", "aciklama": "Ürünleri desenine ve görünümüne göre bulun.",
      "ogeler": [("Şeffaf ürünler", "şeffaf"), ("Desenli ürünler", "desenli"), ("Krom ürünler", "krom"), ("Rattan görünümlü ürünler", "rattan görünümlü"),
                 ("Bambu görünümlü ürünler", "bambu görünümlü"), ("Mermer desenli ürünler", "mermer desenli")]},
-    {"anahtar": "takim", "tur": "arama", "piktogram": "adet", "baslik": "Takıma ve pakete göre", "aciklama": "Paketteki parça sayısı.",
+    {"anahtar": "takim", "tur": "arama", "piktogram": "adet", "baslik": "Takıma ve pakete göre", "aciklama": "Ürünleri paketteki parça sayısına göre bulun.",
      "ogeler": [("Set ürünler", "set"), ("Takım ürünler", "takım"), ("3'lü paketler", "3'lü"), ("4'lü paketler", "4'lü"), ("2'li paketler", "2'li"), ("6'lı paketler", "6'lı")]},
-    {"anahtar": "ikili", "tur": "arama", "piktogram": "matris", "baslik": "Özellik ve ürüne göre", "aciklama": "İki kelimeli aramalar.",
+    {"anahtar": "ikili", "tur": "arama", "piktogram": "matris", "baslik": "Özellik ve ürüne göre", "aciklama": "Özelliği ve ürün adını birlikte arayın.",
      "ogeler": [("Plastik saklama kabı", "plastik saklama kabı"), ("Kapaklı saklama kabı", "kapaklı saklama kabı"), ("Plastik sepet", "plastik sepet"),
                 ("Plastik kova", "plastik kova"), ("Kilitli saklama kabı", "kilitli saklama kabı"), ("Pedallı çöp kovası", "pedallı çöp kovası"), ("Plastik tabure", "plastik tabure")]},
-    {"anahtar": "uretici", "tur": "veri", "piktogram": "uretici", "baslik": "Üreticiye ve markaya göre", "aciklama": "Mağaza ve marka sayfaları."},
-    {"anahtar": "liste", "tur": "liste", "piktogram": "liste", "baslik": "Listeye ve sipariş adedine göre", "aciklama": "Hazır listeler ve sipariş adedi.",
+    {"anahtar": "uretici", "tur": "veri", "piktogram": "uretici", "baslik": "Üreticiye ve markaya göre", "aciklama": "Üreticinin mağaza ya da marka sayfasına gidin."},
+    {"anahtar": "liste", "tur": "liste", "piktogram": "liste", "baslik": "Listeye ve sipariş adedine göre", "aciklama": "Hazır listeden ya da en az sipariş adedine göre seçin.",
      "ogeler": [("Çok satanlar", "/cok-satanlar"), ("Kategoriye göre çok satanlar", "/cok-satanlar/kategori"), ("Haftanın fırsatları", "/firsatlar"),
                 ("Yeni ürünler", "/urunler?sort=newest"), ("En az 100 adetle satılanlar", 100), ("En az 12 adetle satılanlar", 12)]},
 ]
@@ -94,7 +94,7 @@ PARA_VARSAYILAN = "USD"
 DILLER = [("tr", "Türkçe", "TR", "ltr"), ("en", "English", "EN", "ltr"), ("ar", "العربية", "AR", "rtl"), ("ru", "Русский", "RU", "ltr")]
 
 # --- Alt bölüm ------------------------------------------------------------------
-# Kişiye göre sütunlar: (başlık, [(etiket, adres)])
+# Alıcı, satıcı ve destek sayfaları sütunlar: (başlık, [(etiket, adres)])
 ALT_KISI = [
     ("Alıcılar için", [("Teklif isteği", "/pages/dashboard/rfq.html"), ("Üreticiler", "/ureticiler"), ("Tüm kategoriler", "/kategoriler"),
                        ("Sipariş takibi", "/hesabim/siparisler"), ("Mesajlar", "/hesabim/mesajlar")]),
@@ -112,7 +112,7 @@ ALT_TUR = [
     ("dizin", "Dizinler", [("Kategori dizini", "/kategoriler"), ("Üretici dizini", "/ureticiler"), ("Ürün dizini", "/urunler"), ("Arama dizini", "#dizin")]),
     ("kural", "Kurallar ve sözleşmeler", [("Ürün listeleme kuralları", "/urun-listeleme-kurallari"), ("Para iade politikası", "/iade-politikasi"), ("İade koşulları", "/iade-kosullari"),
                                           ("Erişilebilirlik bildirimi", "/erisilebilirlik")]),
-    ("arac", "İşlem sayfaları", [("Teklif isteği formu", "/pages/dashboard/rfq.html"), ("Kimlik doğrulaması", "/pages/dashboard/kyc.html"), ("Canlı sepet", "/pages/cart.html")]),
+    ("arac", "İşlem sayfaları", [("Teklif isteği formu", "/pages/dashboard/rfq.html"), ("Kimlik doğrulaması", "/pages/dashboard/kyc.html"), ("istoc.com sepeti", "/pages/cart.html")]),
 ]
 
 # Sosyal hesaplar: (ad, adres, simge çizimi). Adresler canlı sitenin alt bölümündeki adreslerdir.
@@ -279,7 +279,7 @@ VERI_METNI = [
     "# alt kategori daha var.",
     "Ürünü en çok olan kategoriler önde durur.",
     "Büyük yazan fiyata KDV dahildir.",
-    "Ürünleri # ayrı yoldan bulursunuz.",
+    "Ürünleri # farklı ölçüte göre bulursunuz.",
 ]
 
 # Tasarım metni: bu sayfanın kendi sözü. Değer önerisi, başlık, yönerge, çağrı,
@@ -289,7 +289,7 @@ TASARIM_METNI = [
     # Arama motoru açıklaması
     "Doğrulanmış üreticilerin birim fiyatlarını karşılaştırın.",
     "En az sipariş adedini ve hazırlık süresini görün.",
-    "Teklif isteyin, toptan alımı yerinizden yapın.",
+    "Teklif isteyin ve bulunduğunuz yerden alın.",
     # Değer önerisi ve başlıklar
     # Karşılama alıcıyı ve satıcıyı birlikte anlatır. Altında iki ayrı yol durur.
     # Çarşıda yüz yüze anlaşılan sipariş de kayıt altına alınır.
@@ -298,23 +298,23 @@ TASARIM_METNI = [
     "Çarşıda yüz yüze anlaştığınız satıcıyla da siparişi buradan verirsiniz.",
     "Ürünü, fiyatı ve en az sipariş adedini görün.",
     "Ürününüzü yeni alıcılara gösterin.",
-    "Söze değil, kayda güvenin.",
-    "İşletmenizin toptan alımını yerinizden yaparsınız.",
-    "Altı nedeni var.",
-    "Yola çıkmazsınız",
-    "Kimin doğrulandığını görürsünüz",
-    "Koşulu önceden görürsünüz",
+    "Sipariş koşullarınızı kayıtta tutun.",
+    "İşletmenizin toptan alımını bulunduğunuz yerden yaparsınız.",
+    "Buradan almanın altı faydası aşağıda yazıyor.",
+    "Bulunduğunuz yerden sipariş verirsiniz",
+    "Hangi mağazanın doğrulandığını görürsünüz",
+    "Fiyatı ve sipariş şartlarını önceden görürsünüz",
     "Hangi hesaba ödeyeceğinizi bilirsiniz",
-    "Sorun çıkarsa muhatabınız vardır",
-    "Sektörünüzü seçin.",
-    "Üreticiyi bulun.",
-    "Fiyatı sormayın.",
-    "Kartta yazıyor.",
-    "Kiminle çalıştığınızı bilin.",
-    "Sormadan sipariş vermeyin.",
-    "Alıcı da satıcı da buradan başlar.",
-    "Aracıya pay bırakmayın.",
-    "Aradığınıza kısa yoldan gidin.",
+    "Sorun çıkarsa talep açarsınız",
+    "Ürün kategorinizi seçin.",
+    "O kategorideki ürünleri ve üreticileri bulun.",
+    "Fiyatları ve sipariş şartlarını birlikte görün.",
+    "Fiyat sormanıza gerek yok çünkü ürünlerin fiyatları aşağıda yazıyor.",
+    "Çalışacağınız üreticiyi önceden tanıyın.",
+    "Sipariş vermeden önce sorularınıza yanıt bulun.",
+    "Ücretsiz hesap açın ve toptan alıma başlayın.",
+    "Ürünlerinizi doğrudan alıcılara sunun.",
+    "Ürünü aradığınız özelliğe göre bulun.",
     # Sorular
     "Hesabınız yok mu?",
     "Üretici misiniz?",
@@ -330,17 +330,17 @@ TASARIM_METNI = [
     "Fiyatlar ABD doları olarak gösterilir.",
     # Tutarlar build.py içinde Türk lirası fiyatından, canlı sitenin kuruyla çevrilir.
     "Tutarlar Türk lirası fiyatından çevrilir.",
-    "Bağlantının yanındaki sayı, canlı sitedeki sonuç sayısıdır.",
+    "Her bağlantının yanındaki sayı, istoc.com'da kaç sonuç çıktığını gösterir.",
     # Dizin gruplarının açıklamaları
-    "Kategori ağacındaki ürün grupları.",
-    "Ürünün yapıldığı malzeme.",
-    "Ürünün kullanıldığı yer.",
-    "Ürünü ayıran özellik.",
-    "Ürünün deseni ve görünümü.",
-    "Paketteki parça sayısı.",
-    "İki kelimeli aramalar.",
-    "Mağaza ve marka sayfaları.",
-    "Hazır listeler ve sipariş adedi.",
+    "Ürünleri kategori grubuna göre bulun.",
+    "Ürünleri yapıldığı malzemeye göre bulun.",
+    "Ürünleri kullanılacağı yere göre bulun.",
+    "Ürünleri kapak ya da bölme gibi bir özelliğe göre bulun.",
+    "Ürünleri desenine ve görünümüne göre bulun.",
+    "Ürünleri paketteki parça sayısına göre bulun.",
+    "Özelliği ve ürün adını birlikte arayın.",
+    "Üreticinin mağaza ya da marka sayfasına gidin.",
+    "Hazır listeden ya da en az sipariş adedine göre seçin.",
     # Sık sorulan sorular. Yanıtları kanıt defterindedir.
     "Ödemeyi kime yaparım?",
     "Hangi ödeme yöntemleri geçerlidir?",
@@ -353,25 +353,26 @@ TASARIM_METNI = [
     "Aradığınız ürünü yazın.",
     "Üreticiler size teklif göndersin.",
     "Ürünü ve adedi yazın.",
-    "İsteği canlı sitede gönderin.",
+    "Düğme isteğinizi kimseye göndermez.",
+    "Gerçek isteği istoc.com'da gönderirsiniz.",
+    "İsteği istoc.com'da gönderin.",
     # Teklif kutusu: formun ne işe yaradığı ve sonraki adımlar
-    "Bu form, aradığınız ürünü üreticilere tek seferde anlatmanız içindir.",
-    "Sonra ne olur?",
-    "Ürünü ve adedi yazınca özet burada görünür.",
-    "Üreticilerden teklif alın.",
-    "Teklifleri karşılaştırın ve seçin.",
+    "Bu formla aradığınız ürünü üreticilere tek seferde anlatırsınız.",
+    "Teklif almak için ne yaparsınız?",
+    "İstek özeti, ürünü ve adedi yazınca burada görünür.",
+    "Üreticilerin size gönderdiği teklifleri bekleyin.",
+    "Teklifleri karşılaştırın ve uygun olanı seçin.",
     "Ürün adını yazın.",
-    "Arayın, üreticiye yazın, teklif isteyin.",
+    "Hesabınızla üreticiye mesaj yazar ve teklif istersiniz.",
     "Başvuruyu yaparsınız.",
     "Onayı beklersiniz.",
     "Mağazanızı açarsınız.",
     # Öneri notları: bu sayfanın canlı siteye bağlı olmadığını söyleyen cümleler
     "Bu sayfa bir tasarım önerisidir.",
-    "Form bir yere veri göndermez.",
     "İsteğiniz gönderilmedi.",
     "Bu sepet bir örnektir.",
     "Sepete eklemek ödeme başlatmaz.",
-    "Ürünler canlı sepete eklenmez.",
+    "Ürünler istoc.com sepetine eklenmez.",
     "Bu öneride dil seçimi sayfanın dilini değiştirmez.",
 ]
 
@@ -392,11 +393,11 @@ ETIKETLER = [
     # Form
     "Hangi ürünü arıyorsunuz?", "Kaç adet?",
     # Eylemler
-    "Teklif isteği oluşturun", "Canlı sitede teklif isteği oluşturun", "Ürünleri inceleyin", "Ticaret güvencesini inceleyin",
+    "Teklif isteği oluşturun", "istoc.com'da teklif isteği oluşturun", "Ürünleri inceleyin", "Ticaret güvencesini inceleyin",
     "Satıcı başvurusu yapın", "Paketleri ve ücretleri görün", "Tüm üreticiler", "Mağazaya gidin", "Mesaj yazın",
     "Sepete ekleyin", "Başa dönün", "Toptan alıyorum", "Toptan satıyorum",
     # Alt bölüm
-    "Kişiye göre", "İçerik türüne göre", "Kullanım koşulları", "Gizlilik politikası", "Çerez tercihleri",
+    "Alıcı, satıcı ve destek sayfaları", "İçerik türüne göre", "Kullanım koşulları", "Gizlilik politikası", "Çerez tercihleri",
 ]
 
 # Görünmeyen metinler: ekran okuyucunun okuduğu adlar (aria-label), alan içi örnekler (placeholder),
@@ -409,7 +410,7 @@ OZNITELIK_METNI = [
     "iStoc ana sayfa", "Ürün arayın", "Kategori menüsü", "Bölümleri geri kaydırın", "Bölümleri ileri kaydırın",
     "Arama türü", "Örnek: saklama kabı", "Örnek: #", "Ürünleri süzün", "Süzgeçleri geri kaydırın", "Süzgeçleri ileri kaydırın",
     "Önceki kartlar", "Sonraki kartlar", "# adet azaltın", "# adet artırın", "Para birimi", "Ana gezinme",
-    "Canlı sepeti açın. Örnek sepette # ürün var.", "Toplam #",
+    "istoc.com sepetini açın. Örnek sepette # ürün var.", "Toplam #",
     # İki nokta ile biten kayıt bir ön ektir. Ardından veriden gelen ad yazar (ürün adı).
     "# adet sepete ekleyin:",
 ]
@@ -417,21 +418,21 @@ OZNITELIK_METNI = [
 ONIZLEME_OZNITELIK = ["Öneri notu"]
 
 # Yalnız önizleme derlemesinde görünen metinler. Yayın derlemesinde sayfada bulunmazlar.
-ONIZLEME_ETIKET = ["Canlı siteye gidin", "Araçlar", "İçerik kütüphanesi", "İçerik kütüphanesini görün", "Hesaplama araçlarına gidin",
-                   "Alıcının hesaplama araçları", "Satıcının hesaplama araçları"]
+ONIZLEME_ETIKET = ["istoc.com'a gidin", "Araçlar", "İçerik kütüphanesi", "İçerik kütüphanesini görün", "Hesaplama araçlarını görün",
+                   "Hesaplama araçlarını görün", "Hesaplama araçlarını görün"]
 ONIZLEME_TASARIM = []
 
 # Betik metinleri: app.js içinde yazan ve kullanıcının gördüğü ya da duyduğu metin parçaları.
 # kapi.mjs, app.js içindeki her Türkçe metnin bu listede olduğunu denetler.
 BETIK_METNI = [
     "Ürün arayın", "Üretici arayın", "Ürün adını yazın.",
-    "İsteğiniz gönderilmedi. Bu sayfa bir tasarım önerisidir.",
-    "Canlı sepeti açın. Örnek sepette", "ürün var.", "ürün,", "Sepetiniz boş", "adet ekleyin",
-    "adet örnek sepette. Ürün canlı sepete eklenmedi.", "örnek sepetten çıkarıldı.",
+    "istoc.com sepetini açın. Örnek sepette", "ürün var.", "ürün,", "Sepetiniz boş", "adet ekleyin",
+    "adet örnek sepette. Ürün istoc.com sepetine eklenmedi.", "örnek sepetten çıkarıldı.",
     "ürün gösteriliyor.",
     "seçildi. Bu öneride dil seçimi sayfanın dilini değiştirmez.",
     "seçildi. Fiyatlar bu para biriminde gösteriliyor.",
-    "İsteğiniz hazır:", ". Adedi de yazın.", "Adedi pozitif bir tam sayı olarak yazın.",
+    "İstek özeti:", ". Adedi de yazın.", "Adedi 1 ya da daha büyük bir tam sayıyla yazın. Örneğin 500 ya da 1.000.",
+    "İsteğiniz gönderilmedi. Bu sayfa bir tasarım önerisidir. Gerçek isteği istoc.com'da gönderirsiniz.",
 ]
 
 
@@ -452,10 +453,10 @@ DEGER_BOLUMLERI = [
          "Alıcı, İstanbul dışından düzenli sipariş verebileceği satıcıyı bulur.",
          "Satıcı nalbur, kırtasiye ve market gibi yeni bayilere ulaşır."),
         ("koli", "Stok değerlendirme",
-         "Alıcı, toplu alıma uygun parti malı görür.",
+         "Alıcı, depoda kalmış ve toplu satılan ürünü (parti malı) görür.",
          "Satıcı, depoda bekleyen ürünü yalnız toptan alıcılara sunar."),
     ]),
-    ("yeniden-siparis", "Yeniden sipariş", "Tanıdığınız müşteriyle işi sürdürün.", [
+    ("yeniden-siparis", "Yeniden sipariş", "Tanıdığınız müşteriyle siparişi kolayca yineleyin.", [
         ("siparis", "Müşterinizle yeniden sipariş",
          "Alıcı, tanıdığı satıcıdan aynı siparişi kolayca yineler.",
          "Satıcı katalog bağlantısını müşterisine gönderir. Müşteri sepetini kendisi doldurur."),
@@ -482,34 +483,34 @@ ODEME_FAYDA = [
 # Şehir ya da günlük yazısı tekrarı yoktur. Her tür iki boyutu birleştirir.
 # Ayrı sayfa üretilmez, bağlantı verilmez. Her öğe sayfa içinde açılan bir açıklamadır.
 KUTUPHANE = [
-    ("malzeme", "Sözlük", "Ürün, malzeme ve kullanım yeri birlikte anlatılır.", [
+    ("malzeme", "Sözlük", "Sözlük, ürünün malzemesini ve kullanım yerini anlamanıza yardım eder.", [
         ("Polipropilen saklama kabı", "Malzemenin özelliğini ve mutfaktaki kullanımını anlatır."),
         ("Paslanmaz çelik süzgeç", "Çeliğin türünü ve hangi işte dayanıklı olduğunu anlatır."),
         ("Bambu banyo düzenleyici", "Bambunun neme dayanımını ve bakımını anlatır."),
         ("En az sipariş adedi terimi", "Terimin ne demek olduğunu ve kartta nerede yazdığını anlatır."),
     ]),
     # Hesaplayıcılar menüsü araç listesiyle aynıdır: üç grup ve gruplardaki araçlar (ARACLAR).
-    ("adet", "Hesaplayıcılar", "Miktar ve maliyet birlikte hesaplanır.", [
-        ("Fiyat ve sipariş", "Sipariş maliyeti, KDV dahil ve hariç fiyat, adetli alım indirimi ve teklif karşılaştırma araçlarını kapsar."),
+    ("adet", "Hesaplayıcılar", "Hesaplayıcılar, sipariş adedini ve maliyetini önceden görmenizi sağlar.", [
+        ("Fiyat ve sipariş", "Sipariş maliyeti, KDV dahil ve hariç fiyat, toplu alım indirimi ve teklif karşılaştırma araçlarını kapsar."),
         ("Kargo ve ödeme", "Koli ve adet, kargo hacmi ve ağırlığı, para birimi çevirme ve ödeme takvimi araçlarını kapsar."),
-        ("Kâr ve stok", "Birim kâr, masrafı karşılayan satış, stok yeterlilik süresi ve yeniden sipariş zamanı araçlarını kapsar."),
+        ("Kâr ve stok", "Birim kâr, masrafı karşılayan satış adedi, stok yeterlilik süresi ve yeniden sipariş zamanı araçlarını kapsar."),
     ]),
-    ("belge-onay", "Şablonlar", "Ticaret süreci ve gereken belge birlikte verilir.", [
+    ("belge-onay", "Şablonlar", "Bu şablonlar sipariş bilgilerini eksiksiz yazmanıza yardım eder.", [
         ("Teklif isteği metni", "Ürünü, adedi ve teslim yerini eksiksiz yazmanıza yardım eder."),
         ("Sipariş koşulları özeti", "Fiyatı, adedi, hazırlık süresini ve ödeme yöntemini tek sayfada toplar."),
         ("Ödeme dekontu notu", "Dekontla birlikte yazılacak sipariş bilgisini gösterir."),
     ]),
-    ("matris", "Karşılaştırmalar", "Ürün özellikleri yan yana konur.", [
+    ("matris", "Karşılaştırmalar", "Karşılaştırmalar, iki ürünü özelliklerine göre yan yana koyar.", [
         ("Cam ve plastik saklama kabı", "İki malzemeyi ağırlığa, dayanıklılığa ve kullanım yerine göre karşılaştırır."),
         ("Tek parça ve set ürün", "Paketteki parça sayısına göre birim maliyeti karşılaştırır."),
         ("Kapaklı ve kapaksız çöp kovası", "İki tasarımı kullanım yerine göre karşılaştırır."),
     ]),
-    ("liste", "Sektör verileri", "Kategori ve sayı birlikte gösterilir.", [
+    ("liste", "Sektör verileri", "Sektör verileri, kategorilerdeki ürün sayısını ve sipariş bilgisini gösterir.", [
         ("Kategoriye göre ürün sayısı", "Hangi kategoride kaç ürün olduğunu gösterir."),
         ("Kategoriye göre en az sipariş adedi", "Kategorideki ürünlerin en az sipariş adedini karşılaştırır."),
         ("Hazırlık süresi dağılımı", "Ürünlerin kaç günde hazırlandığını kategoriye göre gösterir."),
     ]),
-    ("kural", "Kontrol listeleri", "Bir işin adımları ve gereken belge sıralanır.", [
+    ("kural", "Kontrol listeleri", "Kontrol listeleri, bir işten önce neyi kontrol edeceğinizi sıralar.", [
         ("İlk siparişten önce", "Satıcı rozetini, birim fiyatı ve en az adedi kontrol etmenizi sağlar."),
         ("Satıcı başvurusundan önce", "Vergi numarası ve iletişim bilgisi gibi gerekenleri sıralar."),
         ("Teslim alırken", "Koli sayısını ve ürünün durumunu kontrol etmenizi sağlar."),
@@ -519,16 +520,16 @@ KUTUPHANE = [
 # Planlanan bölümlerin başlıkları ve notları. Yapılardaki metinler build.py içinde bu listeye kendiliğinden eklenir.
 PLAN_METNI = [
     # Değer bölümleri
-    "Bu hizmetler öneridir.", "Canlı sitede henüz yoktur.", "Hizmetlerin koşulları henüz belirlenmedi.",
+    "Bu hizmetler öneridir.", "Bu hizmetler istoc.com'da henüz yoktur.", "Bu araçlar istoc.com'da henüz yoktur.", "Bu içerikler istoc.com'da henüz yoktur.", "Hizmetlerin koşulları henüz belirlenmedi.",
     # Güvenli ödeme
     "Güvenli ödeme modeli", "Ödeme kuruluşu", "Planlanan modelde ödeme, lisanslı bir ödeme kuruluşunda bekler.",
     "Bu model henüz yoktur.", "Süreler ve ücretler henüz belirlenmedi.", "Koşulları ödeme kuruluşuyla yapılacak sözleşme belirler.",
     "Güvenli ödeme",
     # Araçlar
-    "Siparişten önce hesabı görün.", "Bu araçlar öneridir.", "Neyi hesaplar?",
+    "Maliyetinizi, kârınızı ve stok ihtiyacınızı hesaplayın.", "Bu araçlar öneridir.", "Neyi hesaplar?",
     "Bu öneride araç henüz hesaplama yapmaz.",
     # İçerik kütüphanesi
-    "Bu içerikler öneridir.", "Ayrı sayfaları henüz yoktur.",
+    "Bu içerikler öneridir.", "Her içeriğin kısa açıklaması burada açılır.",
 ]
 
 # Hesaplama araçları (araç listesi 11 Kasım 2026 günü kilitlendi, üç tur değerlendirme: ARASTIRMA.md, bölüm 10).
@@ -542,7 +543,7 @@ ARACLAR = [
          "Birim fiyatı, adedi, kargo ücretini ve diğer giderleri yazarsınız.", "Araç toplam maliyeti ve birim başına maliyeti gösterir.", ""),
         ("KDV dahil ve hariç fiyat", ORTAK, "Fiyatın KDV dahil ve hariç halini birlikte görürsünüz.",
          "Fiyatı ve KDV oranını yazarsınız. Fiyatın KDV dahil olup olmadığını seçersiniz.", "Araç iki fiyatı ve KDV tutarını gösterir.", ""),
-        ("Adetli alım indirimi", ORTAK, "Bir indirim oranıyla toplamın nasıl değiştiğini görürsünüz.",
+        ("Toplu alım indirimi", ORTAK, "Bir indirim oranıyla toplamın nasıl değiştiğini görürsünüz.",
          "Birim fiyatı, adedi ve satıcının verdiği indirim oranını yazarsınız.", "Araç indirimli toplamı ve indirim tutarını gösterir.",
          "İndirim oranını platform vermez. Oranı satıcı belirler."),
         ("Teklif karşılaştırma", ORTAK, "Size gelen teklifleri maliyete ve teslim süresine göre yan yana koyarsınız.",
@@ -551,28 +552,28 @@ ARACLAR = [
     ]),
     ("Kargo ve ödeme", [
         ("Koli ve adet", ORTAK, "Sipariş adedinin kaç koli ettiğini görürsünüz.",
-         "Sipariş adedini ve koli içi adedi yazarsınız.", "Araç koli sayısını ve son kolideki adedi gösterir.", ""),
+         "Sipariş adedini ve bir kolideki ürün adedini yazarsınız.", "Araç koli sayısını ve son kolideki adedi gösterir.", ""),
         ("Kargo hacmi ve ağırlığı", ORTAK, "Kolilerin toplam hacmini ve ağırlığını görürsünüz.",
-         "Koli ölçülerini, koli ağırlığını ve koli sayısını yazarsınız. Kargo firmasının hacim bölenini de yazarsınız.",
-         "Araç toplam hacmi, gerçek ağırlığı ve hacimsel ağırlığı gösterir.", "Hacim böleni kargo firmasına göre değişir."),
+         "Koli ölçülerini, koli ağırlığını ve koli sayısını yazarsınız. Kargo firmasının hacim bölenini de yazarsınız. Hacim böleni, kargo firmasının koli hacmini ağırlığa çevirdiği sayıdır.",
+         "Araç toplam hacmi, gerçek ağırlığı ve hacimsel ağırlığı gösterir. Hacimsel ağırlık, kolinin kapladığı yere göre hesaplanan ağırlıktır.", "Hacim böleni kargo firmasına göre değişir."),
         ("Para birimi çevirme", ORTAK, "Bir tutarı başka para biriminde görürsünüz.",
          "Tutarı, para birimini, kuru, kurun tarihini ve kaynağını yazarsınız.", "Araç çevrilmiş tutarı, kurun tarihi ve kaynağıyla birlikte gösterir.",
          "Araç kuru kendiliğinden almaz."),
         ("Ödeme takvimi", ORTAK, "Ödemelerin hangi gün ne kadar olacağını görürsünüz.",
          "Toplam tutarı, ödeme sayısını ve ilk ödeme gününü yazarsınız.", "Araç her ödemenin tarihini ve tutarını gösterir.",
-         "Bu bir finansman teklifi değildir."),
+         "Bu bir finansman teklifi değildir. Araç kredi ya da vade vermez."),
     ]),
     ("Kâr ve stok", [
-        ("Birim kâr", SATAN, "Bir üründen kalan brüt farkı görürsünüz.",
-         "Satış fiyatını ve birim maliyeti yazarsınız.", "Araç birim başına brüt farkı ve kâr oranını gösterir.",
-         "Bu fark işletmenin net kârı değildir."),
-        ("Masrafı karşılayan satış", SATAN, "Sabit masrafı karşılamak için kaç adet satmanız gerektiğini görürsünüz.",
-         "Aylık sabit masrafı, satış fiyatını ve birim maliyeti yazarsınız.", "Araç masrafı karşılayan satış adedini gösterir.",
+        ("Birim kâr", SATAN, "Bir ürünü satınca satış fiyatı ile maliyet arasında kalan farkı görürsünüz.",
+         "Satış fiyatını ve birim maliyeti yazarsınız.", "Araç bir üründeki brüt farkı ve kâr oranını gösterir. Brüt fark, satış fiyatından birim maliyet çıkınca kalan tutardır.",
+         "Bu fark işletmenin net kârı değildir. Kira ve maaş gibi giderler bu farktan ayrıca düşülür."),
+        ("Masrafı karşılayan satış adedi", SATAN, "Sabit masrafı karşılamak için kaç adet satmanız gerektiğini görürsünüz.",
+         "Aylık sabit masrafı, satış fiyatını ve birim maliyeti yazarsınız. Sabit masraf, satış adedine bağlı olmayan kira gibi giderlerdir.", "Araç masrafı karşılayan satış adedini gösterir.",
          "Satış fiyatı birim maliyetten yüksek değilse araç sonuç vermez."),
         ("Stok yeterlilik süresi", ORTAK, "Elinizdeki stokun kaç gün yeteceğini görürsünüz.",
          "Stok adedini ve günlük ortalama satışı yazarsınız.", "Araç stokun yeteceği gün sayısını gösterir.",
          "Günlük satış sıfırsa araç sonuç vermez."),
         ("Yeniden sipariş zamanı", ORTAK, "Yeni siparişi ne zaman vermeniz gerektiğini görürsünüz.",
-         "Günlük ortalama satışı, tedarik süresini ve güvenlik stokunu yazarsınız.", "Araç yeni siparişin verileceği stok seviyesini gösterir.", ""),
+         "Günlük ortalama satışı, tedarik süresini ve güvenlik stokunu yazarsınız. Tedarik süresi, yeni siparişin size ulaştığı gün sayısıdır. Güvenlik stoku, gecikmeye karşı elde tuttuğunuz yedek adettir.", "Araç, stok hangi adede inince yeni sipariş vermeniz gerektiğini gösterir.", ""),
     ]),
 ]

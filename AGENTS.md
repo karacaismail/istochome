@@ -59,3 +59,17 @@ Ek yazar ve üretim imzası eklemeyin.
 Özel istemleri, kişisel bilgileri ve erişim anahtarlarını depoya koymayın.
 Onaylanmadan lisans seçmeyin veya değiştirmeyin.
 Push sonrası Pages derlemesini ve canlı sayfayı ayrı doğrulayın.
+
+
+## Metni kısaltırken anlamı koruyun
+
+Başlık faydayı, açıklama gerekçeyi söylesin.
+Neyin anlatıldığını aynı bileşende açıkça belirtin.
+"Kart" veya "hesap" gibi çok anlamlı kelimeleri tek başına bırakmayın.
+Açıklamaları kopuk sloganlara veya etiket dizilerine çevirmeyin.
+Gerekiyorsa "çünkü" ile doğal bir neden bağı kurun.
+Başlıkta ve açıklamada aynı bilgiyi gereksiz yere tekrarlamayın.
+Kaynakta olmayan fayda, garanti veya işlem sonucu eklemeyin.
+Bilinmeyen terimi günlük kelimelerle açıklayın.
+Örnek site bağlantısında hedefi "istoc.com" diye belirtin.
+Kısa metni, gerçek okurun anladığına kanıt saymayın.

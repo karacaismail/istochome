@@ -543,7 +543,12 @@ function checkHtml(html, yayin, ledger, classes, site) {
   const said = strip(html) + " " + [...html.matchAll(/\b(aria-label|placeholder|alt|title|content)="([^"]*)"/g)].map((m) => m[2]).join(" ");
   for (const w of ["RFQ", "escrow"]) if (new RegExp(`\\b${w}\\b`, "i").test(said)) fail("jargon", f, `kullanıcı metninde ${w}`);
   // Kaldırılan metinler geri gelmez (kullanıcı kararı 11 Kasım 2026).
-  for (const t of ["Çarşıya gitmeyin", "Rakibiniz yoldayken"]) if (said.includes(t)) fail("kaldırılan metin", f, t);
+  // Gerekçesiz kısa sloganlar da geri gelmez (metin incelemesi, 11 Kasım 2026). Yerlerine gerekçeli cümle yazıldı.
+  // Örnek: "Fiyatı sormayın. Kartta yazıyor." yerine "Fiyat sormanıza gerek yok. Ürünlerin fiyatları aşağıdaki kartlarda yazıyor."
+  for (const t of ["Çarşıya gitmeyin", "Rakibiniz yoldayken", "Fiyatı sormayın", "Kartta yazıyor", "Söze değil, kayda güvenin", "Sormadan sipariş vermeyin",
+    "Aracıya pay bırakmayın", "Yola çıkmazsınız", "Altı nedeni var", "İsteğiniz hazır"]) if (said.includes(t)) fail("kaldırılan metin", f, t);
+  // "Canlı site" ve "canlı sepet" ekip sözüdür. Kullanıcı metni hedefi adıyla söyler: istoc.com, istoc.com sepeti. "Canlı destek" hizmet adıdır, serbesttir.
+  for (const m of said.matchAll(/canlı (site|sepet)\S*/gi)) fail("ekip sözü", f, m[0]);
   if (/class="reason__why"/.test(html)) fail("kaldırılan metin", f, "gerekçe kartında Çünkü satırı");
   // Ödeme garantisi vaat edilmez. Canlı iStoc ödemeyi tutmaz.
   if (/garanti/i.test(said)) fail("vaat", f, "sayfada garanti sözü");
@@ -672,11 +677,14 @@ if (flags.has("--sinama")) {
     ["details ile katlanan grup", "<details><summary>Dizin</summary></details>", "katlanan grup"],
     ["düğmesi grubundan farklı durumda", '<div class="fgroup" data-fold data-open="true"><div class="fold__h"><button class="fold__btn" type="button" aria-expanded="false" aria-controls="yok-1">Dizin</button></div></div>', "katlanan grup"],
     // Altıncı sürüm: planlanan hizmet, jargon, kaldırılan metin ve ödeme vaadi
-    ["planlanan metin işaretsiz bölgede", `<p>${(classSource.plan || ["Planlanan metin yok."])[0]}</p>`, "plan"],
+    ["planlanan metin işaretsiz bölgede", `<p>${[...(classSource.plan || ["Planlanan metin yok."])].sort((x, y) => y.length - x.length)[0]}</p>`, "plan"],
     ["etiketsiz planlanan bölge", '<div id="yeni-plan" data-plan><p>Bu sayfa bir tasarım önerisidir.</p></div>', "plan"],
     ["kullanıcı metninde RFQ", '<a href="/x">RFQ formu</a>', "jargon"],
     ["öznitelikte escrow", '<button type="button" aria-label="Escrow ile ödeyin">x</button>', "jargon"],
     ["kaldırılan slogan geri geldi", "<p>Çarşıya gitmeyin.</p>", "kaldırılan metin"],
+    ["gerekçesiz ürün sloganı geri geldi", "<h2>Fiyatı sormayın. Kartta yazıyor.</h2>", "kaldırılan metin"],
+    ["kullanıcı metninde canlı site", '<a href="/x">Canlı sitede teklif isteği oluşturun</a>', "ekip sözü"],
+    ["öznitelikte canlı sepet", '<a href="/x" aria-label="Canlı sepeti açın">Sepet</a>', "ekip sözü"],
     ["Çünkü satırı geri geldi", '<p class="reason__why">Çünkü</p>', "kaldırılan metin"],
     ["ödeme garantisi vaadi", "<p>Paranız garanti altında.</p>", "vaat"],
   ];

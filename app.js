@@ -431,13 +431,13 @@
       if (n < 0) {
         qty.setAttribute("aria-invalid", "true");
         qty.setAttribute("aria-describedby", "teklif-ozeti");
-        sum.textContent = "Adedi pozitif bir tam sayı olarak yazın.";
+        sum.textContent = "Adedi 1 ya da daha büyük bir tam sayıyla yazın. Örneğin 500 ya da 1.000.";
         return;
       }
       qty.removeAttribute("aria-invalid");
       qty.removeAttribute("aria-describedby");
-      if (p && n) sum.textContent = "İsteğiniz hazır: " + tr(n) + " adet " + p + ".";
-      else if (p) sum.textContent = "İsteğiniz hazır: " + p + ". Adedi de yazın.";
+      if (p && n) sum.textContent = "İstek özeti: " + tr(n) + " adet " + p + ".";
+      else if (p) sum.textContent = "İstek özeti: " + p + ". Adedi de yazın.";
       else sum.textContent = empty0;
     }
     product.addEventListener("input", function () { if (product.value.trim()) setError(false); summary(); });
@@ -449,7 +449,7 @@
       note.hidden = !empty;
       done.hidden = empty;
       if (empty) { product.focus(); announce("Ürün adını yazın."); }
-      else announce("İsteğiniz gönderilmedi. Bu sayfa bir tasarım önerisidir.");
+      else announce("İsteğiniz gönderilmedi. Bu sayfa bir tasarım önerisidir. Gerçek isteği istoc.com'da gönderirsiniz.");
     });
   })();
 
@@ -478,7 +478,7 @@
         b.classList.add("is-bump");
       });
       /* Sepet bağlantıları canlı sitedeki sepeti açar. Sayaç ise bu örnek sepeti sayar. Etiket ikisini de söyler. */
-      links.forEach(function (l) { l.setAttribute("aria-label", "Canlı sepeti açın. Örnek sepette " + keys.length + " ürün var."); });
+      links.forEach(function (l) { l.setAttribute("aria-label", "istoc.com sepetini açın. Örnek sepette " + keys.length + " ürün var."); });
       unitsEl.textContent = keys.length ? keys.length + " ürün, " + tr(units) + " adet" : "Sepetiniz boş";
       /* Para birimi değişince toplam geçişsiz yazılır. Yeni simgeyle görünen ara sayı gerçek bir tutar olmazdı. */
       if (instant === true) totalEl._v = total;
@@ -503,7 +503,7 @@
     return {
       /* Sepet bu öneride canlı siteye bağlı değildir. Duyuru da bunu söyler. */
       /* src: birim fiyatı taşıyan öğe. Fiyat, seçili para birimine göre bu öğeden okunur. */
-      set: function (slug, name, src, qty) { lines[slug] = { name: name, src: src, qty: qty }; paint(); announce(name + ": " + tr(qty) + " adet örnek sepette. Ürün canlı sepete eklenmedi."); },
+      set: function (slug, name, src, qty) { lines[slug] = { name: name, src: src, qty: qty }; paint(); announce(name + ": " + tr(qty) + " adet örnek sepette. Ürün istoc.com sepetine eklenmedi."); },
       remove: function (slug, name) { delete lines[slug]; paint(); announce(name + " örnek sepetten çıkarıldı."); },
       has: function (slug) { return !!lines[slug]; },
       repaint: paint

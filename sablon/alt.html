@@ -24,9 +24,9 @@
       </div>
     </div>
 
-    <!-- 2. Kişiye göre bağlantılar -->
+    <!-- 2. Alıcı, satıcı ve destek sayfaları bağlantılar -->
     <nav class="footer__nav" aria-labelledby="kisi-etiket">
-      <p class="footer__label" id="kisi-etiket">Kişiye göre</p>
+      <p class="footer__label" id="kisi-etiket">Alıcı, satıcı ve destek sayfaları</p>
       <div class="footer__cols">
         {{fgroups}}
       </div>
@@ -68,15 +68,15 @@
 <div class="cartbar on-ink" data-cartbar inert>
   <!-- Sepet bu öneride canlı siteye bağlı değildir. Çubuk bunu açıkça yazar. -->
   <div><small data-cart-units>Sepetiniz boş</small><b data-cart-total>{{sifir}}</b></div>
-  <a class="btn btn--light btn--sm" href="{{u}}/pages/cart.html">Canlı sepet{{i_ok18}}</a>
-  <small class="cartbar__note">Bu sepet bir örnektir. Ürünler canlı sepete eklenmez.</small>
+  <a class="btn btn--light btn--sm" href="{{u}}/pages/cart.html">istoc.com sepeti{{i_ok18}}</a>
+  <small class="cartbar__note">Bu sepet bir örnektir. Ürünler istoc.com sepetine eklenmez.</small>
 </div>
 <nav class="bottomnav" aria-label="Ana gezinme">
   <a href="./" aria-current="page">{{i_ev}}Ana sayfa</a>
   <a href="#kategoriler">{{i_izgara24}}Kategoriler</a>
   <a class="bottomnav__main" href="#teklif"><i>{{i_belge}}</i>Teklif</a>
   <a href="{{u}}/hesabim/mesajlar">{{i_mesaj}}Mesajlar</a>
-  <a href="{{u}}/pages/cart.html" data-cart-link aria-label="Canlı sepeti açın. Örnek sepette 0 ürün var.">{{i_sepet}}<span class="count" data-cart aria-hidden="true" hidden>0</span>Sepet</a>
+  <a href="{{u}}/pages/cart.html" data-cart-link aria-label="istoc.com sepetini açın. Örnek sepette 0 ürün var.">{{i_sepet}}<span class="count" data-cart aria-hidden="true" hidden>0</span>Sepet</a>
 </nav>
 <p class="sr-only" role="status" aria-live="polite" id="durum"></p>
 

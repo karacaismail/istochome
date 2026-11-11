@@ -265,7 +265,7 @@ Araç listesi 11 Kasım 2026 günü kilitlendi. Liste üç turda çıktı. Liste
 ### Araçların sınırları
 
 - Teklif karşılaştırma yalnız size gelen teklifleri yan yana koyar. Teklif isteği göndermez.
-- Adetli alım indiriminde oranı satıcı ya da kullanıcı yazar. Bu bir platform indirimi değildir.
+- Toplu alım indiriminde oranı satıcı ya da kullanıcı yazar. Bu bir platform indirimi değildir.
 - Kargo hacminde herkes için geçerli tek bir bölen yoktur. Bölen kargo firmasına göre değişir. Palet adedi hesaplanmaz.
 - Para birimi çevirmede kurun tarihi ve kaynağı yazılır. Araç kuru kendiliğinden almaz.
 - Ödeme takvimi yalnız tarih ve tutar planıdır. Faizsiz finansman sözü değildir.
@@ -300,3 +300,5 @@ Ana sayfa için beş değer seçildi:
 Bu hizmetler canlı sitede yoktur. Sayfada "Planlanan hizmet" etiketiyle durur.
 
 Güvenli ödeme de planlanan bir modeldir. Canlı iStoc ödemeyi tutmaz ve ödemeye aracılık etmez. Bu yüzden sayfa teslimden sonra ödeme garantisi vermez. Model bir ödeme kuruluşuyla sözleşme ister.
+
+Sonraki metin incelemesinde araç adı "Toplu alım indirimi" oldu.

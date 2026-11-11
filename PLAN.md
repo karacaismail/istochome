@@ -17,7 +17,7 @@ Sayfanın iki okuyucusu var. Her biri "bu platformu kullanırım, çünkü" cüm
 
 | "iStoc'tan alırım, çünkü" | Sayfadaki kanıtı |
 |---|---|
-| Yola çıkmam. | Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırım. |
+| Bulunduğum yerden sipariş veririm. | Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırım. |
 | Karşımdaki doğrulanmıştır. | Rozetli satıcının kimlik ve işletme doğrulamasını iStoc yapar. 19 mağazanın 18 tanesi doğrulandı. |
 | Koşulu önceden görürüm. | Ürün kartında birim fiyat, KDV hariç fiyat, en az sipariş adedi ve hazırlık süresi yazar. |
 | Ödemem doğru hesaba gider. | Yalnız sipariş sayfamda gösterilen hesaba ödeme yaparım. |
@@ -47,7 +47,7 @@ Sayfadaki her öğe beş işten birini yapar. Bu işlerden birini yapmayan öğe
 
 | Öğe türü | İşi | Nasıl yaratılır? | Örnek |
 |---|---|---|---|
-| Vaat | Sonucu söyler. | Okurun kelimeleriyle, kısa ve emir kipinde yazılır. | "Fiyatı sormayın. Kartta yazıyor." |
+| Fayda | Okurun ne kazanacağını söyler. | Başlık faydayı, açıklama gerekçeyi belirtir. | "Fiyatları ve sipariş şartlarını birlikte görün." |
 | Kanıt | Vaadi doğrular. | Sayı, rozet ya da kaynaklı cümledir. Günü yazar. | "19 mağazanın 18 tanesi doğrulandı." |
 | Eylem | Bir sonraki adıma götürür. | Fiil ve nesneyle yazılır. Ne olacağını söyler. | "Teklif isteği oluşturun" |
 | Güvence | Eylem anındaki korkuyu giderir. | Düğmenin hemen altında, tek cümleyle durur. | "Sepete eklemek ödeme başlatmaz." |
@@ -581,7 +581,7 @@ Davranış denetimleri ve klavye turu 320, 390 ve 1440 piksel genişlikte çalı
 
 - Karşılamanın ana cümlesi "Toptan alın. Yeni müşterilere satın." oldu.
 - Karşılamada iki yol var. Alıcının yolu "Toptan alıyorum", satıcının yolu "Toptan satıyorum" adını taşır.
-- "Çarşıya gitmeyin", "Rakibiniz yoldayken" ve "Çünkü" metinleri kaldırıldı. Kural kapısı bu metinleri reddeder.
+- "Çarşıya gitmeyin" ve "Rakibiniz yoldayken" metinleri kaldırıldı. Bağımsız "Çünkü" etiketi de kaldırıldı. Gerekçe anlatan cümlelerde "çünkü" kullanılabilir.
 - Teklif kutusu formun ne işe yaradığını yazar. Ürün ve adet yazılınca özet anında görünür. Altında dört adım vardır.
 - Kullanıcı metninde "RFQ" ve "escrow" kelimeleri geçmez. Kural kapısı bunları da reddeder.
 
@@ -665,9 +665,32 @@ Gerçek okurla denenmedi.
 Son tamamlayıcı kontrolde adet hatası açıklaması alanla ilişkilendirildi.
 Bu ilişki Chromium ve WebKit üzerinde doğrulandı.
 Bağımsız incelemenin uygulama bulguları kapandı.
-Veri kaydı dosyası yayın commitine dahil edilir.
+Veri kaydı dosyası yayımlanan 4df7202 commitine dahil edildi.
 
 Türkçe denetimi sayfa metninde ve belgelerde çalıştı.
 Sayfa metnindeki üç uzun cümle, süreçleri anlatan açıklamalardır.
 Bu cümleler emir değildir ve 15 kelimelik açıklama hedefini aşmaz.
 Başlık ve menü etiketleri ayrı değerlendirilmiştir.
+
+
+### 18.7 Metinlerin anlamını tamamlayan düzeltme
+
+Kullanıcı, kısa ifadelerde anlamın kaybolduğunu bildirdi.
+Sayfa metinleri bu nedenle yeniden incelendi.
+Başlıklar, form açıklamaları ve araç terimleri düzeltildi.
+Kararların örnekleri `METIN-KARARLARI.md` dosyasındadır.
+
+
+Bu düzeltmede 481 metin sınıflandırıldı. Kaynaklı 71 cümle korundu.
+Kural kapısı geçti. Kapının 101 hata örneğinin tamamı reddedildi.
+Hedefli tarayıcı koşusu her motorda önce 167 başarı ve 13 hata verdi.
+Düzeltmelerden sonra her motorda 178 başarı ve 2 hata kaldı.
+Bu iki hata, eksik hacim böleni açıklamasından kaynaklanıyordu.
+Açıklama eklendikten sonra ilgili denetim Chromium ve WebKit üzerinde tekrar çalıştı.
+Her motorda 43 denetimin tamamı geçti.
+Kontroller 320, 390 ve 1440 CSS px genişliklerini kapsadı.
+Son ürün metni 320 ve 1440 CSS px genişliğinde görsel olarak incelendi.
+Bağımsız metin incelemesinde yanıltıcı işlem veya yeni güvence ifadesi bulunmadı.
+İnceleyicinin iki başlık kapsamı notu da düzeltildi.
+Tam tarayıcı takımı bu metin değişikliğinde yeniden çalıştırılmadı.
+Gerçek cihaz ve ekran okuyucu kontrolü yapılmadı. Gerçek okurla denenmedi.

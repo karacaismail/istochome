@@ -263,7 +263,7 @@ function measure() {
   out.numbers = [...document.querySelectorAll("main .mh__no")].map((e) => e.textContent.trim());
   out.numbersVisible = [...document.querySelectorAll("main .mh__no")].every(visible);
   // Bölüm başlığı bölümün adını da okutur: bölüm adı başlığın içinde durur, gözle okunan üst satır okuyucudan gizlidir.
-  // Böylece bölgenin adı yalnız slogan olmaz ("Ürünler: Fiyatı sormayın.").
+  // Böylece bölgenin adı yalnız slogan olmaz ("Ürünler: Fiyat sormanıza gerek yok.").
   out.sloganNames = [...document.querySelectorAll("main .mh")].filter((h) => {
     const kicker = h.querySelector(".mh__kicker").textContent.trim();
     return !h.querySelector("h2").textContent.trim().startsWith(kicker + ":") || h.querySelector(".mh__top").getAttribute("aria-hidden") !== "true";
@@ -670,7 +670,7 @@ async function behavior(page, engine, w, h) {
     };
   });
   check(engine, size, "sepet örnek olduğunu söyler",
-    /örnek/.test(c.note) && /canlı sepete eklenmez/.test(c.note) && /örnek sepette/.test(c.said) && bar.labels.every((x) => x === "Canlı sepeti açın. Örnek sepette 1 ürün var."), JSON.stringify({ note: c.note, said: c.said, labels: bar.labels }));
+    /örnek/.test(c.note) && /istoc\.com sepetine eklenmez/.test(c.note) && /örnek sepette/.test(c.said) && bar.labels.every((x) => x === "istoc.com sepetini açın. Örnek sepette 1 ürün var."), JSON.stringify({ note: c.note, said: c.said, labels: bar.labels }));
   // Çubuk dar ekranda da kısa kalır. Not kendi satırında durur, dar bir sütuna sıkışmaz.
   check(engine, size, "sepet çubuğu ekranın dörtte birinden az yer kaplar", bar.share < 0.25 && bar.overflow <= 0 && bar.noteInside && bar.link >= 44, JSON.stringify(bar));
 
@@ -1496,7 +1496,28 @@ async function planned(page, engine, w, h) {
   await page.fill("#t-urun", "saklama kabı");
   await page.fill("#t-adet", "500");
   const sum = await page.evaluate(() => document.querySelector("[data-rfq-sum-t]").textContent);
-  check(engine, size, "teklif özeti ürün ve adet yazılınca anında güncellenir", sum === "İsteğiniz hazır: 500 adet saklama kabı.", sum);
+  // Özet gönderilmiş bir istek gibi görünmez. Boş özet ne olacağını söyler. Form notu düğmenin göndermediğini ve gerçek isteğin yerini söyler.
+  const rfqCopy = await page.evaluate(() => ({
+    note: document.querySelector("[data-rfq-note]").textContent.trim(),
+    done: document.querySelector("[data-rfq-done]").textContent.replace(/\s+/g, " ").trim(),
+    next: document.querySelector("#teklif-sonra").textContent.trim(),
+  }));
+  check(engine, size, "teklif formu gönderilmediğini ve gerçek isteğin yerini söyler",
+    rfqCopy.note.includes("Düğme isteğinizi kimseye göndermez.") && rfqCopy.note.includes("Gerçek isteği istoc.com'da gönderirsiniz.")
+    && rfqCopy.done.includes("Gerçek isteği istoc.com'da gönderirsiniz.") && rfqCopy.next.endsWith("?") && !rfqCopy.next.startsWith("Sonra"), JSON.stringify(rfqCopy));
+  // Başlık faydayı, açıklama gerekçeyi söyler. Araç adları ve araçlara giden bağlantılar tek ve açık adla yazar.
+  const names = await page.evaluate(() => ({
+    urun: document.querySelector("#urun-baslik").textContent.replace(/^Ürünler: /, "").trim(),
+    lead: document.querySelector("#urunler .mh__lead").textContent.trim(),
+    tools: [...document.querySelectorAll("#araclar .tool h4")].map((h) => h.textContent.trim()),
+    toTools: [...document.querySelectorAll('a[href="#araclar"]')].filter((a) => !a.closest(".nav, .header, .lib")).map((a) => a.textContent.trim()),
+  }));
+  check(engine, size, "ürün başlığı faydayı, açıklaması gerekçeyi söyler",
+    names.urun === "Fiyatları ve sipariş şartlarını birlikte görün." && names.lead.startsWith("Fiyat sormanıza gerek yok çünkü ürünlerin fiyatları aşağıda yazıyor."), JSON.stringify(names));
+  check(engine, size, "araç adları ve araç bağlantıları açık",
+    names.tools.includes("Toplu alım indirimi") && names.tools.includes("Masrafı karşılayan satış adedi")
+    && names.toTools.length >= 2 && names.toTools.every((t) => t === "Hesaplama araçlarını görün"), JSON.stringify({ tools: names.tools, toTools: names.toTools }));
+  check(engine, size, "teklif özeti ürün ve adet yazılınca anında güncellenir", sum === "İstek özeti: 500 adet saklama kabı.", sum);
   // Özet her tuşta okunmaz: canlı bölge değildir. Gönderim sonucunu sayfanın durum satırı (#durum) okur.
   const live = await page.evaluate(() => document.querySelector("[data-rfq-sum]").getAttribute("aria-live"));
   check(engine, size, "teklif özeti her tuşta okunmaz", live === null, String(live));
@@ -1507,8 +1528,8 @@ async function planned(page, engine, w, h) {
     await page.fill("#t-adet", input);
     const st = await page.evaluate(() => ({ t: document.querySelector("[data-rfq-sum-t]").textContent, inv: document.querySelector("#t-adet").getAttribute("aria-invalid"), desc: document.querySelector("#t-adet").getAttribute("aria-describedby") }));
     const ok = shown === null
-      ? st.t === "Adedi pozitif bir tam sayı olarak yazın." && st.inv === "true" && st.desc === "teklif-ozeti"
-      : st.t === `İsteğiniz hazır: ${shown} adet saklama kabı.` && st.inv === null;
+      ? st.t === "Adedi 1 ya da daha büyük bir tam sayıyla yazın. Örneğin 500 ya da 1.000." && st.inv === "true" && st.desc === "teklif-ozeti"
+      : st.t === `İstek özeti: ${shown} adet saklama kabı.` && st.inv === null;
     if (!ok) bad.push(`${input}: ${st.t} (${st.inv})`);
   }
   check(engine, size, "adet yalnız pozitif tam sayı olarak kabul edilir", bad.length === 0, bad.join(" | "));
@@ -1568,6 +1589,25 @@ async function planned(page, engine, w, h) {
   await page.keyboard.press("Enter");
   const closed = await page.evaluate(() => document.querySelector("#arac-1-1-b").getAttribute("aria-expanded"));
   check(engine, size, "araç ayrıntısı Enter ile kapanır", closed === "false", closed);
+  // Terim açıklamalı uzun ayrıntılar da tam açılır: metin panelden taşmaz ve kesilmez.
+  // Yeniden sipariş zamanı aracı tedarik süresini ve güvenlik stokunu günlük sözle açıklar. Birim kâr brüt farkı açıklar.
+  const longs = [];
+  for (const id of ["arac-3-4", "arac-3-1", "arac-2-2"]) {
+    await page.locator(`#${id}-b`).scrollIntoViewIfNeeded();
+    await page.locator(`#${id}-b`).click();
+    await page.waitForTimeout(450);
+    longs.push(await page.evaluate((id) => {
+      const p = document.getElementById(id);
+      const inner = p.firstElementChild;
+      const pr = p.getBoundingClientRect(), ir = inner.getBoundingClientRect();
+      const words = [...inner.querySelectorAll("p")].every((q) => q.scrollWidth <= q.clientWidth + 1);
+      return { id, open: p.dataset.open, fits: ir.bottom <= pr.bottom + 1 && ir.right <= pr.right + 1 && words, text: inner.textContent };
+    }, id));
+  }
+  const terms = longs.map((l) => l.text).join(" ");
+  check(engine, size, "uzun araç ayrıntısı tam açılır ve taşmaz", longs.every((l) => l.open === "true" && l.fits), JSON.stringify(longs.map(({ id, open, fits }) => ({ id, open, fits }))));
+  check(engine, size, "araç terimleri günlük sözle açıklanır",
+    ["Güvenlik stoku, ", "Tedarik süresi, ", "Brüt fark, ", "Hacim böleni, ", "Hacimsel ağırlık, "].every((t) => terms.includes(t)), terms.slice(0, 200));
   const lb = page.locator("#lib-b1-1");
   await lb.scrollIntoViewIfNeeded();
   await lb.click();
@@ -1766,7 +1806,7 @@ const BREAKS = [
   { name: "Safari'de üst arama düğmesinin tıklaması yutuluyor", file: "app.js", run: "behavior:390x844", engine: "webkit", expect: "üst arama düğmesinin tıklaması yutulmaz",
     apply: swap("var on = past || pressing || slot.contains(document.activeElement);", "var on = past || slot.contains(document.activeElement);") },
   { name: "sepet örnek olduğunu söylemiyor", file: "index.html", run: "behavior:1440x900", expect: "sepet örnek olduğunu söyler",
-    apply: swap('<small class="cartbar__note">Bu sepet bir örnektir. Ürünler canlı sepete eklenmez.</small>', "") },
+    apply: swap('<small class="cartbar__note">Bu sepet bir örnektir. Ürünler istoc.com sepetine eklenmez.</small>', "") },
   // Sayaç yalnız sayılar ekrandayken başlar. Bu yüzden sayıların ilk ekranda göründüğü boyutta sınanır.
   { name: "sayaç kare gelmeyince yarıda kalıyor", file: "app.js", run: "layout:1440x900", expect: "sayaç gerçek değerde durur",
     apply: (t) => t.replace("window.setTimeout(finish, ms + 250);", "").replace('"use strict";', '"use strict"; window.requestAnimationFrame = function () { return 0; };') },
