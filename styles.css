@@ -138,12 +138,16 @@
   --dur-4: 800ms;
   --dur-5: 1200ms;
   --stagger: 70ms;
+  /* Yönlü yüzeyin sınırları: kaydırmada en çok --drift, işaretçiye doğru en çok --tilt kayar. */
+  --drift: 24px;
+  --tilt: 8px;
   /* Hareketli yüzeylerin çizgi renkleri: açık zeminde ve koyu zeminde. Durağan çizgi soluktur.
      İşaretçinin yanında beliren çizgi daha belirgindir. Saydamlık düşük kalır, metnin karşıtlığı korunur. */
   --surface-line: rgba(40, 112, 195, 0.16);
   --surface-hi: rgba(40, 112, 195, 0.42);
   --surface-line-ink: rgba(157, 191, 231, 0.16);
   --surface-hi-ink: rgba(198, 218, 241, 0.46);
+  --surface-grid: rgba(40, 112, 195, 0.12);
   /* Dönen örnek aramanın bir kelimede bekleme süresi */
   --dwell: 2800ms;
 }
@@ -1373,9 +1377,106 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
 .surface--nokta.is-on::before { opacity: 1; }
 .surface--nokta::after { color: var(--surface-hi); }
 .on-ink .surface--nokta::after { color: var(--surface-hi-ink); }
+/* Yönlü yüzeyler: yalnız ana duraklarda. Karşılamada dalga yatay, bölgesel tedarikte ızgara çapraz,
+   araçlarda nokta alanı dikey, güvenli ödemede rota yatay kayar. Kayan şey yalnız süs katmanıdır (surface__drift).
+   app.js kaydırma ilerlemesini --p (0 ile 1 arası) ve işaretçi eğimini --tx, --ty olarak yazar. Kaydırma durunca değer değişmez.
+   Kaydırma kayması kaydırmanın kendisini izler, bu yüzden geçişi yoktur. Eğim geçişi iki yönde aynı süre ve eğriyle döner. */
+.surface__drift {
+  /* Katman kayma ve eğim toplamı kadar taşar. Böylece en uç durumda da kenarda boşluk açılmaz. */
+  position: absolute; inset: calc((var(--drift) + var(--tilt)) * -1);
+  transform: translate(var(--tx, 0px), var(--ty, 0px));
+  transition: transform var(--dur-3) var(--ease);
+}
+.surface[data-axis="x"] .surface__drift { translate: calc((var(--p, 0.5) - 0.5) * 2 * var(--drift)) 0; }
+.surface[data-axis="y"] .surface__drift { translate: 0 calc((var(--p, 0.5) - 0.5) * 2 * var(--drift)); }
+.surface[data-axis="xy"] .surface__drift { translate: calc((var(--p, 0.5) - 0.5) * 2 * var(--drift)) calc((0.5 - var(--p, 0.5)) * 2 * var(--drift)); }
+/* Kayan katmanın içindeki parlak katman, katmanın taşan payı kadar kaydırılmış maskeyle işaretçiyi izler. */
+.surface__drift .surface__hi {
+  -webkit-mask-image: radial-gradient(280px circle at calc(var(--mx, 50%) + var(--drift) + var(--tilt)) calc(var(--my, 50%) + var(--drift) + var(--tilt)), #000, transparent);
+  mask-image: radial-gradient(280px circle at calc(var(--mx, 50%) + var(--drift) + var(--tilt)) calc(var(--my, 50%) + var(--drift) + var(--tilt)), #000, transparent);
+}
+/* Dalga: paralel eğriler, ince çizgi. Izgara: düz çizgiler, en ince çizgi. Nokta alanının noktaları kayan katmanda durur. */
+.surface--dalga path { stroke-width: 1.25; }
+/* Yönlü ızgara: kayan katmanda iki doğrusal geçiş. Çizgi 1 CSS px, aralık 72 CSS px ve soluktur.
+   Katman başlığın ve girişin arkasında maskeyle solar. Desen bölüm uzadıkça büyümez. */
+.surface--izgara .surface__drift {
+  background-image: linear-gradient(to right, var(--surface-grid) 1px, transparent 1px), linear-gradient(to bottom, var(--surface-grid) 1px, transparent 1px);
+  background-size: 72px 72px, 72px 72px;
+  opacity: 0; transition: opacity var(--dur-4) var(--ease), transform var(--dur-3) var(--ease);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 120px, #000 520px);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 120px, #000 520px);
+}
+.surface--izgara.is-on .surface__drift { opacity: 1; }
+/* İşaretçinin yanında ızgara biraz belirginleşir. Maske işaretçinin yerini izler, katman yalnız saydamlığını değiştirir. */
+.surface--izgara .surface__drift::after {
+  content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity var(--dur-3) var(--ease);
+  background-image: linear-gradient(to right, var(--surface-hi) 1px, transparent 1px), linear-gradient(to bottom, var(--surface-hi) 1px, transparent 1px);
+  background-size: 72px 72px, 72px 72px;
+  -webkit-mask-image: radial-gradient(280px circle at calc(var(--mx, 50%) + var(--drift) + var(--tilt)) calc(var(--my, 50%) + var(--drift) + var(--tilt)), #000, transparent);
+  mask-image: radial-gradient(280px circle at calc(var(--mx, 50%) + var(--drift) + var(--tilt)) calc(var(--my, 50%) + var(--drift) + var(--tilt)), #000, transparent);
+}
+.surface--izgara.is-near .surface__drift::after { opacity: 1; }
+html:not(.js) .surface--izgara .surface__drift { opacity: 1; }
+.surface--nokta[data-axis]::before, .surface--nokta[data-axis]::after { content: none; }
+.surface--nokta .surface__drift::before, .surface--nokta .surface__drift::after { content: ""; position: absolute; inset: 0; background: radial-gradient(currentColor 1.5px, transparent 2px) 0 0 / 28px 28px; }
+.surface--nokta .surface__drift::before { opacity: 0; transition: opacity var(--dur-4) var(--ease); }
+.surface--nokta.is-on .surface__drift::before { opacity: 1; }
+.surface--nokta .surface__drift::after {
+  color: var(--surface-hi); opacity: 0; transition: opacity var(--dur-3) var(--ease);
+  -webkit-mask-image: radial-gradient(280px circle at calc(var(--mx, 50%) + var(--drift) + var(--tilt)) calc(var(--my, 50%) + var(--drift) + var(--tilt)), #000, transparent);
+  mask-image: radial-gradient(280px circle at calc(var(--mx, 50%) + var(--drift) + var(--tilt)) calc(var(--my, 50%) + var(--drift) + var(--tilt)), #000, transparent);
+}
+.on-ink .surface--nokta .surface__drift::after { color: var(--surface-hi-ink); }
+.surface--nokta.is-near .surface__drift::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .surface__drift, .surface[data-axis] .surface__drift { translate: none; transform: none; transition: none; }
+}
+
 /* Betik yoksa yüzey çizilmiş haliyle durur. */
 html:not(.js) .surface path { stroke-dashoffset: 0; }
-html:not(.js) .surface circle, html:not(.js) .surface--nokta::before { opacity: 1; }
+html:not(.js) .surface circle, html:not(.js) .surface--nokta::before, html:not(.js) .surface--nokta .surface__drift::before { opacity: 1; }
+
+/* Bölgesel tedarik. Her satır bir işletme ihtiyacıyla başlar, sonra yer, neden ve teklifte sorulacak 3 koşul gelir.
+   Satırlar kenarlıksızdır. Bant zemininden açık yüzey ve aradaki boşlukla ayrılır. Gerekçe ve koşullar hep açıktır.
+   Dar ekranda bölümler alt alta durur. Geniş ekranda üç sütun olur: kim ve nerede, neden, ne sorulur. */
+.bolge__intro { display: grid; gap: var(--sp-2); max-width: 72ch; margin-bottom: var(--sp-6); }
+.bolge__intro p { margin: 0; }
+.bolge__not { color: var(--text-2); }
+.bolgeler { display: grid; gap: var(--sp-4); margin: 0; padding: 0; list-style: none; }
+.bolge { display: grid; gap: var(--sp-5); padding: var(--sp-5); border-radius: var(--r-3); background: var(--surface); box-shadow: var(--shadow-1); }
+.bolge__who { display: grid; gap: var(--sp-2); align-content: start; }
+.bolge__need { margin: 0; font-size: var(--t-body); font-weight: var(--w-medium); color: var(--text-2); }
+.bolge__yer { display: grid; gap: var(--sp-1); margin: 0; font-size: var(--t-h3); line-height: 1.2; }
+.bolge__tur { font-size: var(--t-sm); font-weight: var(--w-regular); color: var(--text-2); }
+.bolge__why { display: grid; gap: var(--sp-2); align-content: start; }
+.bolge__why p { margin: 0; }
+.bolge__fact { font-weight: var(--w-medium); }
+.bolge__yorum { color: var(--text-2); }
+.bolge__src { justify-self: start; display: inline-flex; align-items: center; min-height: var(--hit); font-size: var(--t-sm); color: var(--a-700); text-decoration: underline; text-decoration-color: var(--underline); text-underline-offset: 3px; overflow-wrap: break-word; }
+.bolge__ask { display: grid; gap: var(--sp-3); align-content: start; }
+.bolge__ask-t { margin: 0; font-size: var(--t-sm); font-weight: var(--w-bold); color: var(--text-2); }
+.bolge__kosul { display: grid; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.bolge__kosul li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: var(--sp-2); align-items: start; }
+.bolge__kosul svg { margin-top: 3px; color: var(--ok); }
+.bolge__cta { justify-self: start; }
+.bolge__tarih { margin: var(--sp-4) 0 0; font-size: var(--t-sm); color: var(--text-2); }
+@media (min-width: 1024px) {
+  .bolge { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.1fr) minmax(0, 1.1fr); gap: var(--sp-6); padding: var(--sp-6); }
+}
+/* Alım planı: çok çeşit satan mağaza için satın alma kontrol önerisi. Bir platform sözü değildir. */
+.alim { display: grid; gap: var(--sp-5); margin-top: var(--sp-8); padding-top: var(--sp-6); box-shadow: 0 -1px 0 var(--line); }
+.alim__head { display: grid; gap: var(--sp-2); align-content: start; }
+.alim__head h3 { margin: 0; font-size: var(--t-h3); }
+.alim__ust { margin: 0; font-size: var(--t-sm); font-weight: var(--w-bold); color: var(--a-700); }
+.alim__d, .alim__t, .alim__not { margin: 0; }
+.alim__d, .alim__not { color: var(--text-2); }
+.alim__body { display: grid; gap: var(--sp-3); }
+.alim__t { font-weight: var(--w-medium); }
+.alim__list { display: grid; gap: var(--sp-2); margin: 0; padding-left: var(--sp-5); }
+.alim__cta { display: flex; flex-wrap: wrap; column-gap: var(--sp-5); }
+@media (min-width: 1024px) {
+  .alim { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--sp-8); }
+}
 
 /* Karşılamadaki iki yol: alıcı ve satıcı amacını ayrı seçer. Kart tıklanır, bu yüzden dolguludur. */
 .paths { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); margin-top: var(--sp-6); max-width: 680px; }

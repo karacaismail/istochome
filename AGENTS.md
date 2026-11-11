@@ -73,3 +73,31 @@ Kaynakta olmayan fayda, garanti veya işlem sonucu eklemeyin.
 Bilinmeyen terimi günlük kelimelerle açıklayın.
 Örnek site bağlantısında hedefi "istoc.com" diye belirtin.
 Kısa metni, gerçek okurun anladığına kanıt saymayın.
+
+
+## Bölgesel tedarik ve kaynaklar
+
+Bölgesel içerikte önce işletmenin alım ihtiyacını açıklayın.
+Yerin seçilme nedenini kaynakla destekleyin.
+İlçe ve semt adlarını doğru türle yazın.
+Üretim bilgilerini `data/bolgeler.json` dosyasında tutun.
+Kaynaklı olguları editoryal alım önerilerinden ayırın.
+Her olgunun kaynak adresi ve denetim günü bulunsun.
+Bölgenin anılması platformda satıcı bulunduğu anlamına gelmez.
+Fiyat üstünlüğü, sertifika veya kalite garantisi uydurmayın.
+Bu görev yalnız ana sayfayı kapsar. Ayrı bölge sayfası üretmeyin.
+Teklif bağlantısı kullanıcının yazdığı ürün bilgisini korusun.
+Odaklanan alan sabit çubukların altında kalmasın.
+
+Yönlü hareket yalnız dekoratif katmanlarda kullanılır.
+Metin ve eylem alanları bu hareketle yer değiştirmez.
+React Bits örnekleri görsel referanstır. Bu projede kodları kopyalanmaz.
+Three.js veya başka grafik bağımlılığı eklenmez.
+Hareket azaltmada yüzeyler sabit kalır.
+Gizli sekmede ve ekran dışındaki yüzeylerde hareket hesaplanmaz.
+
+Bölüm denetimi için `--bolge` seçeneğini kullanın.
+Tek motor için `--motor=chromium` veya `--motor=webkit` seçin.
+Bu seçenekler `tarayici-testi.mjs` komutuna eklenir.
+Yükleme sorunu varsa sonucu `not_run` olarak kaydedin.
+Çalışmayan kontrolü geçmiş saymayın.

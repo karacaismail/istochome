@@ -13,6 +13,9 @@ Bu depo, istoc.com ana sayfası için bir tasarım önerisi içerir. Sayfa canl�
 - Dizin bölümü, ürünleri dokuz ayrı yoldan bulur. Her öğe canlı sitede çalışan bir adrese gider.
 - Alt bölüm beş katmandır. Dil, para birimi ve ödeme yöntemleri görsel kutularla durur.
 - Para birimi seçimi sayfadaki fiyatları değiştirir.
+- Bölgesel tedarik bölümü dört yerin üretim alanlarını ve alım koşullarını açıklar.
+- Bölge seçiminin gerekçesi [BOLGE-STRATEJISI.md](BOLGE-STRATEJISI.md) dosyasındadır.
+- Kaydırmaya bağlı arka planlar yatay, dikey ve çapraz hareket eder.
 - Yazı tipi Ubuntu'dur.
 - 12 araç, ne hesaplayacağını sayfa içinde açıklar. Araçlar henüz hesaplama yapmaz.
 - Sözlük, hesaplayıcılar, şablonlar, karşılaştırmalar, sektör verileri ve kontrol listeleri menüde yer alır.
@@ -28,7 +31,7 @@ GitHub Pages, planlanan bölümleri içeren önizleme derlemesini sunar. Bu derl
 
 `veri.py` üç şeyi de denetler. Bir denetim başarısız olursa hiçbir dosyayı yazmaz.
 
-- Sayfadaki her kaynaklı cümlenin kanıtı canlı sitede duruyor mu?
+- istoc.com kaynağına dayanan cümlelerin kanıtı canlı sitede duruyor mu?
 - Sayfanın bağlantı verdiği her canlı sayfa açılıyor mu?
 - Dizindeki her arama sonuç veriyor mu?
 
@@ -41,6 +44,9 @@ GitHub Pages, planlanan bölümleri içeren önizleme derlemesini sunar. Bu derl
 Tarayıcı testi Playwright ister. `PLAYWRIGHT_PACKAGE_DIR` değişkeni verilirse test Playwright'ı önce o klasörde arar. Sonra bu klasörde arar.
 
 Kapı ve test kendini de sınar. Bunun için iki komuta `--sinama` seçeneğini ekleyin.
+
+Bölgesel tedarik için tarayıcı komutuna `--bolge` seçeneğini ekleyin.
+Tek motor için `--motor=chromium` veya `--motor=webkit` seçeneğini kullanın.
 
 ## Notlar
 

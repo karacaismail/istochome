@@ -870,6 +870,102 @@
     }, { passive: true });
   })();
 
+  /* 15b. Yönlü yüzeyler: yalnız ana duraklar (data-axis). Süs katmanı sayfanın gerçek kaydırma yönünü izler.
+     İlerleme (--p) yüzeyin ekrandan geçişidir: 0 ekrana girerken, 1 ekrandan çıkarken. Aşağı kaydırınca artar, yukarı kaydırınca azalır.
+     Değer yalnız kaydırma karesinde hesaplanır. Kaydırma durunca kare istenmez, kendiliğinden süren hareket yoktur.
+     Ekran dışındaki ve gizli sekmedeki yüzey için hesap yapılmaz. Sekme görünür olunca ekrandaki yüzey hemen güncellenir.
+     İnce işaretçi yüzeyin üstündeyken katman işaretçiye doğru en çok --tilt kadar eğilir. İşaretçi çıkınca eğim sıfıra döner.
+     Dönüş CSS geçişiyle olur: iki yönde aynı süre ve eğri. Hareket azaltma tercihinde değer yazılmaz, katman durağandır. */
+  (function () {
+    var movers = $$("[data-surface][data-axis]");
+    if (!movers.length) return;
+    var tilt = parseFloat(getComputedStyle(root).getPropertyValue("--tilt")) || 0;
+    if ("IntersectionObserver" in window) {
+      /* Yüzey ekrana girince ilerleme hemen yazılır. Kaydırma karesi gözlemciden önce gelmiş olabilir. */
+      var io = new IntersectionObserver(function (entries) {
+        var entered = false;
+        entries.forEach(function (en) { en.target._live = en.isIntersecting; if (en.isIntersecting) entered = true; });
+        if (entered) frame.run();
+      }, { threshold: 0 });
+      movers.forEach(function (el) { io.observe(el); });
+    } else movers.forEach(function (el) { el._live = true; });
+    frame.add(function () {
+      if (reduce.matches) return null;
+      if (document.hidden) return [];
+      var h = window.innerHeight;
+      return movers.map(function (el) {
+        if (!el._live) return undefined;
+        var r = el.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > h) return undefined;
+        return Math.min(1, Math.max(0, (h - r.top) / (h + r.height))).toFixed(3);
+      });
+    }, function (list) {
+      movers.forEach(function (el, i) {
+        if (!list) { el.style.removeProperty("--p"); return; }
+        if (list[i] !== undefined && el.style.getPropertyValue("--p") !== list[i]) el.style.setProperty("--p", list[i]);
+      });
+    });
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) frame.run(); });
+    /* İşaretçi eğimi. Önce ölçülür, sonra yazılır. */
+    var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
+    var last = null;
+    var ticking = false;
+    function rest(el) {
+      if (el._tilted) { el.style.setProperty("--tx", "0px"); el.style.setProperty("--ty", "0px"); el._tilted = false; }
+    }
+    function restAll() { last = null; movers.forEach(rest); }
+    function flush() {
+      ticking = false;
+      if (!last) return;
+      if (reduce.matches || document.hidden) { restAll(); return; }
+      var boxes = movers.map(function (el) { return el._live ? el.getBoundingClientRect() : null; });
+      movers.forEach(function (el, i) {
+        var r = boxes[i];
+        var inside = r && last.clientX >= r.left && last.clientX <= r.right && last.clientY >= r.top && last.clientY <= r.bottom;
+        if (!inside) { rest(el); return; }
+        var tx = ((last.clientX - r.left) / r.width - 0.5) * 2 * tilt;
+        var ty = ((last.clientY - r.top) / r.height - 0.5) * 2 * tilt;
+        el.style.setProperty("--tx", tx.toFixed(1) + "px");
+        el.style.setProperty("--ty", ty.toFixed(1) + "px");
+        el._tilted = true;
+      });
+    }
+    document.addEventListener("pointermove", function (e) {
+      if (e.pointerType === "touch" || !fine.matches || reduce.matches) return;
+      last = e;
+      if (!ticking) { ticking = true; requestAnimationFrame(flush); }
+    }, { passive: true });
+    /* İşaretçi pencereden çıkınca bütün eğimler sıfıra döner. */
+    document.addEventListener("pointerout", function (e) { if (!e.relatedTarget) restAll(); });
+    window.addEventListener("blur", restAll);
+    if (reduce.addEventListener) reduce.addEventListener("change", function () { restAll(); frame.run(); });
+  })();
+
+  /* 16. Bölgesel tedarik: "Teklif isteyin" bağlantısı aynı sayfadaki teklif formuna gider.
+     Ürün alanı boşsa o yerin ürününü yazar, özet input olayıyla hemen güncellenir. Alan doluysa yazılan ürün silinmez.
+     Adres #teklif olur, sayfa forma anında kayar ve odak aynı anda ürün alanına geçer. Alan ekranda tam görünür. Yumuşak kaydırma yoktur.
+     Değiştirici tuşlu ya da orta tuşlu tıklama bağlantının doğal davranışına bırakılır (yeni sekme gibi).
+     Bağlantı sayfa içi bağlantıdır: betik yoksa da forma gider. */
+  (function () {
+    var product = $("#t-urun");
+    var target = $("#teklif");
+    if (!product || !target) return;
+    $$("a[data-bolge-teklif]").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        if (!product.value.trim()) {
+          product.value = a.dataset.urun;
+          product.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        if (location.hash !== "#teklif") history.pushState(null, "", "#teklif");
+        target.scrollIntoView({ block: "start" });
+        /* Odak alanı gerekirse görünür yere kaydırır. Kısa yatay ekranda alan formun başlığından aşağıda kalabilir. */
+        product.focus();
+      });
+    });
+  })();
+
   /* Kaydırmaya bağlı değerlerin ilk hali. */
   frame.run();
   window.addEventListener("load", frame.run);

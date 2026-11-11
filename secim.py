@@ -41,7 +41,8 @@ MAGAZA_NOTU = {
 }
 
 # --- Dizin: programatik arama motoru stratejileri ----------------------------
-# Her grup ayrı bir stratejidir: sayfa, bir veri boyutundan üretilir. Konum (şehir, ilçe) kullanılmaz.
+# Her grup ayrı bir stratejidir: sayfa, bir veri boyutundan üretilir. Bu dizin gruplarında konum (şehir, ilçe) kullanılmaz.
+# Bu kural yalnız bu dizine aittir. Bölgesel tedarik bölümü ayrıdır, verisini data/bolgeler.json dosyasından alır.
 # Bu görevde sayfa üretilmez. Her öğe bir menü öğesidir ve canlı sitede çalışan bir adrese gider.
 # veri.py her öğenin sonuç sayısını canlı siteden alır. Sonucu DIZIN_EN_AZ değerinin altında kalan öğe sayfaya girmez.
 DIZIN_EN_AZ = 5

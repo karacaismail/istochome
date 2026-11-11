@@ -3,11 +3,15 @@
 //     Chromium ve WebKit'te (Safari ailesi) yerleşimi, renk rollerini, karşıtlığı, odağı ve etkileşimleri sınar.
 //     İki denetim yalnız Chromium'da çalışır: büyütülmüş kök yazı boyutu ve zorlanmış renkler.
 //     WebKit bu iki ayarı öykünmez. Çıktıda NOT_RUN satırı bunu yazar.
+//   node tarayici-testi.mjs [adres] --motor=chromium   (ya da --motor=webkit)
+//     Yalnız o motoru çalıştırır. Diğer seçeneklerle birlikte kullanılabilir.
+//   node tarayici-testi.mjs [adres] --bolge
+//     Yalnız bölgesel tedarik bölümünü, hareketli yüzeyleri ve betiksiz görünümü sınar.
 //   node tarayici-testi.mjs [adres] --sinama
 //     Test kendini sınar. Bilinen her bozulma kaynağa uygulanır. İlgili denetim FAIL vermelidir.
 // Playwright, komşu site klasöründeki kurulumdan alınır. Önizleme sunucusu açık olmalıdır.
 import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -39,6 +43,19 @@ const facts = JSON.parse(readFileSync(join(here, "data", "ana-sayfa.json"), "utf
 const rates = JSON.parse(readFileSync(join(here, "data", "kur.json"), "utf8")).TRY;
 const topCats = JSON.parse(readFileSync(join(here, "data", "kategoriler.json"), "utf8")).length;
 const SYM = { GBP: "£", USD: "$", EUR: "€", TRY: "₺" };
+// Bölgesel tedarik bölümünün tek veri kaynağı. Dosya yoksa bölüm denetimleri FAIL verir, test çökmez.
+const bolgeFile = join(here, "data", "bolgeler.json");
+const bolgeData = existsSync(bolgeFile) ? JSON.parse(readFileSync(bolgeFile, "utf8")) : null;
+// Yerlerin idari türü burada sabittir. Veri yanlış ilçe ya da semt etiketi taşırsa test bunu yakalar.
+// Merter semttir. Kaynak semti ve İstanbul'u verir. Sayfa semtin ilçesini yazmaz.
+const YER_TURU = {
+  buldan: { tur: "ilçe", il: "Denizli", etiket: "Denizli'nin ilçesi" },
+  surmene: { tur: "ilçe", il: "Trabzon", etiket: "Trabzon'un ilçesi" },
+  inegol: { tur: "ilçe", il: "Bursa", etiket: "Bursa'nın ilçesi" },
+  merter: { tur: "semt", il: "İstanbul", etiket: "İstanbul'da bir semt" },
+};
+// Sayfada yazan yer etiketi: yerin adı ve idari türü. Örnek: "Buldan Denizli'nin ilçesi".
+const yerEtiketi = (y) => `${y.ad} ${y.yer_etiketi}`;
 // Bir ürünün KDV dahil, yuvarlanmamış birim tutarı. build.py ile aynı işlem ve aynı sıra: sekiz ondalık.
 // Toplam bu değerden hesaplanır. Yuvarlanmış birim fiyat adetle çarpılsaydı toplam, çevrilen gerçek tutardan sapardı.
 const unitOf = (slug, cur = "USD") => {
@@ -1298,6 +1315,13 @@ async function noScript(browser, engine, prepare) {
     text: await nojs.evaluate(() => (document.querySelector(".prefs .nojs-only") || {}).textContent || ""),
   };
   check(engine, size, "JavaScript kapalıyken çalışmayan seçenek ve doğru olmayan cümle görünmez", dead.radios === 0 && dead.jsOnly === 0 && dead.fixed === 1 && /olarak gösterilir/.test(dead.text), JSON.stringify(dead));
+  // Betik yokken bölgesel tedarik bölümü açık durur ve yönlü yüzeylerin örüntüsü çizili görünür.
+  const nb = await nojs.evaluate(() => {
+    const sec = document.querySelector("#bolgesel-tedarik");
+    const p = document.querySelector("[data-surface][data-axis] path");
+    return { sec: !!sec && getComputedStyle(sec.querySelector("[data-bolge]") || sec).opacity === "1" && sec.getBoundingClientRect().height > 200, path: p ? getComputedStyle(p).strokeDashoffset : "yok" };
+  });
+  check(engine, size, "JavaScript kapalıyken bölge bölümü ve yüzey örüntüsü görünür", nb.sec && nb.path === "0px", JSON.stringify(nb));
   // İlk durak içeriğe atla bağlantısıdır. Üçüncü durakta odak dolgusu ve alt çizgi görünmelidir.
   // Dolgu, sayfadaki odak dolgularından biridir: lacivert, beyaz, vurgu mavisi ya da logonun ara tonu.
   await nojs.keyboard.press(tab);
@@ -1650,13 +1674,443 @@ async function planned(page, engine, w, h) {
   }
 }
 
+// Yeni bölüm ve hareket denetimleri sayfayı DOM hazır olunca sınar. Dış yazı tipinin yüklenmesi beklenmez.
+// Bir koşu zaman aşımına uğrarsa o koşunun denetimi FAIL olur. Diğer koşular ve sonuç yine yazılır.
+// Yükleme sorunu ile uygulama hatası ayrı yazılır. Sayfa, bağlam ya da sekme açılamazsa satır "YÜKLEME" ile başlar ve NOT_RUN olur.
+// NOT_RUN geçmiş sayılmaz: koşunun çıkış kodu 1 olur. Uygulama denetiminin kendisi gevşemez.
+const loadIssues = [];
+class LoadError extends Error {}
+const bounded = (promise, ms, what) => Promise.race([
+  promise,
+  new Promise((_, reject) => setTimeout(() => reject(new LoadError(`${what} ${ms} ms içinde bitmedi`)), ms)),
+]);
+async function open(page) {
+  try {
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.waitForFunction(() => document.readyState !== "loading" && !!document.querySelector("footer"), null, { timeout: 10000 });
+  } catch (e) {
+    throw new LoadError(`sayfa açılamadı: ${String(e.message || e).split("\n")[0]}`);
+  }
+}
+// Yeni denetimlerin açtığı bağlamlar. Koşu bitince ya da yarıda kalınca sınırlı süreyle kapatılır.
+const made = [];
+async function newCtx(browser, opts) {
+  const ctx = await bounded(browser.newContext(opts), 15000, "bağlam açma");
+  made.push(ctx);
+  return ctx;
+}
+async function newTab(ctx) {
+  return bounded(ctx.newPage(), 15000, "sekme açma");
+}
+async function guarded(engine, size, name, run) {
+  try {
+    await run();
+  } catch (e) {
+    const msg = String(e.message || e).split("\n")[0];
+    if (e instanceof LoadError) {
+      loadIssues.push(`${engine} ${size} ${name}`);
+      notRun.push(`${engine} ${size} ${name}: YÜKLEME ${msg}`);
+    } else check(engine, size, `${name} koşusu tamamlanır`, false, msg);
+  } finally {
+    for (const ctx of made.splice(0)) await bounded(ctx.close(), 10000, "bağlam kapatma").catch((e) => notRun.push(`${engine} ${size} ${name}: YÜKLEME ${e.message}`));
+  }
+}
+
+// Bölgesel tedarik bölümü. Dizinden sonra, footer'dan önce gelir.
+// Önce işletmenin ihtiyacı yazar, sonra yerler gelir. Her yerin nedeni ve teklif için 3 koşulu hep görünür.
+// Ana eylem aynı sayfadaki teklif formunu o yerin ürünüyle doldurur. Satıcı varlığı ve doğrulama yazılmaz.
+async function bolge(page, engine, w, h) {
+  const size = `${w}x${h}`;
+  await page.setViewportSize({ width: w, height: h });
+  await open(page);
+  await page.waitForTimeout(600);
+  check(engine, size, "bölge verisi tek dosyada var", !!bolgeData && Array.isArray(bolgeData.yerler), bolgeFile);
+  const data = bolgeData || { yerler: [], alim_plani: {} };
+  // İdari tür veride doğru: üç ilçe ve bir semt.
+  const wrongType = Object.entries(YER_TURU).filter(([id, t]) => {
+    const y = data.yerler.find((x) => x.kimlik === id);
+    return !y || y.tur !== t.tur || y.il !== t.il || y.yer_etiketi !== t.etiket;
+  }).map(([id]) => id);
+  check(engine, size, "veride üç ilçe ve bir semt doğru etiketli", data.yerler.length === 4 && wrongType.length === 0, wrongType.join(", ") || String(data.yerler.length));
+  const m = await page.evaluate(() => {
+    const sec = document.querySelector("#bolgesel-tedarik");
+    if (!sec) return null;
+    const dizin = document.querySelector("#dizin");
+    const footer = document.querySelector("footer");
+    const shown = (e) => !!e && e.getClientRects().length > 0 && getComputedStyle(e).visibility === "visible" && e.getBoundingClientRect().height > 0;
+    const hiddenBehind = (e) => !!e.closest("details:not([open]), [hidden], [aria-hidden='true'], [data-open='false'], [inert]");
+    const need = sec.querySelector("[data-bolge-giris]");
+    const list = sec.querySelector("[data-bolgeler]");
+    const items = [...sec.querySelectorAll("[data-bolge]")].map((li) => {
+      const teklif = li.querySelector("a[data-bolge-teklif]");
+      const src = li.querySelector("a[data-bolge-kaynak]");
+      const kosul = [...li.querySelectorAll("[data-bolge-kosul] > li")];
+      const parts = ["[data-bolge-yer]", "[data-bolge-ihtiyac]", "[data-bolge-neden]"].map((q) => li.querySelector(q));
+      return {
+        id: li.dataset.bolge,
+        yer: (parts[0] || {}).textContent?.replace(/\s+/g, " ").trim() || "",
+        ihtiyac: (parts[1] || {}).textContent?.trim() || "",
+        neden: (parts[2] || {}).textContent?.trim() || "",
+        kosul: kosul.map((k) => k.textContent.trim()),
+        open: parts.every((e) => shown(e) && !hiddenBehind(e)) && kosul.length === 3 && kosul.every((k) => shown(k) && !hiddenBehind(k)),
+        teklif: teklif ? { text: teklif.textContent.trim(), href: teklif.getAttribute("href"), urun: teklif.dataset.urun || "" } : null,
+        src: src ? { href: src.getAttribute("href"), size: parseFloat(getComputedStyle(src).fontSize), text: src.textContent.trim() } : null,
+      };
+    });
+    const links = [...sec.querySelectorAll("a")].map((a) => a.getAttribute("href") || "");
+    const plan = sec.querySelector("[data-alim-plani]") || document.querySelector("[data-alim-plani]");
+    const planLinks = plan ? [...plan.querySelectorAll("a")].map((a) => a.textContent.trim() + ">" + a.getAttribute("href")) : [];
+    const small = [...sec.querySelectorAll("*")].filter((e) => e.childNodes.length && [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && shown(e) && parseFloat(getComputedStyle(e).fontSize) < 14)
+      .map((e) => e.textContent.trim().slice(0, 20));
+    const r = sec.getBoundingClientRect();
+    const follows = (a, b) => !!a && !!b && !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    return {
+      inMain: !!sec.closest("main"),
+      order: follows(dizin, sec) && follows(sec, footer),
+      title: (sec.querySelector("h2") || {}).textContent?.replace(/\s+/g, " ").trim() || "",
+      needFirst: !!need && shown(need) && follows(need, list),
+      items,
+      links,
+      targetsOk: links.every((href) => /^https:\/\/\S+$/.test(href) || (/^#[\w-]+$/.test(href) && !!document.getElementById(href.slice(1)))),
+      text: sec.innerText,
+      plan: plan ? {
+        title: (plan.querySelector("h3") || {}).textContent?.trim() || "",
+        desc: (plan.querySelector("[data-alim-aciklama]") || {}).textContent?.trim() || "",
+        checks: [...plan.querySelectorAll("[data-alim-kontrol] > li")].filter(shown).map((li) => li.textContent.trim()),
+        links: planLinks,
+        text: plan.innerText,
+      } : null,
+      small,
+      overflow: Math.round(Math.max(r.right - innerWidth, document.documentElement.scrollWidth - innerWidth)),
+      boxed: [...sec.querySelectorAll("[data-bolge]")].filter((li) => { const s = getComputedStyle(li); return parseFloat(s.borderTopLeftRadius) > 0 && s.borderLeftWidth !== "0px" && s.borderLeftColor !== s.borderTopColor; }).length,
+    };
+  });
+  check(engine, size, "bölgesel tedarik bölümü dizinden sonra ve footer'dan önce gelir", !!m && m.inMain && m.order, JSON.stringify(m && { inMain: m.inMain, order: m.order }));
+  if (!m) return;
+  check(engine, size, "bölge başlığı faydayı söyler", m.title.endsWith("İhtiyacınıza uygun üretim bölgesini keşfedin."), m.title);
+  check(engine, size, "bölgelerden önce işletmenin ihtiyacı yazar", m.needFirst, String(m.needFirst));
+  const ids = m.items.map((i) => i.id).join(" ");
+  check(engine, size, "bölümde dört yer var", ids === data.yerler.map((y) => y.kimlik).join(" ") && m.items.length === 4, ids);
+  const badLabel = m.items.filter((i) => { const y = data.yerler.find((x) => x.kimlik === i.id); return !y || i.yer !== yerEtiketi(y); }).map((i) => `${i.id}: ${i.yer}`);
+  check(engine, size, "yerin ilçe ya da semt olduğu yazıyla görünür", badLabel.length === 0, badLabel.join(" | "));
+  const closed = m.items.filter((i) => !i.open).map((i) => i.id);
+  check(engine, size, "yerin nedeni ve 3 teklif koşulu hep açık görünür", closed.length === 0, closed.join(", "));
+  // Her yerin metni o yere özgüdür. Yer adı çıkarılınca aynı kalan cümle şablon metindir.
+  const strip = (i, t) => t.replace(new RegExp(data.yerler.find((y) => y.kimlik === i.id)?.ad || "@@", "g"), "").trim();
+  const same = (key) => new Set(m.items.map((i) => strip(i, Array.isArray(i[key]) ? i[key].join("|") : i[key]))).size === m.items.length;
+  check(engine, size, "her yerin ihtiyacı, nedeni ve koşulları kendine özgü", same("ihtiyac") && same("neden") && same("kosul"), "");
+  // Olgu kaynaklıdır, ihtiyaç ve koşullar editoryal öneridir. İkisi veride ayrı durur.
+  const dataSame = m.items.every((i) => { const y = data.yerler.find((x) => x.kimlik === i.id); return y && y.fact && y.editorial && i.ihtiyac === y.editorial.ihtiyac && i.neden === y.fact.metin && i.kosul.join("|") === y.editorial.kosullar.join("|") && i.teklif?.urun === y.editorial.teklif_urun; });
+  check(engine, size, "bölge metni tek veri kaynağıyla aynı", dataSame, "");
+  const badFact = data.yerler.filter((y) => !y.fact || !(y.fact.source_url || []).length || !y.fact.source_url.every((u) => /^https:\/\//.test(u)) || !(/^\d{4}-\d{2}-\d{2}$/.test(y.checked_at || "") && !Number.isNaN(Date.parse(y.checked_at)))).map((y) => y.kimlik);
+  check(engine, size, "her olgunun kaynağı ve denetim tarihi var", data.yerler.length === 4 && badFact.length === 0, badFact.join(", "));
+  const srcSame = m.items.every((i) => { const y = data.yerler.find((x) => x.kimlik === i.id); return y && y.fact && y.fact.source_url.includes(i.src?.href); });
+  check(engine, size, "kaynak bağlantısı verideki kaynağa gider", srcSame, m.items.map((i) => i.src && i.src.href).join(" "));
+  check(engine, size, "bölüm satıcı bulunduğu anlamına gelmediğini söyler", /Bu bölgelerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez\./.test(m.text) && !/Planlanan|Yakında/.test(m.text), "");
+  const badAction = m.items.filter((i) => !i.teklif || i.teklif.text !== "Teklif isteyin" || i.teklif.href !== "#teklif" || !i.teklif.urun).map((i) => i.id);
+  check(engine, size, "ana eylem teklif formuna gider", badAction.length === 0, badAction.join(", "));
+  const badSrc = m.items.filter((i) => !i.src || !/^https:\/\//.test(i.src.href) || i.src.size < 14 || !i.src.text).map((i) => i.id);
+  check(engine, size, "her yerin kaynak bağlantısı okunur", badSrc.length === 0, badSrc.join(", "));
+  check(engine, size, "bölüm bağlantıları boş ya da sahte hedefe gitmez", m.targetsOk && m.links.length <= m.items.length * 2 + 4, m.links.join(" "));
+  check(engine, size, "bölüm satıcı varlığı ya da doğrulama uydurmaz", !/doğrulan|onaylı satıcı|\d+\s*(satıcı|üretici)|satıcı bulunur|satıcılar var/i.test(m.text), (m.text.match(/.{0,30}(doğrulan|onaylı|satıcı).{0,30}/i) || [""])[0]);
+  check(engine, size, "bölge satırları vurgu kenarlı kutu değildir", m.boxed === 0, String(m.boxed));
+  check(engine, size, "bölümde 14 px altında metin yok", m.small.length === 0, m.small.slice(0, 4).join(" | "));
+  check(engine, size, "bölüm yatay taşmaz", m.overflow <= 0, `${m.overflow}px`);
+  // Alım planı: çok çeşit satan mağazalar için satın alma kontrol önerisi. Platform garantisi değildir.
+  const pl = m.plan;
+  check(engine, size, "alım planı bloğu çok çeşit satan mağazaya seslenir", !!pl && pl.title === "Ucuzluk mağazanızın alım listesini hazırlayın." && pl.desc === "Ev gereçleri, kırtasiye ve temizlik ürünleri satıyorsanız ürünlerin toplam maliyetini karşılaştırın.", JSON.stringify(pl && { title: pl.title, desc: pl.desc }));
+  if (pl) {
+    check(engine, size, "alım planı 4 kontrol önerisi verir", pl.checks.length === 4 && pl.checks.every((t) => /[.?]$/.test(t)), pl.checks.join(" | "));
+    check(engine, size, "alım planı garanti ya da anahtar kelime yığını değildir", !/garanti|tek kargo|karışık koli (gönder|sağla)|japon|kapatıyoruz/i.test(pl.text), (pl.text.match(/.{0,20}(garanti|tek kargo|japon|kapatıyoruz).{0,20}/i) || [""])[0]);
+    check(engine, size, "alım planı kategorilere ve teklif formuna gider", pl.links.join(" ") === "Ürün kategorilerini inceleyin>#kategoriler Teklif isteyin>#teklif", pl.links.join(" "));
+  }
+  // Eylem: teklif formunu o yerin ürünüyle doldurur ve odağı ürün alanına taşır.
+  const first = m.items.find((i) => i.teklif);
+  if (first) {
+    await page.fill("#t-urun", "");
+    const link = page.locator(`[data-bolge="${first.id}"] a[data-bolge-teklif]`);
+    await link.scrollIntoViewIfNeeded();
+    await link.click();
+    await page.waitForTimeout(100);
+    const after = await page.evaluate(() => ({ value: document.querySelector("#t-urun").value, focus: document.activeElement && document.activeElement.id, hash: location.hash, sum: document.querySelector("[data-rfq-sum-t]").textContent }));
+    check(engine, size, "teklif bağlantısı formu o yerin ürünüyle doldurur", after.value === first.teklif.urun && after.focus === "t-urun" && after.hash === "#teklif" && after.sum.includes(first.teklif.urun), JSON.stringify(after));
+    // Odak ve özet tıklamayla aynı karede gelir. Gecikmeli odak yoktur.
+    await page.fill("#t-urun", "");
+    const tick = await page.evaluate((id) => {
+      document.querySelector(`[data-bolge="${id}"] a[data-bolge-teklif]`).click();
+      return { focus: document.activeElement && document.activeElement.id, value: document.querySelector("#t-urun").value, sum: document.querySelector("[data-rfq-sum-t]").textContent, hash: location.hash };
+    }, first.id);
+    check(engine, size, "teklif bağlantısı odağı ve özeti aynı anda verir", tick.focus === "t-urun" && tick.value === first.teklif.urun && tick.sum.includes(first.teklif.urun) && tick.hash === "#teklif", JSON.stringify(tick));
+    // Değiştirici tuşlu tıklama bağlantının doğal davranışına bırakılır: alan doldurulmaz.
+    await page.fill("#t-urun", "");
+    const mod = await page.evaluate((id) => {
+      const a = document.querySelector(`[data-bolge="${id}"] a[data-bolge-teklif]`);
+      let prevented = null;
+      const spy = (e) => { prevented = e.defaultPrevented; e.preventDefault(); };
+      document.addEventListener("click", spy);
+      a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true, metaKey: true }));
+      document.removeEventListener("click", spy);
+      return { prevented, value: document.querySelector("#t-urun").value };
+    }, first.id);
+    check(engine, size, "değiştirici tuşlu tıklamada bağlantı doğal davranır", mod.prevented === false && mod.value === "", JSON.stringify(mod));
+    // Kullanıcının yazdığı ürün silinmez. Alan doluysa öneri yazılmaz, odak yine alana gider.
+    await page.fill("#t-urun", "kendi ürünüm");
+    const other = page.locator(`[data-bolge="${m.items[1].id}"] a[data-bolge-teklif]`);
+    await other.scrollIntoViewIfNeeded();
+    await other.click();
+    await page.waitForTimeout(100);
+    const kept = await page.evaluate(() => ({ value: document.querySelector("#t-urun").value, focus: document.activeElement && document.activeElement.id }));
+    check(engine, size, "teklif bağlantısı yazılan ürünü silmez", kept.value === "kendi ürünüm" && kept.focus === "t-urun", JSON.stringify(kept));
+  }
+}
+
+// Hareketli yüzeyler: yalnız ana duraklar kayar. Karşılama dalga (yatay), bölgesel tedarik ızgara (çapraz),
+// araçlar nokta alanı (dikey), güvenli ödeme rota. Kayma sayfanın gerçek kaydırma yönüne bağlıdır ve sınırlıdır.
+// Kaydırma durunca kare istenmez. Ekran dışındaki ve gizli sekmedeki yüzey için hesap yapılmaz.
+// İnce işaretçi yüzeyi en çok 8 px eğer. İşaretçi çıkınca eğim aynı süre ve eğriyle sıfıra döner. İçerik yerinde kalır.
+async function motion(browser, engine, w, h, prepare) {
+  const size = `${w}x${h} hareket`;
+  const ctx = await newCtx(browser, { viewport: { width: w, height: h } });
+  if (prepare) await prepare(ctx);
+  // Kare isteklerini sayar. Sayaç testin kendisine aittir, sayfanın davranışını değiştirmez.
+  await ctx.addInitScript(() => {
+    const raf = window.requestAnimationFrame.bind(window);
+    window.__raf = 0;
+    window.requestAnimationFrame = (cb) => { window.__raf++; return raf(cb); };
+  });
+  const page = await newTab(ctx);
+  await open(page);
+  await page.waitForTimeout(600);
+  const stops = await page.evaluate(() => {
+    const at = (sel) => { const e = document.querySelector(`${sel} [data-surface]`); return e ? { axis: e.dataset.axis || "", kind: [...e.classList].find((c) => c.startsWith("surface--")) || "" } : null; };
+    return {
+      hero: at(".band--hero"), bolge: at("#bolgesel-tedarik"), araclar: at("#araclar"), odeme: at("#guvenli-odeme"),
+      axes: [...new Set([...document.querySelectorAll("[data-surface][data-axis]")].map((e) => e.dataset.axis))].sort().join(" "),
+      moving: document.querySelectorAll("[data-surface][data-axis]").length,
+      dalga: [...document.querySelectorAll(".surface--dalga .surface__lo path")].map((p) => p.getAttribute("d")),
+      // Izgara CSS ile çizilir: kayan katmanda iki doğrusal geçiş, sabit aralık. Çizgi bölüm uzadıkça büyümez.
+      izgara: (() => {
+        const l = document.querySelector(".surface--izgara .surface__drift");
+        if (!l) return null;
+        const c = getComputedStyle(l);
+        const step = c.backgroundSize.split(",").map((x) => x.trim().split(" ").map(parseFloat));
+        return { img: c.backgroundImage, size: c.backgroundSize, svg: l.querySelectorAll("svg").length, step, h: l.getBoundingClientRect().height };
+      })(),
+      nokta: (() => { const e = document.querySelector(".surface--nokta"); return e ? getComputedStyle(e, "::before").backgroundImage : ""; })(),
+    };
+  });
+  const plan = !!stops.araclar;
+  check(engine, size, "ana duraklarda yönlü yüzey var", stops.hero?.axis === "x" && stops.hero?.kind === "surface--dalga" && stops.bolge?.axis === "xy" && stops.bolge?.kind === "surface--izgara"
+    && (!plan || (stops.araclar.axis === "y" && stops.araclar.kind === "surface--nokta" && !!stops.odeme?.axis)), JSON.stringify(stops).slice(0, 300));
+  check(engine, size, "üç hareket ekseni var ve yalnız ana duraklar kayar", stops.axes === "x xy y" || (!plan && stops.axes === "x xy"), `${stops.axes} (${stops.moving})`);
+  check(engine, size, "dalga paralel eğri, ızgara düz çizgi, nokta alanı noktadır",
+    stops.dalga.length >= 6 && stops.dalga.every((d) => /C/.test(d)) && /radial-gradient/.test(stops.nokta)
+      && !!stops.izgara && stops.izgara.svg === 0 && (stops.izgara.img.match(/linear-gradient/g) || []).length === 2
+      && stops.izgara.step.length === 2 && stops.izgara.step.every(([a, b]) => a === b && a >= 64 && a <= 80),
+    JSON.stringify({ dalga: stops.dalga.length, izgara: stops.izgara, nokta: stops.nokta.slice(0, 40) }));
+  // Izgara çizgisi 1 CSS px kalınlığında ve düşük karşıtlıktadır. Katman başlığın arkasında maskeyle solar.
+  const gridLine = await page.evaluate(() => {
+    const l = document.querySelector(".surface--izgara .surface__drift");
+    if (!l) return null;
+    const c = getComputedStyle(l);
+    const stops = [...c.backgroundImage.matchAll(/rgba?\([^)]*\)\s+(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]));
+    const alpha = [...c.backgroundImage.matchAll(/rgba\([^)]*,\s*([\d.]+)\)/g)].map((m) => Number(m[1]));
+    return { stops, alpha, mask: c.maskImage || c.webkitMaskImage || "" };
+  });
+  check(engine, size, "ızgara çizgisi ince, soluk ve başlığın arkasında solar", !!gridLine && gridLine.stops.length >= 2 && gridLine.stops.every((x) => x <= 1) && gridLine.alpha.length >= 1 && gridLine.alpha.every((a) => a <= 0.2) && /gradient/.test(gridLine.mask), JSON.stringify(gridLine));
+  // Kaydırma yönü: aşağı kaydırınca ilerleme artar, yukarı kaydırınca azalır. Değer 0 ile 1 arasında kalır.
+  const read = (sel) => page.evaluate((q) => {
+    const sec = document.querySelector(q);
+    const s = sec && sec.querySelector("[data-surface]");
+    if (!s) return null;
+    const layer = s.querySelector(".surface__drift") || s;
+    const sr = s.getBoundingClientRect();
+    const lr = layer.getBoundingClientRect();
+    const head = sec.querySelector("h1, h2");
+    const hr = head ? head.getBoundingClientRect() : sr;
+    return { p: s.style.getPropertyValue("--p"), dx: lr.left - sr.left, dy: lr.top - sr.top, head: [Math.round(hr.left - sr.left), Math.round(hr.top - sr.top), Math.round(hr.width)].join(",") };
+  }, sel);
+  // Bölümün başlığındaki beliriş geçişi (data-reveal) doğal olarak biter, sonra ölçülür. Böylece beliriş kayması yüzey kaymasıyla karışmaz.
+  // Yalnız süren ya da başlamayı bekleyen geçiş beklenir. Bitmiş ve son hâlinde duran canlandırma (fill: both) listede kalır, o sayılmaz.
+  const settled = (sel) => page.waitForFunction((q) => {
+    const sec = document.querySelector(q);
+    return !sec || [...sec.querySelectorAll("[data-reveal], [data-intro]")].filter((e) => e.getBoundingClientRect().top < innerHeight).every((e) => e.getAnimations().every((an) => an.playState !== "running" && !an.pending));
+  }, sel, { timeout: 5000 });
+  const bring = async (sel, frac) => { await page.evaluate(([q, f]) => { const e = document.querySelector(q); if (e) scrollBy(0, e.getBoundingClientRect().top - innerHeight * f); }, [sel, frac]); await page.waitForTimeout(250); await settled(sel); };
+  await bring("#bolgesel-tedarik", 0.8);
+  const a = await read("#bolgesel-tedarik");
+  await page.evaluate(() => scrollBy(0, 220));
+  await page.waitForTimeout(250);
+  await settled("#bolgesel-tedarik");
+  const b = await read("#bolgesel-tedarik");
+  await page.evaluate(() => scrollBy(0, -120));
+  await page.waitForTimeout(250);
+  await settled("#bolgesel-tedarik");
+  const c = await read("#bolgesel-tedarik");
+  const num = (x) => (x && x.p !== "" ? Number(x.p) : NaN);
+  check(engine, size, "yüzey kaydırma yönüne bağlı ilerler ve geri döner", num(b) > num(a) && num(c) < num(b) && [a, b, c].every((x) => num(x) >= 0 && num(x) <= 1), JSON.stringify([a, b, c].map((x) => x && x.p)));
+  check(engine, size, "kayma sınırlıdır ve çapraz eksende iki yöne kayar", !!a && !!b && Math.abs(b.dx - a.dx) <= 48 && Math.abs(b.dy - a.dy) <= 48 && Math.abs(b.dx - a.dx) > 0.5 && Math.abs(b.dy - a.dy) > 0.5, JSON.stringify({ a, b }));
+  check(engine, size, "kaydırmada içerik yerinde kalır", !!a && a.head === b.head && b.head === c.head, JSON.stringify([a && a.head, b && b.head, c && c.head]));
+  // Karşılamanın dalgası yalnız yatay kayar.
+  await page.evaluate(() => scrollTo(0, 0));
+  await page.waitForTimeout(250);
+  await settled(".band--hero");
+  const h0 = await read(".band--hero");
+  await page.evaluate(() => scrollBy(0, Math.round(innerHeight * 0.3)));
+  await page.waitForTimeout(250);
+  await settled(".band--hero");
+  const h1 = await read(".band--hero");
+  check(engine, size, "karşılamanın dalgası yatay kayar", !!h0 && Math.abs(h1.dx - h0.dx) > 0.5 && Math.abs(h1.dy - h0.dy) < 0.5, JSON.stringify({ h0, h1 }));
+  // Ekran dışındaki yüzey için iş yapılmaz.
+  await bring("#bolgesel-tedarik", 0.5);
+  const off0 = await read(".band--hero");
+  await page.evaluate(() => scrollBy(0, 150));
+  await page.waitForTimeout(250);
+  const off1 = await read(".band--hero");
+  check(engine, size, "ekran dışındaki yüzey güncellenmez", !!off0 && off0.p === off1.p, JSON.stringify([off0 && off0.p, off1 && off1.p]));
+  // Gizli sekmede hesap yapılmaz. Sekme görünür olunca ekrandaki yüzey güncellenir.
+  const v0 = await read("#bolgesel-tedarik");
+  // Gizli sekme öykünmesi: hidden ve visibilityState birlikte değişir.
+  await page.evaluate(() => { for (const [k, v] of [["hidden", true], ["visibilityState", "hidden"]]) Object.defineProperty(document, k, { configurable: true, get: () => v }); scrollBy(0, -160); });
+  await page.waitForTimeout(250);
+  const v1 = await read("#bolgesel-tedarik");
+  await page.evaluate(() => { for (const [k, v] of [["hidden", false], ["visibilityState", "visible"]]) Object.defineProperty(document, k, { configurable: true, get: () => v }); document.dispatchEvent(new Event("visibilitychange")); });
+  await page.waitForTimeout(250);
+  const v2 = await read("#bolgesel-tedarik");
+  check(engine, size, "gizli sekmede yüzey güncellenmez, görünür olunca güncellenir", !!v0 && v0.p === v1.p && v2.p !== v1.p, JSON.stringify([v0 && v0.p, v1 && v1.p, v2 && v2.p]));
+  // Kaydırma durunca kare istenmez. Karşılamadaki örnek arama önce durdurulur, o hareket ayrı bir sözleşmedir.
+  await page.evaluate(() => { const q = document.querySelector("#q-ana"); if (q) q.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
+  await page.waitForTimeout(900);
+  await page.evaluate(() => { window.__raf = 0; });
+  await page.waitForTimeout(1200);
+  const idle = await page.evaluate(() => window.__raf);
+  check(engine, size, "kaydırma durunca kare istenmez", idle === 0, String(idle));
+  // İnce işaretçi: yüzey en çok 8 px eğilir. İşaretçi yüzeyden çıkınca ya da sayfadan ayrılınca eğim sıfıra döner.
+  if (w >= 1024) {
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.waitForTimeout(300);
+    // Karşılama ekrandan uzun olabilir. Görünen kısmı ölçülür, böylece işaretçi pencerenin dışına çıkmaz.
+    const box = await page.evaluate(() => { const r = document.querySelector(".band--hero").getBoundingClientRect(); const top = Math.max(0, r.top); const bottom = Math.min(innerHeight, r.bottom); return { x: r.left, y: top, w: r.width, h: bottom - top }; });
+    const tilt = () => page.evaluate(() => { const s = document.querySelector(".band--hero [data-surface]"); return { tx: s.style.getPropertyValue("--tx"), ty: s.style.getPropertyValue("--ty") }; });
+    const headBefore = await read(".band--hero");
+    await page.mouse.move(box.x + box.w * 0.5, box.y + box.h * 0.5);
+    await page.mouse.move(box.x + box.w * 0.9, box.y + box.h * 0.85);
+    await page.waitForTimeout(150);
+    const t1 = await tilt();
+    const headIn = await read(".band--hero");
+    const px = (v) => Math.abs(parseFloat(v) || 0);
+    check(engine, size, "işaretçi yüzeyi sınırlı eğer, içerik yerinde kalır", (px(t1.tx) > 0 || px(t1.ty) > 0) && px(t1.tx) <= 8 && px(t1.ty) <= 8 && headBefore.head === headIn.head, JSON.stringify({ t1, headBefore: headBefore.head, headIn: headIn.head }));
+    await page.mouse.move(box.x + 10, Math.max(2, box.y - 40));
+    await page.waitForTimeout(150);
+    const t2 = await tilt();
+    await page.mouse.move(box.x + box.w * 0.8, box.y + box.h * 0.8);
+    await page.waitForTimeout(150);
+    await page.evaluate(() => document.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: null, pointerType: "mouse" })));
+    await page.waitForTimeout(150);
+    const t3 = await tilt();
+    const zero = (t) => px(t.tx) === 0 && px(t.ty) === 0;
+    check(engine, size, "işaretçi çıkınca eğim sıfıra döner", zero(t2) && zero(t3), JSON.stringify({ t2, t3 }));
+    const tr = await page.evaluate(() => { const l = document.querySelector(".band--hero [data-surface] .surface__drift"); const s = l ? getComputedStyle(l) : null; return s ? { prop: s.transitionProperty, dur: s.transitionDuration, fn: s.transitionTimingFunction } : null; });
+    const parts = (v) => v.split(/,\s*(?![^()]*\))/);
+    const i = tr ? parts(tr.prop).indexOf("transform") : -1;
+    check(engine, size, "eğim iki yönde aynı süre ve eğriyle döner", i >= 0 && parts(tr.dur)[i] === "0.52s" && parts(tr.fn)[i] === "cubic-bezier(0.65, 0, 0.35, 1)", JSON.stringify(tr));
+  }
+  await ctx.close();
+  // Dokunmatik ekran: üzerine gelmeden, yalnız kaydırmayla yüzey ilerler.
+  const tctx = await newCtx(browser, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  if (prepare) await prepare(tctx);
+  const tp = await newTab(tctx);
+  await open(tp);
+  await tp.waitForTimeout(500);
+  await tp.evaluate(() => { const e = document.querySelector("#bolgesel-tedarik"); if (e) scrollBy(0, e.getBoundingClientRect().top - innerHeight * 0.8); });
+  await tp.waitForTimeout(250);
+  const tA = await tp.evaluate(() => document.querySelector("#bolgesel-tedarik [data-surface]")?.style.getPropertyValue("--p") || "");
+  await tp.evaluate(() => scrollBy(0, 200));
+  await tp.waitForTimeout(250);
+  const tB = await tp.evaluate(() => document.querySelector("#bolgesel-tedarik [data-surface]")?.style.getPropertyValue("--p") || "");
+  check(engine, "390x844 dokunmatik", "dokunmatik ekranda yüzey kaydırmayla ilerler", tA !== "" && Number(tB) > Number(tA), JSON.stringify([tA, tB]));
+  await tctx.close();
+  // Hareket azaltma: yüzey çizili ve durağandır, kaydırma ilerlemesi yazılmaz.
+  const rctx = await newCtx(browser, { viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  if (prepare) await prepare(rctx);
+  const rp = await newTab(rctx);
+  await open(rp);
+  await rp.waitForTimeout(300);
+  await rp.evaluate(() => { const e = document.querySelector("#bolgesel-tedarik"); if (e) scrollBy(0, e.getBoundingClientRect().top - innerHeight * 0.6); });
+  await rp.waitForTimeout(250);
+  await rp.evaluate(() => scrollBy(0, 200));
+  await rp.waitForTimeout(250);
+  const rs = await rp.evaluate(() => [...document.querySelectorAll("[data-surface][data-axis]")].map((s) => {
+    const l = s.querySelector(".surface__drift");
+    const c = l ? getComputedStyle(l) : null;
+    return { p: s.style.getPropertyValue("--p"), on: s.classList.contains("is-on"), tr: c ? c.translate : "", tf: c ? c.transform : "" };
+  }));
+  check(engine, "390x844 hareket azaltma", "hareket azaltmada yönlü yüzey kaymaz", rs.length >= 2 && rs.every((x) => x.p === "" && x.on && (x.tr === "none" || x.tr === "") && x.tf === "none"), JSON.stringify(rs).slice(0, 300));
+  await rctx.close();
+}
+
+// Kısa yatay ekranda teklif bağlantısı: odaklanan ürün alanı ekranda tam görünür.
+// Sabit üst çubuk ve alt çubuk alanı örtmez. Alan en az 44 px yüksekliktedir.
+async function prefillShort(page, engine) {
+  const size = "568x320";
+  await page.setViewportSize({ width: 568, height: 320 });
+  await open(page);
+  await page.waitForTimeout(300);
+  const link = page.locator("[data-bolge] a[data-bolge-teklif]").first();
+  await link.scrollIntoViewIfNeeded();
+  await page.fill("#t-urun", "");
+  await link.click();
+  await page.waitForTimeout(150);
+  const m = await page.evaluate(() => {
+    const el = document.activeElement;
+    const r = el.getBoundingClientRect();
+    const covers = [...document.querySelectorAll("header, .header, .bottomnav, .cartbar")].filter((b) => {
+      const s = getComputedStyle(b);
+      // Boş sepet çubuğu saydam, etkisiz (inert) ve tıklanmaz durur. O çubuk alanı örtmez. Görünen ve tıklanan çubuk sayılır.
+      return (s.position === "sticky" || s.position === "fixed") && b.getClientRects().length && s.visibility !== "hidden" && !b.inert && s.opacity !== "0" && s.pointerEvents !== "none";
+    }).map((b) => b.getBoundingClientRect()).filter((b) => b.bottom > r.top && b.top < r.bottom && b.right > r.left && b.left < r.right);
+    return { id: el.id, top: Math.round(r.top), bottom: Math.round(r.bottom), h: Math.round(r.height), vh: innerHeight, covered: covers.length };
+  });
+  check(engine, size, "kısa yatay ekranda odaklanan ürün alanı tam görünür", m.id === "t-urun" && m.top >= 0 && m.bottom <= m.vh && m.h >= 44 && m.covered === 0, JSON.stringify(m));
+}
+
+// Yeni bölüm ve hareket denetimleri. --bolge seçeneği yalnız bunları ve betiksiz denetimi çalıştırır.
+async function newChecks(browser, page, engine) {
+  await guarded(engine, "568x320", "kısa ekranda teklif", () => prefillShort(page, engine));
+  await guarded(engine, "320x568", "bölge", () => bolge(page, engine, 320, 568));
+  await guarded(engine, "1440x900", "bölge", () => bolge(page, engine, 1440, 900));
+  await guarded(engine, "390x844 hareket", "hareket", () => motion(browser, engine, 390, 844));
+  await guarded(engine, "1440x900 hareket", "hareket", () => motion(browser, engine, 1440, 900));
+}
+const onlyBolge = process.argv.includes("--bolge");
+// --motor=chromium ya da --motor=webkit yalnız o motoru çalıştırır. Varsayılan ikisidir.
+const motorArg = (process.argv.find((a) => a.startsWith("--motor=")) || "").split("=")[1] || "";
+const ENGINES = [["chromium", chromium], ["webkit", webkit]].filter(([n]) => !motorArg || n === motorArg);
+if (motorArg && !ENGINES.length) throw new Error(`Bilinmeyen motor: ${motorArg}. Seçenekler: chromium, webkit`);
+// Her motor bitince o motorun sonucu hemen yazılır. Böylece bir motor takılırsa öteki motorun sonucu kaybolmaz.
+function report(engine) {
+  const mine = results.filter((r) => r.engine === engine);
+  for (const r of mine.filter((x) => !x.ok)) console.log(`FAIL ${r.engine} ${r.size} ${r.name}${r.detail ? ": " + r.detail : ""}`);
+  for (const n of notRun.filter((x) => x.startsWith(engine))) console.log(`NOT_RUN ${n}`);
+  console.log(`[${engine}] bitti ${new Date().toISOString()}: ${mine.filter((r) => r.ok).length} pass, ${mine.filter((r) => !r.ok).length} fail, ${loadIssues.filter((x) => x.startsWith(engine)).length} yükleme sorunu`);
+}
+
 async function all() {
-  for (const [engine, type] of [["chromium", chromium], ["webkit", webkit]]) {
+  for (const [engine, type] of ENGINES) {
+    console.log(`[${engine}] başladı ${new Date().toISOString()}`);
     const browser = await type.launch();
     const errors = [];
     const page = await browser.newPage();
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+    if (onlyBolge) {
+      await newChecks(browser, page, engine);
+      await guarded(engine, "390x844 betiksiz", "betiksiz", () => noScript(browser, engine));
+      check(engine, "tümü", "konsol hatası yok", errors.length === 0, errors.slice(0, 3).join(" | "));
+      await bounded(browser.close(), 15000, "tarayıcı kapatma").catch((e) => notRun.push(`${engine}: YÜKLEME ${e.message}`));
+      report(engine);
+      continue;
+    }
     for (const [w, h] of sizes) await layout(page, engine, w, h);
     // Davranış en dar ekranda da sınanır: 320 px önce gelir.
     await behavior(page, engine, 320, 568);
@@ -1664,6 +2118,7 @@ async function all() {
     await behavior(page, engine, 1440, 900);
     await planned(page, engine, 320, 568);
     await planned(page, engine, 1440, 900);
+    await newChecks(browser, page, engine);
     // Yatay telefon: sabit çubuklar. En küçük yatay ekran da sınanır.
     await landscape(page, engine, 844, 390);
     await landscape(page, engine, 568, 320);
@@ -1697,15 +2152,16 @@ async function all() {
     }
     check(engine, "tümü", "konsol hatası yok", errors.length === 0, errors.slice(0, 3).join(" | "));
     await browser.close();
+    report(engine);
   }
+  // Özet: her motorun satırları motor bitince yazıldı. Burada yalnız sayılar tekrarlanır.
   const failed = results.filter((r) => !r.ok);
-  for (const r of failed) console.log(`FAIL ${r.engine} ${r.size} ${r.name}${r.detail ? ": " + r.detail : ""}`);
-  for (const n of notRun) console.log(`NOT_RUN ${n}`);
-  for (const engine of ["chromium", "webkit"]) {
+  for (const [engine] of ENGINES) {
     const mine = results.filter((r) => r.engine === engine);
     console.log(`${engine}: ${mine.filter((r) => r.ok).length} pass, ${mine.filter((r) => !r.ok).length} fail`);
   }
-  return failed.length ? 1 : 0;
+  if (loadIssues.length) console.log(`NOT_RUN yükleme sorunu: ${loadIssues.join(", ")}`);
+  return failed.length || loadIssues.length ? 1 : 0;
 }
 
 // Sınama kipi: testin kendisi sınanır. Her bozulma, sunucudan gelen kaynağa yolda uygulanır (dosyalar değişmez).
@@ -1714,6 +2170,13 @@ async function all() {
 const swap = (from, to) => (text) => text.replace(from, to);
 const add = (css) => (text) => text + "\n" + css;
 const BREAKS = [
+  // Bölgesel tedarik ve yönlü yüzeyler (11 Kasım 2026). En değerli üç bozulma.
+  { name: "teklif bağlantısı yazılan ürünü eziyor", file: "app.js", run: "bolge:1440x900", expect: "teklif bağlantısı yazılan ürünü silmez",
+    apply: swap("        if (!product.value.trim()) {\n          product.value = a.dataset.urun;", "        if (true) {\n          product.value = a.dataset.urun;") },
+  { name: "hareket azaltmada yönlü yüzey kayıyor", file: "styles.css", run: "motion:390x844", expect: "hareket azaltmada yönlü yüzey kaymaz",
+    apply: swap("  .surface__drift, .surface[data-axis] .surface__drift { translate: none; transform: none; transition: none; }", "") },
+  { name: "bölgede satıcı uyarısı kayboldu", file: "index.html", run: "bolge:320x568", expect: "bölüm satıcı bulunduğu anlamına gelmediğini söyler",
+    apply: swap("Bu bölgelerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez.", "") },
   // Beşinci incelemenin bulguları. Her bozulma, düzeltilen bir kusuru geri getirir.
   { name: "seçenek adı seçim işaretinin altına giriyor", file: "styles.css", run: "layout:320x568", expect: "seçenek adı seçim işaretine değmez",
     apply: add(".pref { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 12px; } .pref__mark { grid-column: 1; } .pref__t { grid-column: 2; grid-row: 1; } .pref__on { grid-column: 3; }") },
@@ -1865,7 +2328,8 @@ async function selfCheck() {
   for (const f of Object.keys(files)) source[f] = await (await fetch(new URL(f, url))).text();
   const lines = [];
   let caught = 0;
-  const chosen = BREAKS.filter((b) => b.name.includes(selfOnly));
+  // --motor verilirse sınama da yalnız o motorda çalışır. Öteki motorun bozulmaları bu koşuda denenmez.
+  const chosen = BREAKS.filter((b) => b.name.includes(selfOnly) && (!motorArg || (b.engine || "chromium") === motorArg));
   const runs = [...new Set(chosen.map((b) => `${b.engine || "chromium"}|${b.run}`))];
   for (const key of runs) {
     const [engine, run] = key.split("|");
@@ -1887,6 +2351,7 @@ async function selfCheck() {
     try {
       const [kind, dims, extra] = run.split(":");
       if (kind === "touch") await touch(browser, engine, prepare);
+      else if (kind === "motion") await motion(browser, engine, ...dims.split("x").map(Number), prepare);
       else if (kind === "noscript") await noScript(browser, engine, prepare);
       else if (kind === "forced") await forcedColors(browser, engine, prepare);
       else if (kind === "scale") await textScale(engine, Number(dims), ...extra.split("x").map(Number), prepare);
@@ -1899,6 +2364,7 @@ async function selfCheck() {
         else if (kind === "landscape") await landscape(page, engine, w, h);
         else if (kind === "focus") await focusTour(page, engine, w, h);
         else if (kind === "planned") await planned(page, engine, w, h);
+        else if (kind === "bolge") await bolge(page, engine, w, h);
         else await behavior(page, engine, w, h);
         await ctx.close();
       }

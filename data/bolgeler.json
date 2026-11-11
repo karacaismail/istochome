@@ -1,0 +1,104 @@
+{
+ "aciklama": "Bölgesel tedarik bölümünün tek veri kaynağı. fact: kaynağında okunan olgu ve kaynak adresleri. editorial: bu sayfanın önerisi (işletme ihtiyacı, yorum, teklifte sorulacak koşullar). Editoryal metin müşteri araştırmasına dayanmaz.",
+ "checked_at": "2026-11-11",
+ "yerler": [
+  {
+   "kimlik": "buldan",
+   "ad": "Buldan",
+   "tur": "ilçe",
+   "il": "Denizli",
+   "yer_etiketi": "Denizli'nin ilçesi",
+   "checked_at": "2026-11-11",
+   "fact": {
+    "metin": "Buldan bezi, ilçenin dokuma geleneğinden gelir. Ev tekstili ürünlerinde de kullanılır.",
+    "source_url": [
+     "https://ci.turkpatent.gov.tr/Files/GeographicalSigns/194.pdf",
+     "https://ci.turkpatent.gov.tr/cografi-isaretler/detay/38021"
+    ],
+    "bagi": "https://ci.turkpatent.gov.tr/Files/GeographicalSigns/194.pdf",
+    "bag_metni": "Kaynak: Türk Patent ve Marka Kurumu, Buldan bezi belgesi",
+    "yer_notu": "Belgenin 1. ve 2. sayfası"
+   },
+   "editorial": {
+    "ihtiyac": "Mağazanız için dokuma ürünler arıyorsanız",
+    "yorum": "Mağazanızda satacağınız ürün için kumaş ve ölçü seçeneklerini karşılaştırın.",
+    "kosullar": ["Kumaşın içeriğini sorun.", "Ürünün ölçüsünü ve yıkama sonrası çekmesini sorun.", "Aynı renk ve deseni yeniden alıp alamayacağınızı sorun."],
+    "teklif_urun": "Buldan bezi ev tekstili ürünleri"
+   }
+  },
+  {
+   "kimlik": "surmene",
+   "ad": "Sürmene",
+   "tur": "ilçe",
+   "il": "Trabzon",
+   "yer_etiketi": "Trabzon'un ilçesi",
+   "checked_at": "2026-11-11",
+   "fact": {
+    "metin": "Sürmene'de mutfak ve kasap bıçağı üretiminin geçmişi vardır.",
+    "source_url": [
+     "https://ci.turkpatent.gov.tr/Files/GeographicalSigns/65d834cb-5d2e-4104-a3d1-f961aae52cb0.pdf",
+     "https://ci.turkpatent.gov.tr/cografi-isaretler/detay/38340"
+    ],
+    "bagi": "https://ci.turkpatent.gov.tr/Files/GeographicalSigns/65d834cb-5d2e-4104-a3d1-f961aae52cb0.pdf",
+    "bag_metni": "Kaynak: Türk Patent ve Marka Kurumu, Sürmene bıçağı belgesi",
+    "yer_notu": "Belgenin 2. sayfası, ilk paragraf"
+   },
+   "editorial": {
+    "ihtiyac": "Mağazanıza veya mutfağınıza bıçak alıyorsanız",
+    "kosullar": ["Bıçağın hangi işte kullanılacağını belirtin.", "Çelik ve sap malzemesini sorun.", "Ambalajı ve bakım koşullarını karşılaştırın."],
+    "teklif_urun": "Mutfak ve kasap bıçakları"
+   }
+  },
+  {
+   "kimlik": "inegol",
+   "ad": "İnegöl",
+   "tur": "ilçe",
+   "il": "Bursa",
+   "yer_etiketi": "Bursa'nın ilçesi",
+   "checked_at": "2026-11-11",
+   "fact": {
+    "metin": "İnegöl'de mobilya üretimi uzun bir geçmişe sahiptir. Koltuk ve yemek odası gibi farklı ürünler üretilir.",
+    "source_url": ["https://www.itso.org.tr/inegol-mobilyasi"],
+    "bagi": "https://www.itso.org.tr/inegol-mobilyasi",
+    "bag_metni": "Kaynak: İnegöl Ticaret ve Sanayi Odası, İnegöl mobilyası sayfası",
+    "yer_notu": "Sayfanın tamamı"
+   },
+   "editorial": {
+    "ihtiyac": "Mobilya mağazanızın ürünlerini yeniliyorsanız",
+    "kosullar": ["Ölçü ve malzeme bilgisini isteyin.", "Üretim süresini sorun.", "Nakliye ve montajın fiyata dahil olup olmadığını sorun."],
+    "teklif_urun": "Mağaza için mobilya"
+   }
+  },
+  {
+   "kimlik": "merter",
+   "ad": "Merter",
+   "tur": "semt",
+   "il": "İstanbul",
+   "yer_etiketi": "İstanbul'da bir semt",
+   "checked_at": "2026-11-11",
+   "fact": {
+    "metin": "Merter'de tekstil ve hazır giyim işletmeleri bir arada bulunur.",
+    "source_url": [
+     "https://www.mesiad.tr/kurumsal/hakkimizda",
+     "https://www.mesiad.tr/baskanin-mesajlari/baskanin-mesaji"
+    ],
+    "bagi": "https://www.mesiad.tr/kurumsal/hakkimizda",
+    "bag_metni": "Kaynak: MESİAD, Hakkımızda sayfası",
+    "yer_notu": "Hakkımızda sayfası ve başkanın mesajı"
+   },
+   "editorial": {
+    "ihtiyac": "Giyim mağazanızın beden ve renklerini tamamlıyorsanız",
+    "kosullar": ["Bir paketteki beden dağılımını sorun.", "Kumaş içeriğini ve renk seçeneklerini karşılaştırın.", "Eksilen bedeni yeniden sipariş etme koşullarını sorun."],
+    "teklif_urun": "Mağaza için hazır giyim"
+   }
+  }
+ ],
+ "alim_plani": {
+  "ust": "Çok çeşit satan mağazalar için",
+  "baslik": "Ucuzluk mağazanızın alım listesini hazırlayın.",
+  "aciklama": "Ev gereçleri, kırtasiye ve temizlik ürünleri satıyorsanız ürünlerin toplam maliyetini karşılaştırın.",
+  "kontrol_basligi": "Teklif isterken bu dört bilgiyi karşılaştırın:",
+  "kontroller": ["Her ürün için alacağınız adedi bir listede yazın.", "Bir kolide kaç adet ürün olduğunu sorun.", "Taşıma dahil toplam maliyeti karşılaştırın.", "Eksilen ürünü yeniden sipariş etme koşulunu sorun."],
+  "not": "Bu maddeler, satın alırken kontrol etmeniz için bir öneridir."
+ }
+}

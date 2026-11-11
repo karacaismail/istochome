@@ -325,7 +325,7 @@ Programatik strateji şudur: bir veri boyutundaki her değer için bir sayfa ür
 
 ### 11.1 Dokuz strateji
 
-Hiçbir strateji konuma bağlı değildir. Hiçbiri günlük yazısına dayanmaz.
+Bu ürün dizinindeki dokuz strateji konuma bağlı değildir. Hiçbiri günlük yazısına dayanmaz. Bölgesel tedarik bölümü ayrıca eklenir. Gerekçe BOLGE-STRATEJISI.md dosyasındadır.
 
 | Strateji | Veri boyutu | Örnek öğe | Canlı adres |
 |---|---|---|---|
@@ -694,3 +694,94 @@ Bağımsız metin incelemesinde yanıltıcı işlem veya yeni güvence ifadesi b
 İnceleyicinin iki başlık kapsamı notu da düzeltildi.
 Tam tarayıcı takımı bu metin değişikliğinde yeniden çalıştırılmadı.
 Gerçek cihaz ve ekran okuyucu kontrolü yapılmadı. Gerçek okurla denenmedi.
+
+
+## 19. Bölgesel tedarik ve yönlü arka planlar
+
+Bu ekleme yalnız ana sayfayı değiştirir.
+Onaylanan üst bölüm, alt bölüm ve mevcut ürün dizini korunur.
+Dizinden sonra bölgesel tedarik bölümü gelir.
+Ayrı ilçe sayfası üretilmedi.
+Gerekçe ve kaynaklar `BOLGE-STRATEJISI.md` dosyasındadır.
+
+### 19.1 Alıcının ihtiyacından başlayan içerik
+
+Buldan, Sürmene ve İnegöl ilçe olarak tanıtılır.
+Merter semt olarak tanıtılır.
+Her yer için işletme ihtiyacı ve üretim gerekçesi birlikte gösterilir.
+Alıcı, teklif isterken soracağı üç koşulu aynı satırda görür.
+Kaynak bağlantıları görünürdür. Bu bilgiler üzerine gelmeye bağlı değildir.
+
+Çok çeşit satan mağazalar için ayrı alım kontrol listesi bulunur.
+Liste, ürün adedini, koli içeriğini, taşıma maliyetini ve yeniden siparişi kapsar.
+Bölüm, bu bölgelerde iStoc satıcısı bulunduğunu iddia etmez.
+
+Teklif bağlantısı aynı sayfadaki forma gider.
+Ürün alanı boşsa ilgili ürün önerisi yazılır.
+Önceden yazılan ürün korunur. Odak ürün alanına geçer.
+Betik kapalıysa bağlantı yine form bölümüne gider.
+
+### 19.2 Dekoratif yüzeylerin hareketi
+
+Karşılama dalgası yatay, bölgesel ızgara çapraz hareket eder.
+Araçlardaki noktalar dikey hareket eder.
+Planlanan ödeme bölümündeki rota yatay hareket eder.
+Hareketli ana yüzey sayısı dörttür.
+Metinler ve düğmeler bu hareketle yer değiştirmez.
+
+Kaydırma hareketi en çok 24 CSS px olur.
+Fareye bağlı hareket en çok 8 CSS px olur.
+Çizgiler sabit aralıklıdır. Bölüm uzadıkça desen büyümez.
+Hareket azaltma tercihinde yüzeyler durağandır.
+Gizli sekmede ve ekran dışındaki yüzeylerde hareket hesaplanmaz.
+Yeni kütüphane, Three.js, Canvas veya WebGL eklenmedi.
+
+### 19.3 Kontrol kaydı
+
+Kontroller 11 Kasım 2026 günü macOS üzerinde çalıştırılır.
+Node 24.21.0, Python 3.9.6 ve Playwright 1.64.1 kullanılır.
+Aşağıdaki sonuçlar yalnız bu eklemenin kapsamını belirtir.
+Önceki sürümlerin sonuçları bu sürümün kanıtı değildir.
+
+
+| Denetim | Sonuç |
+|---|---|
+| Önizleme derlemesi | pass. 530 metin sınıflandırıldı. |
+| Kural kapısı | pass. 800 stil kuralı ve bir sayfa denetlendi. |
+| Kapının bozulma sınaması | pass. 108 örneğin tamamı reddedildi. |
+| İlk hedefli Chromium koşusu | fail. 84 denetim geçti, dokuz denetim kaldı. |
+| İkinci hedefli Chromium koşusu | fail. 78 denetim geçti, iki bekleme koşulu hatalıydı. |
+| Son hedefli Chromium koşusu | pass. 93 denetimin tamamı geçti. Yükleme sorunu yoktu. |
+| Tarayıcı testlerinin bozulma sınaması | pass. Uyarı, hareket ve form gruplarındaki dört bozulma yakalandı. |
+| Yedi genişlikte yerleşim | pass. Taşma ve 14 CSS px altında yazı bulunmadı. |
+| Bağımsız kod ve görsel inceleme | pass. Açık bulgu kalmadı. |
+| Son WebKit koşusu | not_run. Tarayıcı siteye gitmeden sekme oluştururken takıldı. |
+
+Yerleşim kontrolü 320, 360, 375, 390, 768, 844 ve 1440 CSS px genişlikleri kapsadı.
+568 × 320 görünümünde teklif alanının odağı ve görünürlüğü ayrıca doğrulandı.
+320 ve 1440 CSS px görüntüleri görsel olarak incelendi.
+Ubuntu yazı tipinin yüklenmesi doğrulandı.
+
+Yüzey ilk görünüşünde ilerleme hesaplanmıyordu. Görünürlük olayı bu hesabı artık başlatır.
+Testlerde giriş hareketi ile kaydırma hareketi birbirinden ayrıldı.
+Bitmiş animasyonları bekleyen yanlış koşul düzeltildi.
+Saydam ve etkisiz sepet çubuğu gerçek örtüşme sayılmıyor.
+Kısa yatay görünümde çubuğun altındaki noktada ürün alanı bulundu.
+Dolu örnek sepetin aynı görünümdeki durumu bu eklemede ayrıca sınanmadı.
+
+Son hedefli komut şöyledir:
+
+`PLAYWRIGHT_PACKAGE_DIR=<kurulu paket klasörü> node tarayici-testi.mjs <önizleme adresi> --bolge --motor=chromium`
+
+Bozulma koşuları `--sinama=bölge`, `--sinama=yönlü` ve `--sinama=teklif bağlantısı` kullandı.
+Son seçenek komut satırında tırnak içine alınır.
+
+Türkçe denetimi yeni metinlerde ve değişen belgelerde çalıştı.
+Uzun kelime uyarıları elle incelendi. İsimler ve koşullar korundu.
+README içindeki üç uzun ifade açıklamadır ve 15 kelime hedefini aşmaz.
+Gerçek okurla denenmedi.
+
+Tam tarayıcı takımı bu eklemede yeniden çalıştırılmadı.
+WebKit hatası sayfanın çalışmadığını kanıtlamaz. Bu sürümün WebKit sonucu doğrulanmamıştır.
+Firefox çalıştırılmadı. Gerçek Safari, iOS, Android ve ekran okuyucu kontrolleri yapılmadı.
+Pages önizlemesi arama motorlarına kapalı kalır.

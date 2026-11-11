@@ -2,6 +2,8 @@
 # Kural: sayfada görünen, en az iki kelimeli her metnin sınıfı bilinir. Sınıfı bilinmeyen metin sayfaya giremez.
 #   kaynak  canlı sitedeki bir sayfaya dayanan cümle (secim.py, IDDIALAR). veri.py kanıtını arar.
 #           Bu sınıfta eşleşme birebirdir. Sayısı değişen bir cümle başka bir cümledir.
+#   dis     istoc.com dışındaki bir kaynağa dayanan olgu cümlesi (data/bolgeler.json, fact.metin).
+#           Cümle kaynağının bağlantısıyla aynı satırda durur. kapi.mjs bağlantıyı ve denetim gününü denetler.
 #   veri    sayısı ya da dayanağı data/ klasöründen gelen metin (secim.py, VERI_METNI). Sayılar # ile yazılır.
 #   tasarim bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu (secim.py, TASARIM_METNI).
 #   etiket  düğme, bağlantı ve alan etiketi (secim.py, ETIKETLER). Canlı sitedeki bir sayfanın adı da etikettir.
@@ -114,10 +116,10 @@ def hidden_known(text, exact, prefixes):
     return t in exact or t.rstrip(":").strip() in exact or any(t.startswith(p) for p in prefixes)
 
 
-def classify(doc, sourced, data_copy, design_copy, labels, planned=()):
+def classify(doc, sourced, data_copy, design_copy, labels, planned=(), outside=()):
     """Her metni sınıfıyla döndürür. Sınıfı olmayan metin "yok" sınıfını alır."""
     exact = {}
-    for name, items in (("etiket", labels), ("plan", planned), ("tasarim", design_copy), ("kaynak", sourced)):
+    for name, items in (("etiket", labels), ("plan", planned), ("tasarim", design_copy), ("dis", outside), ("kaynak", sourced)):
         for item in items:
             exact[squeeze(item)] = name
     folded = {norm(item) for item in data_copy}
