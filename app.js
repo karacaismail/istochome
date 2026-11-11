@@ -635,7 +635,7 @@
 
   /* 10. Sık sorulanlar, araç ayrıntıları ve kütüphane öğeleri: tek tek açılır. Kapalı yanıt klavye ve okuyucudan gizlenir.
      Durum (aria-expanded, data-open, inert) tıklama anında yazılır. Açılma görünümü CSS geçişiyle gelir. */
-  $$(".faq, .tool, .libq").forEach(function (item) {
+  $$(".faq, .tool, .libq, .talep__acil").forEach(function (item) {
     var btn = $("button", item);
     var panel = $(".faq__panel", item);
     panel.inert = true;
@@ -814,132 +814,8 @@
     });
   })();
 
-  /* 15. Hareketli yüzeyler: ticaret ağı, nokta alanı ve sipariş rotası.
-     Yüzey ekrana girince bir kez çizilir (is-on). Sonsuz hareket yoktur.
-     Sekme gizliyken çizim başlamaz. Sekme görünür olunca ekrandaki yüzey çizilir.
-     İşaretçi ekrandaki bir yüzeyin üstündeyken yakın çizgiler belirginleşir (is-near). Ekran dışındaki yüzey için iş yapılmaz.
-     Hareket azaltma tercihinde yüzey çizilmiş haliyle durur ve işaretçiyi izlemez. Tercih sonradan değişse de bu uygulanır. */
-  (function () {
-    var list = $$("[data-surface]");
-    if (!list.length) return;
-    var waiting = [];
-    function draw(el) { el.classList.add("is-on"); }
-    function settle() { list.forEach(function (el) { draw(el); el.classList.remove("is-near"); }); }
-    if (reduce.matches || !("IntersectionObserver" in window)) settle();
-    if ("IntersectionObserver" in window) {
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          en.target._seen = en.isIntersecting;
-          if (!en.isIntersecting) { en.target.classList.remove("is-near"); return; }
-          if (document.hidden) waiting.push(en.target);
-          else draw(en.target);
-        });
-      }, { threshold: 0.12 });
-      list.forEach(function (el) { io.observe(el); });
-    }
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) { list.forEach(function (el) { el.classList.remove("is-near"); }); return; }
-      waiting.splice(0).forEach(function (el) { if (el._seen) draw(el); });
-    });
-    if (reduce.addEventListener) reduce.addEventListener("change", function () { if (reduce.matches) settle(); });
-    var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-    var last = null;
-    var ticking = false;
-    function flush() {
-      ticking = false;
-      if (!last || reduce.matches || document.hidden) return;
-      /* Önce ölçülür, sonra yazılır. */
-      var shown = list.filter(function (el) { return el._seen; });
-      var boxes = shown.map(function (el) { return el.getBoundingClientRect(); });
-      shown.forEach(function (el, i) {
-        var r = boxes[i];
-        var x = last.clientX - r.left;
-        var y = last.clientY - r.top;
-        var inside = x >= 0 && y >= 0 && x <= r.width && y <= r.height;
-        el.classList.toggle("is-near", inside);
-        if (inside) {
-          el.style.setProperty("--mx", Math.round(x) + "px");
-          el.style.setProperty("--my", Math.round(y) + "px");
-        }
-      });
-    }
-    document.addEventListener("pointermove", function (e) {
-      if (e.pointerType === "touch" || !fine.matches || reduce.matches) return;
-      last = e;
-      if (!ticking) { ticking = true; requestAnimationFrame(flush); }
-    }, { passive: true });
-  })();
-
-  /* 15b. Yönlü yüzeyler: yalnız ana duraklar (data-axis). Süs katmanı sayfanın gerçek kaydırma yönünü izler.
-     İlerleme (--p) yüzeyin ekrandan geçişidir: 0 ekrana girerken, 1 ekrandan çıkarken. Aşağı kaydırınca artar, yukarı kaydırınca azalır.
-     Değer yalnız kaydırma karesinde hesaplanır. Kaydırma durunca kare istenmez, kendiliğinden süren hareket yoktur.
-     Ekran dışındaki ve gizli sekmedeki yüzey için hesap yapılmaz. Sekme görünür olunca ekrandaki yüzey hemen güncellenir.
-     İnce işaretçi yüzeyin üstündeyken katman işaretçiye doğru en çok --tilt kadar eğilir. İşaretçi çıkınca eğim sıfıra döner.
-     Dönüş CSS geçişiyle olur: iki yönde aynı süre ve eğri. Hareket azaltma tercihinde değer yazılmaz, katman durağandır. */
-  (function () {
-    var movers = $$("[data-surface][data-axis]");
-    if (!movers.length) return;
-    var tilt = parseFloat(getComputedStyle(root).getPropertyValue("--tilt")) || 0;
-    if ("IntersectionObserver" in window) {
-      /* Yüzey ekrana girince ilerleme hemen yazılır. Kaydırma karesi gözlemciden önce gelmiş olabilir. */
-      var io = new IntersectionObserver(function (entries) {
-        var entered = false;
-        entries.forEach(function (en) { en.target._live = en.isIntersecting; if (en.isIntersecting) entered = true; });
-        if (entered) frame.run();
-      }, { threshold: 0 });
-      movers.forEach(function (el) { io.observe(el); });
-    } else movers.forEach(function (el) { el._live = true; });
-    frame.add(function () {
-      if (reduce.matches) return null;
-      if (document.hidden) return [];
-      var h = window.innerHeight;
-      return movers.map(function (el) {
-        if (!el._live) return undefined;
-        var r = el.getBoundingClientRect();
-        if (r.bottom < 0 || r.top > h) return undefined;
-        return Math.min(1, Math.max(0, (h - r.top) / (h + r.height))).toFixed(3);
-      });
-    }, function (list) {
-      movers.forEach(function (el, i) {
-        if (!list) { el.style.removeProperty("--p"); return; }
-        if (list[i] !== undefined && el.style.getPropertyValue("--p") !== list[i]) el.style.setProperty("--p", list[i]);
-      });
-    });
-    document.addEventListener("visibilitychange", function () { if (!document.hidden) frame.run(); });
-    /* İşaretçi eğimi. Önce ölçülür, sonra yazılır. */
-    var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-    var last = null;
-    var ticking = false;
-    function rest(el) {
-      if (el._tilted) { el.style.setProperty("--tx", "0px"); el.style.setProperty("--ty", "0px"); el._tilted = false; }
-    }
-    function restAll() { last = null; movers.forEach(rest); }
-    function flush() {
-      ticking = false;
-      if (!last) return;
-      if (reduce.matches || document.hidden) { restAll(); return; }
-      var boxes = movers.map(function (el) { return el._live ? el.getBoundingClientRect() : null; });
-      movers.forEach(function (el, i) {
-        var r = boxes[i];
-        var inside = r && last.clientX >= r.left && last.clientX <= r.right && last.clientY >= r.top && last.clientY <= r.bottom;
-        if (!inside) { rest(el); return; }
-        var tx = ((last.clientX - r.left) / r.width - 0.5) * 2 * tilt;
-        var ty = ((last.clientY - r.top) / r.height - 0.5) * 2 * tilt;
-        el.style.setProperty("--tx", tx.toFixed(1) + "px");
-        el.style.setProperty("--ty", ty.toFixed(1) + "px");
-        el._tilted = true;
-      });
-    }
-    document.addEventListener("pointermove", function (e) {
-      if (e.pointerType === "touch" || !fine.matches || reduce.matches) return;
-      last = e;
-      if (!ticking) { ticking = true; requestAnimationFrame(flush); }
-    }, { passive: true });
-    /* İşaretçi pencereden çıkınca bütün eğimler sıfıra döner. */
-    document.addEventListener("pointerout", function (e) { if (!e.relatedTarget) restAll(); });
-    window.addEventListener("blur", restAll);
-    if (reduce.addEventListener) reduce.addEventListener("change", function () { restAll(); frame.run(); });
-  })();
+  /* 15. Hareketli sahneler bu dosyada değildir. TypeScript hareket paketi yönetir (src/hareket, derleme çıktısı hareket/).
+     Önyükleyici hareket/baslat.js dosyasıdır. Bu dosyada sahne için dinleyici ya da kare zamanlayıcısı yoktur. */
 
   /* 16. Bölgesel tedarik: "Teklif isteyin" bağlantısı aynı sayfadaki teklif formuna gider.
      Ürün alanı boşsa o yerin ürününü yazar, özet input olayıyla hemen güncellenir. Alan doluysa yazılan ürün silinmez.
@@ -949,6 +825,7 @@
   (function () {
     var product = $("#t-urun");
     var target = $("#teklif");
+    var area = $("[data-rfq-alan]");
     if (!product || !target) return;
     $$("a[data-bolge-teklif]").forEach(function (a) {
       a.addEventListener("click", function (e) {
@@ -958,10 +835,117 @@
           product.value = a.dataset.urun;
           product.dispatchEvent(new Event("input", { bubbles: true }));
         }
+        /* Alıcı talep alanından gelinirse seçilen alan formun yanında yazar. Tedarik bağlantısı bu satırı kaldırır. */
+        if (area) {
+          area.hidden = !a.dataset.alan;
+          area.textContent = a.dataset.alan ? "Seçtiğiniz alım alanı:" + " " + a.dataset.alan : "";
+        }
         if (location.hash !== "#teklif") history.pushState(null, "", "#teklif");
         target.scrollIntoView({ block: "start" });
         /* Odak alanı gerekirse görünür yere kaydırır. Kısa yatay ekranda alan formun başlığından aşağıda kalabilir. */
         product.focus();
+      });
+    });
+  })();
+
+  /* Arama ya da süzgeç sürerken açılır panel: eşleşen satırlar düğmesiz, açık listede görünür.
+     Panelin düğmesi ve üstündeki eski sayı ("... daha görün") gizlenir, panel açık tutulur.
+     Arama ya da süzgeç kalkınca panel kullanıcının bıraktığı duruma döner. Durum (data-open, aria-expanded, inert) anında yazılır. */
+  function holdOpen(more, on) {
+    if (!more) return;
+    var btn = $(".talep__btn", more);
+    var panel = $(".faq__panel", more);
+    if (!btn || !panel) return;
+    /* Panelin adı bu sürede bölümün başlığıdır (aria-labelledby). Gizli düğmedeki eski sayı okunmaz. Çıkışta eski ad geri gelir. Odak taşınmaz. */
+    var sec = more.closest("section");
+    var heading = sec ? sec.getAttribute("aria-labelledby") : null;
+    if (on) {
+      if (more._was === undefined) {
+        more._was = btn.getAttribute("aria-expanded") === "true";
+        more._label = panel.getAttribute("aria-labelledby");
+      }
+      btn.hidden = true;
+      btn.setAttribute("aria-expanded", "true");
+      panel.dataset.open = "true";
+      panel.inert = false;
+      if (heading) panel.setAttribute("aria-labelledby", heading);
+    } else if (more._was !== undefined) {
+      var was = more._was;
+      var label = more._label;
+      delete more._was;
+      delete more._label;
+      btn.hidden = false;
+      btn.setAttribute("aria-expanded", was ? "true" : "false");
+      panel.dataset.open = was ? "true" : "false";
+      panel.inert = !was;
+      if (label) panel.setAttribute("aria-labelledby", label);
+    }
+  }
+
+  /* 16b. Tedarik merkezi araması. Merkez adı, şehir ya da sektör yazılır, sonuç yazma anında güncellenir.
+     Arama Türkçe büyük ve küçük harfe ve işaretlere duyarsızdır. Yazılan her kelime satırda geçmelidir.
+     Eşleşmeyen satır hidden olur, böylece odak sırasından da çıkar. Eşleşen satır kapalı paneldeyse panel açılır.
+     Sonuç sayısı bölümde yazar ve #durum satırında duyurulur. Eşleşme yoksa durum cümlesi görünür.
+     Betik yoksa arama alanı görünmez (js-only), bütün merkezler okunur. Yerel seçim menüsü kullanılmaz. */
+  (function () {
+    var sec = $("#bolgesel-tedarik");
+    var input = sec ? $("[data-bolge-q]", sec) : null;
+    if (!input) return;
+    /* Türkçe küçük harf, işaretler atılır. Noktasız ı da i olur. Böylece "Istanbul" yazımı da İstanbul ile eşleşir. */
+    var norm = function (t) { return String(t).toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i"); };
+    var rows = $$("[data-bolge]", sec).map(function (li) {
+      var cells = [$(".bolge__ad", li), $(".bolge__tur", li)].concat($$(".yer__meta dd", li));
+      return { li: li, text: norm(cells.map(function (c) { return c ? c.textContent : ""; }).join(" ")) };
+    });
+    var more = $("[data-bolge-more]", sec);
+    var out = $("[data-bolge-sonuc]", sec);
+    var empty = $("[data-bolge-bos]", sec);
+    var last = null;
+    function run() {
+      var words = norm(input.value).split(/\s+/).filter(Boolean);
+      var n = 0;
+      rows.forEach(function (r) {
+        var on = words.every(function (w) { return r.text.indexOf(w) !== -1; });
+        r.li.hidden = !on;
+        if (on) n += 1;
+      });
+      holdOpen(more, words.length > 0);
+      if (empty) empty.hidden = n > 0;
+      var text = n + " " + "merkez listeleniyor.";
+      if (out) out.textContent = text;
+      if (text !== last) announce(text);
+      last = text;
+    }
+    input.addEventListener("input", run);
+  })();
+
+  /* 17. Alıcı talep alanları: grup süzgeci. Düğme aria-pressed taşır ve durum tıklama anında değişir.
+     Eşleşmeyen alan hidden olur, böylece odak sırasından da çıkar. Eşleşen bir alan kapalı paneldeyse panel açılır.
+     Sonuç sayısı bölümde yazar ve #durum satırında duyurulur. Eşleşen alan yoksa boş grup cümlesi görünür.
+     Betik yoksa süzgeç görünmez (js-only). 24 alan HTML içindedir. Betik yoksa açılır panel de açık durur. */
+  (function () {
+    var sec = $("#alici-talepleri");
+    if (!sec) return;
+    var buttons = $$("[data-talep-grup]", sec);
+    var items = $$("[data-talep]", sec);
+    var more = $("[data-talep-more]", sec);
+    var out = $("[data-talep-sonuc]", sec);
+    var empty = $("[data-talep-bos]", sec);
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var g = b.dataset.talepGrup;
+        buttons.forEach(function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+        var n = 0;
+        items.forEach(function (li) {
+          var on = !g || li.dataset.grup === g;
+          li.hidden = !on;
+          if (on) n += 1;
+        });
+        holdOpen(more, !!g);
+        if (empty) empty.hidden = n > 0;
+        var text = (g ? "Bu grupta" : "Tüm gruplarda") + " " + n + " " + "alan var.";
+        if (out) out.textContent = text;
+        announce(text);
       });
     });
   })();

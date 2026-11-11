@@ -1,104 +1,1412 @@
 {
- "aciklama": "Bölgesel tedarik bölümünün tek veri kaynağı. fact: kaynağında okunan olgu ve kaynak adresleri. editorial: bu sayfanın önerisi (işletme ihtiyacı, yorum, teklifte sorulacak koşullar). Editoryal metin müşteri araştırmasına dayanmaz.",
- "checked_at": "2026-11-11",
- "yerler": [
-  {
-   "kimlik": "buldan",
-   "ad": "Buldan",
-   "tur": "ilçe",
-   "il": "Denizli",
-   "yer_etiketi": "Denizli'nin ilçesi",
-   "checked_at": "2026-11-11",
-   "fact": {
-    "metin": "Buldan bezi, ilçenin dokuma geleneğinden gelir. Ev tekstili ürünlerinde de kullanılır.",
-    "source_url": [
-     "https://ci.turkpatent.gov.tr/Files/GeographicalSigns/194.pdf",
-     "https://ci.turkpatent.gov.tr/cografi-isaretler/detay/38021"
+  "aciklama": "Bölgesel tedarik bölümünün tek veri kaynağıdır. fact alanı kurumsal kaynaklarla doğrulanan olguları içerir. editorial alanı alım ihtiyacına yönelik önerileri içerir. Öneriler müşteri araştırması sonucu değildir.",
+  "checked_at": "2026-11-11",
+  "yerler": [
+    {
+      "kimlik": "istoc",
+      "ad": "İSTOÇ",
+      "tur": "ticaret merkezi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Bağcılar'da ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "İSTOÇ'ta ev gereçleri ve züccaciye satan işletmeler bulunur.",
+        "source_url": [
+          "https://www.bagcilar.bel.tr/BBImages/Slider/Image/hbulteni_kasim_2024.pdf",
+          "https://www.zucder.org.tr/zucder-uyeleri/uye/ipek-zuccaciye-ith-ihr-san-tic-ltd-sti/"
+        ],
+        "bagi": "https://www.bagcilar.bel.tr/BBImages/Slider/Image/hbulteni_kasim_2024.pdf",
+        "bag_metni": "Kaynak: Bağcılar Belediyesi, Kasım 2024 bülteni",
+        "yer_notu": "13. sayfadaki İSTOÇ ürün grupları. ZÜCDER üye kaydı züccaciye faaliyetini ve konumu destekler."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanız için ev gereçleri alıyorsanız",
+        "yorum": "Mutfak ve ev gereçlerini farklı satıcılardan araştırabilirsiniz. Teklifleri taşıma dahil toplam maliyetle karşılaştırın.",
+        "kosullar": [
+          "Bir kolide kaç adet ürün olduğunu sorun.",
+          "Farklı ürünleri aynı siparişte alıp alamayacağınızı sorun.",
+          "Eksilen ürünün yeniden sipariş koşulunu sorun."
+        ],
+        "teklif_urun": "Mağaza için mutfak ve ev gereçleri"
+      },
+      "sektor": "Ev gereçleri",
+      "sektor_kodu": "ev-gerecleri",
+      "grup": "imalat"
+    },
+    {
+      "kimlik": "gimat",
+      "ad": "GİMAT",
+      "tur": "ticaret merkezi",
+      "il": "Ankara",
+      "yer_etiketi": "Ankara, Yenimahalle'de ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "GİMAT Gıda Toptancılar Sitesi, Ankara'nın Yenimahalle ilçesindedir. GİMAT'ın faaliyet alanı gıda ticaretidir.",
+        "source_url": [
+          "https://www.gimat.com.tr/hakkimizda/",
+          "https://www.gimat.com.tr/iletisim/"
+        ],
+        "bagi": "https://www.gimat.com.tr/hakkimizda/",
+        "bag_metni": "Kaynak: GİMAT, faaliyet bilgileri",
+        "yer_notu": "Hakkımızda sayfası gıda ticaretini açıklar. İletişim sayfası site adını ve ilçeyi doğrular."
+      },
+      "editorial": {
+        "ihtiyac": "Marketinizin gıda stokunu tamamlıyorsanız",
+        "yorum": "Düzenli alım için koli fiyatını ve teslim günlerini birlikte değerlendirin. Raf ömrünü siparişten önce öğrenin.",
+        "kosullar": [
+          "Koli içeriğini ve birim fiyatını sorun.",
+          "Son tüketim tarihini ve saklama koşullarını sorun.",
+          "Teslim gününü ve en az sipariş tutarını sorun."
+        ],
+        "teklif_urun": "Market için kolili gıda ürünleri"
+      },
+      "sektor": "Toptan gıda",
+      "sektor_kodu": "gida",
+      "grup": "gida"
+    },
+    {
+      "kimlik": "akdeniz",
+      "ad": "Akdeniz",
+      "tur": "ilçe",
+      "il": "Mersin",
+      "yer_etiketi": "Mersin'in ilçesi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "Mersin'de bakliyat işleme ve ticareti yapılır. Akdeniz ilçesinde de bakliyat işletmeleri bulunur.",
+        "source_url": [
+          "https://www.mtso.org.tr/Etiket/detay/e/mersin-fao-heyetiyle-kuresel-gida-guvenligini-gorustu",
+          "https://arbel.com.tr/tr/urunlerimiz",
+          "https://arbel.com.tr/tr/iletisim",
+          "https://mersin.bel.tr/ilan/mersin-ili-akdeniz-ilcesi-kazanli-mahallesi-301-ada-376-ve-380-parsel-ile-cevresine-iliskin-1-5000-olcekli-nazim-imar-plani-degisikligi-ve-1-1000-olcekli-uygulama-imar-plani-degisikligi-teklifi"
+        ],
+        "bagi": "https://www.mtso.org.tr/Etiket/detay/e/mersin-fao-heyetiyle-kuresel-gida-guvenligini-gorustu",
+        "bag_metni": "Kaynak: Mersin Ticaret ve Sanayi Odası",
+        "yer_notu": "Oda bakliyat işleme sanayisini açıklar. Üreticinin ürün ve Kazanlı adresi, belediyenin ilçe kaydıyla birlikte değerlendirilir."
+      },
+      "editorial": {
+        "ihtiyac": "Yemek işletmeniz için toplu bakliyat alıyorsanız",
+        "yorum": "Nohut, mercimek veya fasulyeyi kullanımınıza göre seçin. Numuneyi pişirerek değerlendirin ve kilogram fiyatını karşılaştırın.",
+        "kosullar": [
+          "Ürünün çeşidini ve tane boyunu sorun.",
+          "Paket ağırlığını ve raf ömrünü sorun.",
+          "Numune ve düzenli teslim koşullarını sorun."
+        ],
+        "teklif_urun": "Yemek işletmesi için toplu bakliyat"
+      },
+      "sektor": "Bakliyat",
+      "sektor_kodu": "bakliyat",
+      "grup": "gida"
+    },
+    {
+      "kimlik": "buttim",
+      "ad": "BUTTİM",
+      "tur": "ticaret merkezi",
+      "il": "Bursa",
+      "yer_etiketi": "Bursa, Osmangazi'de ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "BUTTİM, tekstil firmalarının bulunduğu bir ticaret merkezidir. Merkezde nakliye ve kargo firmaları da bulunur.",
+        "source_url": [
+          "https://buttim.org.tr/hakkimizda/",
+          "https://buttim.org.tr/iletisim/",
+          "https://buttim.org.tr/hometeks-fuarina-buttim-damgasi/"
+        ],
+        "bagi": "https://buttim.org.tr/hakkimizda/",
+        "bag_metni": "Kaynak: BUTTİM, merkez bilgileri",
+        "yer_notu": "Hakkımızda sayfası ticaret ve nakliyeyi açıklar. Ev tekstili fuarı haberi ürün odağını destekler."
+      },
+      "editorial": {
+        "ihtiyac": "Ev tekstili mağazanızın ürünlerini yeniliyorsanız",
+        "yorum": "Kumaş içeriği ve ölçüleri aynı olan ürünlerin tekliflerini karşılaştırın. Taşıma bedelini ayrıca öğrenin.",
+        "kosullar": [
+          "Kumaş içeriğini ve ürün ölçüsünü sorun.",
+          "Aynı renk ve deseni yeniden alıp alamayacağınızı sorun.",
+          "Koli adedini ve taşıma bedelini sorun."
+        ],
+        "teklif_urun": "Mağaza için ev tekstili ürünleri"
+      },
+      "sektor": "Ev tekstili",
+      "sektor_kodu": "ev-tekstili",
+      "grup": "tekstil"
+    },
+    {
+      "kimlik": "baspinar",
+      "ad": "Gaziantep OSB (Başpınar)",
+      "tur": "sanayi bölgesi",
+      "il": "Gaziantep",
+      "yer_etiketi": "Gaziantep, Şehitkamil'de sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "Gaziantep, makine halısı üretiminde uzmanlaşmıştır. Başpınar'da da halı üreticileri bulunur.",
+        "source_url": [
+          "https://ika.org.tr/assets/upload/dosyalar/2024-2028-trc1-bolge-plani.pdf",
+          "https://asyacarpet.com/iletisim.html",
+          "https://www.ozkaplancarpet.com/bvcsk/showroom.html",
+          "https://gaosb.org/"
+        ],
+        "bagi": "https://ika.org.tr/assets/upload/dosyalar/2024-2028-trc1-bolge-plani.pdf",
+        "bag_metni": "Kaynak: İpekyolu Kalkınma Ajansı, bölge planı",
+        "yer_notu": "PDF 69. sayfa makine halısı uzmanlığını açıklar. Üretici adresleri Başpınar konumunu destekler."
+      },
+      "editorial": {
+        "ihtiyac": "Halı mağazanızın ölçü ve desenlerini tamamlıyorsanız",
+        "yorum": "Aynı desenin farklı ölçülerini birlikte değerlendirin. Çok satan ölçüyü yeniden alabilmek için üretim koşulunu öğrenin.",
+        "kosullar": [
+          "İplik türünü ve halının kalınlığını sorun.",
+          "Her ölçüden en az kaç adet alınacağını sorun.",
+          "Aynı deseni yeniden üretme koşulunu sorun."
+        ],
+        "teklif_urun": "Mağaza için makine halısı"
+      },
+      "sektor": "Makine halısı",
+      "sektor_kodu": "hali",
+      "grup": "tekstil"
+    },
+    {
+      "kimlik": "merkezefendi",
+      "ad": "Merkezefendi",
+      "tur": "ilçe",
+      "il": "Denizli",
+      "yer_etiketi": "Denizli ilinde Merkezefendi ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Havlu ve bornoz",
+      "sektor_kodu": "ev-tekstili",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Merkezefendi'deki ev tekstili işletmelerinin ürünleri arasında havlu ve bornoz bulunur.",
+        "source_url": [
+          "https://www.aydentekstil.com/",
+          "https://www.julie.com.tr/iletisim/"
+        ],
+        "bagi": "https://www.aydentekstil.com/",
+        "bag_metni": "Kaynak: Ayden Tekstil, ürün ve adres bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanız için havlu veya bornoz alıyorsanız",
+        "yorum": "Kumaş içeriğini ve ürün ağırlığını birlikte karşılaştırın. Tekrar siparişte aynı renk ve ölçüyü isteyin.",
+        "kosullar": [
+          "Kumaş içeriğini ve ürün ağırlığını sorun.",
+          "Renk ve ölçü başına sipariş adedini sorun.",
+          "Yıkama ve tekrar sipariş koşullarını sorun."
+        ],
+        "teklif_urun": "Mağaza için havlu ve bornoz"
+      }
+    },
+    {
+      "kimlik": "melikgazi",
+      "ad": "Kayseri OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Kayseri",
+      "yer_etiketi": "Kayseri, Melikgazi içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Ofis mobilyası",
+      "sektor_kodu": "mobilya",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Melikgazi'deki mobilya işletmeleri arasında ofis mobilyası sunan üreticiler bulunur.",
+        "source_url": [
+          "https://shop.flekssit.com.tr/iletisim",
+          "https://www.kayseriosb.org/index.php"
+        ],
+        "bagi": "https://shop.flekssit.com.tr/iletisim",
+        "bag_metni": "Kaynak: Flekssit, ürün ve adres bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "İşyeriniz için masa veya çalışma koltuğu alıyorsanız",
+        "yorum": "Ofisinizin ölçüsünü ve kullanım biçimini belirtin. Nakliye ve montajı toplam fiyatla birlikte değerlendirin.",
+        "kosullar": [
+          "Ürünün ölçüsünü ve malzemesini sorun.",
+          "Toplu siparişin teslim süresini sorun.",
+          "Nakliye ve montajın fiyata dahil olup olmadığını sorun."
+        ],
+        "teklif_urun": "İşyeri için masa ve çalışma koltuğu"
+      }
+    },
+    {
+      "kimlik": "perpa",
+      "ad": "PERPA Ticaret Merkezi",
+      "tur": "ticaret merkezi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Şişli'de ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "PERPA'nın firma rehberinde elektronik, bilgisayar ve haberleşme işletmeleri yer alır.",
+        "source_url": [
+          "https://www.perpa.com.tr/company",
+          "https://www.perpa.com.tr/about/contact_us"
+        ],
+        "bagi": "https://www.perpa.com.tr/company",
+        "bag_metni": "Kaynak: PERPA, firma rehberi",
+        "yer_notu": "Rehber elektronik firmalarını ve ilgili sektörleri listeler. İletişim sayfası Şişli konumunu doğrular."
+      },
+      "editorial": {
+        "ihtiyac": "İşletmenize elektronik ürün veya parça alıyorsanız",
+        "yorum": "Model kodunu ve birlikte kullanılacak cihazları belirtin. Teknik uyumu, garanti koşullarını ve toplu fiyatı karşılaştırın.",
+        "kosullar": [
+          "Model kodunu ve teknik özellikleri doğrulatın.",
+          "Garanti ve teknik destek koşullarını sorun.",
+          "Aynı ürünü yeniden tedarik etme süresini sorun."
+        ],
+        "teklif_urun": "İşletme için elektronik ürün ve parçalar"
+      },
+      "sektor": "Elektronik",
+      "sektor_kodu": "elektronik",
+      "grup": "imalat"
+    },
+    {
+      "kimlik": "ostim",
+      "ad": "OSTİM OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Ankara",
+      "yer_etiketi": "Ankara, Yenimahalle'de sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "OSTİM'de makine, metal işleme ve teknik ekipman firmaları bulunur.",
+        "source_url": [
+          "https://ostim.org.tr/sektorler",
+          "https://ostimmem.meb.k12.tr/"
+        ],
+        "bagi": "https://ostim.org.tr/sektorler",
+        "bag_metni": "Kaynak: OSTİM, sektör rehberi",
+        "yer_notu": "OSB sektör rehberi faaliyetleri açıklar. MEB kurum adresi OSTİM OSB mahallesinin ilçesini doğrular."
+      },
+      "editorial": {
+        "ihtiyac": "Atölyenize makine parçası veya ekipman alıyorsanız",
+        "yorum": "Satıcıya parça kodunu, ölçüyü veya teknik çizimi gönderin. Böylece aynı ihtiyaca verilen teklifleri karşılaştırabilirsiniz.",
+        "kosullar": [
+          "Parçanın makinenize uygunluğunu doğrulatın.",
+          "Malzemeyi ve ölçüleri yazılı isteyin.",
+          "Teslim süresini ve tekrar üretim koşullarını sorun."
+        ],
+        "teklif_urun": "Atölye için makine parçası ve teknik ekipman"
+      },
+      "sektor": "Makine parçaları",
+      "sektor_kodu": "makine",
+      "grup": "imalat"
+    },
+    {
+      "kimlik": "konya-osb",
+      "ad": "Konya Organize Sanayi Bölgesi",
+      "tur": "sanayi bölgesi",
+      "il": "Konya",
+      "yer_etiketi": "Konya, Selçuklu'da sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "Konya'da otomotiv yedek parça üretimi yapılır. Organize sanayi bölgesinde piston gibi motor parçaları üretilir.",
+        "source_url": [
+          "https://www.konyadayatirim.gov.tr/sektorler/otomotiv-yan-sanayi",
+          "https://www.koneks.com/",
+          "https://www.kos.org.tr/"
+        ],
+        "bagi": "https://www.konyadayatirim.gov.tr/sektorler/otomotiv-yan-sanayi",
+        "bag_metni": "Kaynak: Mevlana Kalkınma Ajansı, otomotiv sektörü",
+        "yer_notu": "Ajans şehirdeki üretimi açıklar. Koneks üretim ve adres bilgileri motor parçası odağını destekler."
+      },
+      "editorial": {
+        "ihtiyac": "Yedek parça mağazanıza motor parçaları alıyorsanız",
+        "yorum": "Parça kodu ve araç modelini satıcıya birlikte iletin. Teklifleri aynı uyumluluk ve adet üzerinden karşılaştırın.",
+        "kosullar": [
+          "Parça kodunun araç modeline uygunluğunu doğrulatın.",
+          "Numune ve ölçü belgesi isteyin.",
+          "Hatalı parça için değişim koşullarını sorun."
+        ],
+        "teklif_urun": "Mağaza için motor yedek parçaları"
+      },
+      "sektor": "Motor parçaları",
+      "sektor_kodu": "otomotiv",
+      "grup": "imalat"
+    },
+    {
+      "kimlik": "kemalpasa",
+      "ad": "Kemalpaşa OSB",
+      "tur": "sanayi bölgesi",
+      "il": "İzmir",
+      "yer_etiketi": "İzmir, Kemalpaşa içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "Kemalpaşa'da streç film, karton köşebent ve ambalaj çemberi üretimi yapılır.",
+        "source_url": [
+          "https://izmirambalaj.com.tr/",
+          "https://www.kosbi.org.tr/iletisim"
+        ],
+        "bagi": "https://izmirambalaj.com.tr/",
+        "bag_metni": "Kaynak: İzmir Ambalaj, üretim bilgileri",
+        "yer_notu": "Üreticinin ürün listesi ve Kemalpaşa OSB adresi aynı sayfadadır. KOSBİ konumu destekler."
+      },
+      "editorial": {
+        "ihtiyac": "Ürünlerinizi sevkiyat için paketliyorsanız",
+        "yorum": "Ambalajı ürününüzün ağırlığına ve taşıma biçimine göre seçin. Teklifleri aynı ölçü ve kalınlıkla karşılaştırın.",
+        "kosullar": [
+          "Ölçü ve malzeme kalınlığını yazılı isteyin.",
+          "Siparişten önce ürününüzle numune deneyin.",
+          "En az sipariş miktarını ve teslim süresini sorun."
+        ],
+        "teklif_urun": "Sevkiyat için streç film ve koruyucu ambalaj"
+      },
+      "sektor": "Sevkiyat ambalajı",
+      "sektor_kodu": "ambalaj",
+      "grup": "imalat"
+    },
+    {
+      "kimlik": "corum-osb",
+      "ad": "Çorum Organize Sanayi Bölgesi",
+      "tur": "sanayi bölgesi",
+      "il": "Çorum",
+      "yer_etiketi": "Çorum, Merkez'de sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "fact": {
+        "metin": "Çorum Organize Sanayi Bölgesi'nde değirmen makineleri üretilir.",
+        "source_url": [
+          "https://www.corumosb.org.tr/firmalar/hilal-degirmen-makina-san-tic-ltd-sti-203-6/",
+          "https://www.corumosb.org.tr/iletisim/",
+          "https://oka.gov.tr/assets/upload/dosyalar/corum-yatirim-rehberi.pdf"
+        ],
+        "bagi": "https://www.corumosb.org.tr/firmalar/hilal-degirmen-makina-san-tic-ltd-sti-203-6/",
+        "bag_metni": "Kaynak: Çorum OSB, üretici kaydı",
+        "yer_notu": "OSB rehberi değirmen makinesi imalatını açıklar. Kalkınma ajansı rehberi şehirdeki makine uzmanlığını destekler."
+      },
+      "editorial": {
+        "ihtiyac": "Tahıl işleyen işletmenize makine alıyorsanız",
+        "yorum": "İşleyeceğiniz ürünü ve saatlik üretim ihtiyacını belirtin. Makine bedeline kurulum ve bakım giderlerini de ekleyin.",
+        "kosullar": [
+          "Saatlik işleme kapasitesini yazılı isteyin.",
+          "Enerji tüketimini ve kurulum şartlarını sorun.",
+          "Yedek parça ve servis koşullarını sorun."
+        ],
+        "teklif_urun": "İşletme için değirmen ve tahıl işleme makineleri"
+      },
+      "sektor": "Değirmen makineleri",
+      "sektor_kodu": "makine",
+      "grup": "imalat"
+    },
+    {
+      "kimlik": "megacenter",
+      "ad": "Megacenter",
+      "tur": "ticaret merkezi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Bayrampaşa'da ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "sektor": "Toptan gıda",
+      "sektor_kodu": "gida",
+      "grup": "gida",
+      "fact": {
+        "metin": "Megacenter'da toptan gıda satan işletmeler bulunur.",
+        "source_url": [
+          "https://turkmengida.com.tr/",
+          "https://www.demirellergida.com.tr/iletisim/"
+        ],
+        "bagi": "https://turkmengida.com.tr/",
+        "bag_metni": "Kaynak: Türkmen Gıda",
+        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Marketiniz için paketli gıda alıyorsanız",
+        "yorum": "Rafınızda eksilen ürünleri koli miktarıyla listeleyin. Teklifleri aynı marka ve paket ağırlığı üzerinden karşılaştırın.",
+        "kosullar": [
+          "Koli içeriğini ve paket ağırlığını sorun.",
+          "Son tüketim tarihlerini sorun.",
+          "Taşıma bedelini ve teslim gününü sorun."
+        ],
+        "teklif_urun": "Market için paketli gıda"
+      }
+    },
+    {
+      "kimlik": "masko",
+      "ad": "MASKO",
+      "tur": "ticaret merkezi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Başakşehir'de ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "sektor": "Mobilya",
+      "sektor_kodu": "mobilya",
+      "grup": "imalat",
+      "fact": {
+        "metin": "MASKO'da ofis, otel ve restoran mobilyaları listelenir.",
+        "source_url": [
+          "https://www.masko.com.tr/icerik/kurumsal",
+          "https://www.masko.com.tr/iletisim"
+        ],
+        "bagi": "https://www.masko.com.tr/icerik/kurumsal",
+        "bag_metni": "Kaynak: MASKO",
+        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Restoranınıza masa ve sandalye alıyorsanız",
+        "yorum": "Masa ölçüsünü ve sandalye sayısını yerleşiminize göre belirleyin. Teklifte kumaş, yüzey ve taşıma koşullarını birlikte karşılaştırın.",
+        "kosullar": [
+          "Masa ölçüsünü ve sandalye adedini yazın.",
+          "Malzeme ve yüzey seçeneklerini sorun.",
+          "Taşıma ve montaj bedelini sorun."
+        ],
+        "teklif_urun": "Restoran için masa ve sandalye"
+      }
+    },
+    {
+      "kimlik": "modoko",
+      "ad": "MODOKO",
+      "tur": "ticaret merkezi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Ümraniye'de ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "sektor": "Mobilya",
+      "sektor_kodu": "mobilya",
+      "grup": "imalat",
+      "fact": {
+        "metin": "MODOKO, ofis mobilyalarını ve bekleme koltuklarını kendi sitesinde listeler.",
+        "source_url": [
+          "https://www.modoko.com.tr/tr"
+        ],
+        "bagi": "https://www.modoko.com.tr/tr",
+        "bag_metni": "Kaynak: MODOKO",
+        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "İşyerinizin bekleme alanını döşüyorsanız",
+        "yorum": "Oturma kapasitesini ve kullanılabilir alanı belirleyin. Kumaş temizliği, ölçü ve teslim koşullarını birlikte değerlendirin.",
+        "kosullar": [
+          "Alan ölçüsünü ve koltuk sayısını yazın.",
+          "Kumaşın temizlik koşullarını sorun.",
+          "Taşıma ve kurulum bedelini sorun."
+        ],
+        "teklif_urun": "İşyeri için bekleme koltukları"
+      }
+    },
+    {
+      "kimlik": "topkapi-matbaacilar",
+      "ad": "Topkapı 2. Matbaacılar Sitesi",
+      "tur": "sanayi bölgesi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Topkapı'da sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Baskı",
+      "sektor_kodu": "baski",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Topkapı 2. Matbaacılar Sitesi'nde katalog ve broşür baskısı yapan işletmeler bulunur.",
+        "source_url": [
+          "https://matbaaloji.com/",
+          "https://nakisdijital.com/"
+        ],
+        "bagi": "https://matbaaloji.com/",
+        "bag_metni": "Kaynak: Matbaaloji",
+        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Ürünleriniz için basılı katalog hazırlıyorsanız",
+        "yorum": "Sayfa sayısını, ölçüyü ve baskı adedini belirleyin. Renk örneğini onaylama ve teslim koşullarını tekliften önce sorun.",
+        "kosullar": [
+          "Kâğıt türünü ve baskı adedini yazın.",
+          "Baskı öncesi örnek onayını sorun.",
+          "Ciltleme ve teslim bedelini sorun."
+        ],
+        "teklif_urun": "İşletme için katalog ve broşür baskısı"
+      }
+    },
+    {
+      "kimlik": "imes",
+      "ad": "İMES Sanayi Sitesi",
+      "tur": "sanayi bölgesi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Ümraniye'de sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Makine ve ekipman",
+      "sektor_kodu": "makine",
+      "grup": "imalat",
+      "fact": {
+        "metin": "İMES'in sektör rehberinde makine ve ekipman işletmeleri yer alır.",
+        "source_url": [
+          "https://www.imes.org/",
+          "https://www.imes.org/iletisim/"
+        ],
+        "bagi": "https://www.imes.org/",
+        "bag_metni": "Kaynak: İMES",
+        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Üretiminiz için makine veya ekipman alıyorsanız",
+        "yorum": "İşleyeceğiniz malzemeyi ve gereken kapasiteyi belirleyin. Teknik özellikleri aynı ölçütlerle karşılaştırarak teklif isteyin.",
+        "kosullar": [
+          "İşlenecek malzemeyi ve kapasiteyi yazın.",
+          "Enerji ve bağlantı gereksinimlerini sorun.",
+          "Kurulum ve servis koşullarını sorun."
+        ],
+        "teklif_urun": "Üretim için makine ve ekipman"
+      }
+    },
+    {
+      "kimlik": "giyimkent",
+      "ad": "Giyimkent",
+      "tur": "ticaret merkezi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Esenler içinde ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "sektor": "Hazır giyim",
+      "sektor_kodu": "giyim",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Giyimkent, hazır giyim üreticilerini ve toptan satıcıları bir araya getirir.",
+        "source_url": [
+          "https://giyimkent.com.tr/hakkimizda/"
+        ],
+        "bagi": "https://giyimkent.com.tr/hakkimizda/",
+        "bag_metni": "Kaynak: Giyimkent",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Giyim mağazanız için sezon ürünleri alıyorsanız",
+        "yorum": "Beden dağılımını ve renk sayısını belirleyin. Aynı modelin yeniden sipariş koşulunu öğrenin.",
+        "kosullar": [
+          "Beden serisindeki adetleri sorun.",
+          "Renk başına en az adedi sorun.",
+          "Eksilen bedenin yeniden tedarikini sorun."
+        ],
+        "teklif_urun": "Mağaza için toptan hazır giyim"
+      }
+    },
+    {
+      "kimlik": "tekstilkent",
+      "ad": "Tekstilkent",
+      "tur": "ticaret merkezi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Esenler içinde ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "sektor": "Tekstil",
+      "sektor_kodu": "tekstil",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Tekstilkent, tekstil toptan ticareti ve küçük üretim birimleri için kurulmuştur.",
+        "source_url": [
+          "https://tekstilkent.com.tr/kurumsal/",
+          "https://tekstilkent.com.tr/iletisim/"
+        ],
+        "bagi": "https://tekstilkent.com.tr/kurumsal/",
+        "bag_metni": "Kaynak: Tekstilkent",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Üretiminiz için tekstil malzemesi arıyorsanız",
+        "yorum": "Kullanacağınız malzemeyi ve miktarı açıkça belirtin. Numuneyi ve aynı özelliğin sonraki siparişte bulunmasını değerlendirin.",
+        "kosullar": [
+          "Malzemenin içeriğini ve ölçüsünü yazın.",
+          "Numune gönderilip gönderilmediğini sorun.",
+          "Tekrar siparişte renk tutarlılığını sorun."
+        ],
+        "teklif_urun": "Üretim için toptan tekstil malzemesi"
+      }
+    },
+    {
+      "kimlik": "imc",
+      "ad": "İMÇ",
+      "tur": "ticaret merkezi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Fatih içinde ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "sektor": "Perde ve döşemelik kumaş",
+      "sektor_kodu": "ev-tekstili",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "İMÇ firma rehberinde perde ve döşemelik kumaş işletmeleri bulunur.",
+        "source_url": [
+          "https://imc.org.tr/firmalar",
+          "https://istanbul.ktb.gov.tr/TR-278794/fatih-unkapani---istanbul-manifaturacilar-carsisi-imc.html"
+        ],
+        "bagi": "https://imc.org.tr/firmalar",
+        "bag_metni": "Kaynak: İMÇ firma rehberi",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Döşeme işleriniz için kumaş alıyorsanız",
+        "yorum": "Kumaşın enini, içeriğini ve gereken metreyi belirtin. Renk örneğini siparişten önce inceleyin.",
+        "kosullar": [
+          "Kumaşın enini ve metre fiyatını sorun.",
+          "Temizlik ve kullanım koşullarını sorun.",
+          "Aynı renk için tekrar siparişi sorun."
+        ],
+        "teklif_urun": "Atölye için perde ve döşemelik kumaş"
+      }
+    },
+    {
+      "kimlik": "aykosan",
+      "ad": "AYKOSAN",
+      "tur": "sanayi bölgesi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Başakşehir içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Ayakkabı",
+      "sektor_kodu": "ayakkabi",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "İstanbul Ticaret Odası, AYKOSAN'da ayakkabı imalatı yapan bir şube kaydı listeler.",
+        "source_url": [
+          "https://www.ito.org.tr/tr/meslek-komiteleri/uye-firmalar/ayakkabi-ve-ayakkabi-yan-sanayi?page=0",
+          "https://iosb.org.tr/kooperatifler/"
+        ],
+        "bagi": "https://www.ito.org.tr/tr/meslek-komiteleri/uye-firmalar/ayakkabi-ve-ayakkabi-yan-sanayi?page=0",
+        "bag_metni": "Kaynak: İstanbul Ticaret Odası",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanız için ayakkabı üreticisi arıyorsanız",
+        "yorum": "Modeli, numara dağılımını ve toplam adedi belirtin. Üretim numunesini görerek malzeme ve kalıbı değerlendirin.",
+        "kosullar": [
+          "Numara başına kaç çift gerektiğini yazın.",
+          "Üretim numunesini ve malzemeyi sorun.",
+          "Üretim süresini ve tekrar siparişi sorun."
+        ],
+        "teklif_urun": "Mağaza için ayakkabı üretimi"
+      }
+    },
+    {
+      "kimlik": "aymakoop",
+      "ad": "AYMAKOOP",
+      "tur": "sanayi bölgesi",
+      "il": "İstanbul",
+      "yer_etiketi": "İstanbul, Başakşehir içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Ayakkabı",
+      "sektor_kodu": "ayakkabi",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "AYMAKOOP, ayakkabı imalatçılarına ve toptancılarına hizmet veren bir merkezdir.",
+        "source_url": [
+          "https://aymakoop.com.tr/misyon-vizyon/",
+          "https://iosb.org.tr/kooperatifler/"
+        ],
+        "bagi": "https://aymakoop.com.tr/misyon-vizyon/",
+        "bag_metni": "Kaynak: AYMAKOOP",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanızın ayakkabı stoğunu tamamlıyorsanız",
+        "yorum": "Hazır modelleri numara serisiyle karşılaştırın. Koli içeriğiyle mağazanızın eksik numaralarını birlikte değerlendirin.",
+        "kosullar": [
+          "Serideki numaraları ve çift sayısını sorun.",
+          "Farklı modelleri birlikte alma koşulunu sorun.",
+          "Eksik veya hatalı ürün koşullarını sorun."
+        ],
+        "teklif_urun": "Mağaza için toptan ayakkabı"
+      }
+    },
+    {
+      "kimlik": "ivedik",
+      "ad": "İvedik OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Ankara",
+      "yer_etiketi": "Ankara, Yenimahalle içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Makine",
+      "sektor_kodu": "makine",
+      "grup": "imalat",
+      "fact": {
+        "metin": "İvedik OSB, makine imalatını faaliyet alanları arasında sayar.",
+        "source_url": [
+          "https://www.ivedikosb.org.tr/hakkimizda/",
+          "https://www.osbuk.org/view/osb/osbliste.php"
+        ],
+        "bagi": "https://www.ivedikosb.org.tr/hakkimizda/",
+        "bag_metni": "Kaynak: İvedik OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Atölyenize üretim makinesi alıyorsanız",
+        "yorum": "Ürününüzü ve saatlik üretim ihtiyacınızı açıklayın. Deneme, kurulum ve bakım koşullarını aynı teklifte isteyin.",
+        "kosullar": [
+          "İşlenecek ürünü ve kapasiteyi yazın.",
+          "Deneme üretimi yapılıp yapılmadığını sorun.",
+          "Kurulum ve bakım koşullarını sorun."
+        ],
+        "teklif_urun": "Atölye için üretim makinesi"
+      }
+    },
+    {
+      "kimlik": "siteler",
+      "ad": "Siteler",
+      "tur": "semt",
+      "il": "Ankara",
+      "yer_etiketi": "Ankara, Altındağ içinde semt",
+      "checked_at": "2026-11-11",
+      "sektor": "Mobilya",
+      "sektor_kodu": "mobilya",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Siteler'de mobilya, marangozluk ve döşeme işletmeleri bulunur.",
+        "source_url": [
+          "https://www.sanayi.gov.tr/assets/pdf/plan-program/06_ANKARA_ISDR_2021.pdf",
+          "https://ankara.ktb.gov.tr/TR-370255/ilimiz-tarihcesi.html"
+        ],
+        "bagi": "https://www.sanayi.gov.tr/assets/pdf/plan-program/06_ANKARA_ISDR_2021.pdf",
+        "bag_metni": "Kaynak: Sanayi ve Teknoloji Bakanlığı",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "İşletmenize ölçüye uygun mobilya yaptırıyorsanız",
+        "yorum": "Yerleşim ölçülerini ve kullanım amacını paylaşın. Çizim onayını, malzemeyi ve montaj kapsamını belirleyin.",
+        "kosullar": [
+          "Ölçüyü ve kullanım yerini yazın.",
+          "Malzeme örneği ve çizim onayını sorun.",
+          "Montaj ve taşıma kapsamını sorun."
+        ],
+        "teklif_urun": "İşletme için özel ölçü mobilya"
+      }
+    },
+    {
+      "kimlik": "elmadag-mobilya",
+      "ad": "Elmadağ Mobilyacılar İhtisas OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Ankara",
+      "yer_etiketi": "Ankara, Elmadağ'da sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Mobilya",
+      "sektor_kodu": "mobilya",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Elmadağ Mobilyacılar İhtisas OSB, ilk fabrikaların işletmeye açıldığını bildirir.",
+        "source_url": [
+          "https://mobilyacilarosb.com/",
+          "https://mobilyacilarosb.com/iletisim",
+          "https://www.osbuk.org/view/osb/osbliste.php"
+        ],
+        "bagi": "https://mobilyacilarosb.com/",
+        "bag_metni": "Kaynak: Elmadağ Mobilyacılar İhtisas OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mobilya mağazanız için üretici arıyorsanız",
+        "yorum": "Üreticinin sunduğu modelleri ve sipariş kapasitesini doğrulayın. Bölgedeki her tesisin üretime başladığını varsaymayın.",
+        "kosullar": [
+          "Modeli ve aylık alım adedini yazın.",
+          "Üretimin başladığını ve kapasiteyi sorun.",
+          "Numune ve teslim koşullarını sorun."
+        ],
+        "teklif_urun": "Mağaza için mobilya üretimi"
+      }
+    },
+    {
+      "kimlik": "sasmaz",
+      "ad": "Şaşmaz Sanayi Sitesi",
+      "tur": "sanayi bölgesi",
+      "il": "Ankara",
+      "yer_etiketi": "Ankara, Etimesgut içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Oto bakım",
+      "sektor_kodu": "otomotiv",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Şaşmaz'da oto tamir, kaporta, boya ve lastik işletmeleri bulunur.",
+        "source_url": [
+          "https://www.atonet.org.tr/IcerikDetay/11987_-ato-baskani-baran--vali-sahin-le-sasmaz-da-incelemelerde-bulundu",
+          "https://etimesgut.bel.tr/haber/etimesgut-belediyesi-sasmaz-oto-sanayisinde-kapsamli-temizlik-gerceklestirdi-2025-07-07-261"
+        ],
+        "bagi": "https://www.atonet.org.tr/IcerikDetay/11987_-ato-baskani-baran--vali-sahin-le-sasmaz-da-incelemelerde-bulundu",
+        "bag_metni": "Kaynak: Ankara Ticaret Odası",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Şirket araçlarınızın bakımını planlıyorsanız",
+        "yorum": "Araç modellerini ve gereken işlemleri listeleyin. Parça ile işçilik bedelini ayrı isteyin.",
+        "kosullar": [
+          "Araç modelini ve bakım işini yazın.",
+          "Parça ve işçilik bedelini ayrı sorun.",
+          "Teslim gününü ve işlem kapsamını sorun."
+        ],
+        "teklif_urun": "Şirket araçları için bakım ve onarım"
+      }
+    },
+    {
+      "kimlik": "aykusan",
+      "ad": "Işıkkent Ayakkabıcılar Sitesi (AYKÜSAN)",
+      "tur": "sanayi bölgesi",
+      "il": "İzmir",
+      "yer_etiketi": "İzmir, Bornova içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Ayakkabı",
+      "sektor_kodu": "ayakkabi",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Bornova Belediyesi, Işıkkent'teki ayakkabıcılar bölgesini tanıtır.",
+        "source_url": [
+          "https://bornova.bel.tr/isikkentte-ayakkabicilarin-sorunlarina-nester"
+        ],
+        "bagi": "https://bornova.bel.tr/isikkentte-ayakkabicilarin-sorunlarina-nester",
+        "bag_metni": "Kaynak: Bornova Belediyesi",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Ayakkabı mağazanız için yeni modeller arıyorsanız",
+        "yorum": "Model, malzeme ve numara dağılımını birlikte belirleyin. Numuneyi görerek üretici tekliflerini karşılaştırın.",
+        "kosullar": [
+          "Model başına kaç çift gerektiğini yazın.",
+          "Taban ve üst malzemeyi sorun.",
+          "Numune ve tekrar sipariş koşullarını sorun."
+        ],
+        "teklif_urun": "Mağaza için ayakkabı modelleri"
+      }
+    },
+    {
+      "kimlik": "izmir-ataturk",
+      "ad": "İzmir Atatürk OSB",
+      "tur": "sanayi bölgesi",
+      "il": "İzmir",
+      "yer_etiketi": "İzmir, Çiğli içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Makine",
+      "sektor_kodu": "makine",
+      "grup": "imalat",
+      "fact": {
+        "metin": "İzmir Atatürk OSB, Tolon Makine'nin sanayi tipi makinelerini tanıtır.",
+        "source_url": [
+          "https://www.iaosb.org.tr/haberler/bir-basari-hikayesi-tolon-makine",
+          "https://www.iaosb.org.tr/"
+        ],
+        "bagi": "https://www.iaosb.org.tr/haberler/bir-basari-hikayesi-tolon-makine",
+        "bag_metni": "Kaynak: İzmir Atatürk OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Çamaşırhanenize yıkama makinesi alıyorsanız",
+        "yorum": "Günlük çamaşır miktarını ve çalışma süresini belirleyin. Su, enerji ve kurulum koşullarını birlikte karşılaştırın.",
+        "kosullar": [
+          "Günlük yükü kilogram olarak yazın.",
+          "Su ve enerji tüketimini sorun.",
+          "Kurulum ve teknik servis koşullarını sorun."
+        ],
+        "teklif_urun": "Çamaşırhane için sanayi tipi yıkama makinesi"
+      }
+    },
+    {
+      "kimlik": "kemeralti",
+      "ad": "Kemeraltı Çarşısı",
+      "tur": "ticaret merkezi",
+      "il": "İzmir",
+      "yer_etiketi": "İzmir, Konak içinde ticaret merkezi",
+      "checked_at": "2026-11-11",
+      "sektor": "Deri ürünleri",
+      "sektor_kodu": "deri",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "İzmir İl Kültür ve Turizm Müdürlüğü, Kemeraltı'nda deri ürünlerini listeler.",
+        "source_url": [
+          "https://izmir.ktb.gov.tr/TR-77370/kemeralti.html"
+        ],
+        "bagi": "https://izmir.ktb.gov.tr/TR-77370/kemeralti.html",
+        "bag_metni": "Kaynak: İzmir İl Kültür ve Turizm Müdürlüğü",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanız için deri ürünleri araştırıyorsanız",
+        "yorum": "Malzeme türünü ve ürün başına adedi belirtin. Her işletmenin toptan satış yaptığını varsaymadan koşullarını sorun.",
+        "kosullar": [
+          "Malzeme türünü ve gereken adedi yazın.",
+          "Toptan satış yapılıp yapılmadığını sorun.",
+          "Model devamlılığını ve teslim koşulunu sorun."
+        ],
+        "teklif_urun": "Mağaza için deri ürünleri"
+      }
+    },
+    {
+      "kimlik": "bursa-osb",
+      "ad": "Bursa OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Bursa",
+      "yer_etiketi": "Bursa, Nilüfer içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Tekstil",
+      "sektor_kodu": "tekstil",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Bursa OSB firma rehberinde tekstil ve kumaş boyama işletmeleri bulunur.",
+        "source_url": [
+          "https://www.bosb.org.tr/bosb-firma-927-detay.html",
+          "https://www.bosb.org.tr/bosb-firma-1100-detay.html"
+        ],
+        "bagi": "https://www.bosb.org.tr/bosb-firma-927-detay.html",
+        "bag_metni": "Kaynak: Bursa OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Üretiminizde kullanacağınız kumaşı hazırlatıyorsanız",
+        "yorum": "Kumaşın içeriğini ve istenen rengi belirtin. Numune onayıyla teslim ölçülerini birlikte kararlaştırın.",
+        "kosullar": [
+          "Kumaş içeriğini ve miktarını yazın.",
+          "Renk numunesi onayını sorun.",
+          "İşlem sonrası en ve çekmeyi sorun."
+        ],
+        "teklif_urun": "Üretim için kumaş ve boya işlemi"
+      }
+    },
+    {
+      "kimlik": "demirtas",
+      "ad": "Demirtaş OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Bursa",
+      "yer_etiketi": "Bursa, Osmangazi içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Otomotiv parçaları",
+      "sektor_kodu": "otomotiv",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Demirtaş OSB, otomotiv yan sanayi firmalarını küme sayfasında listeler.",
+        "source_url": [
+          "https://www.dosab.org.tr/Detail/795/Automotive-and-Auxilaries-URGE-Project",
+          "https://www.dosab.org.tr/firma-listesi"
+        ],
+        "bagi": "https://www.dosab.org.tr/Detail/795/Automotive-and-Auxilaries-URGE-Project",
+        "bag_metni": "Kaynak: Demirtaş OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Üretiminiz için otomotiv parçası alıyorsanız",
+        "yorum": "Teknik çizimi ve beklenen ölçüleri paylaşın. Numune onayı ile seri üretim koşullarını ayrı değerlendirin.",
+        "kosullar": [
+          "Parça çizimini ve adet ihtiyacını yazın.",
+          "Numune ve ölçüm raporunu sorun.",
+          "Seri üretim ve teslim planını sorun."
+        ],
+        "teklif_urun": "Üretim için otomotiv parçaları"
+      }
+    },
+    {
+      "kimlik": "inegol",
+      "ad": "İnegöl OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Bursa",
+      "yer_etiketi": "Bursa, İnegöl içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Mobilya",
+      "sektor_kodu": "mobilya",
+      "grup": "imalat",
+      "fact": {
+        "metin": "İnegöl OSB'nin mobilya rehberinde üretici işletmeler bulunur.",
+        "source_url": [
+          "https://www.inegolosb.org.tr/tr/mobilya-sanayi.html"
+        ],
+        "bagi": "https://www.inegolosb.org.tr/tr/mobilya-sanayi.html",
+        "bag_metni": "Kaynak: İnegöl OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mobilya mağazanız için ürün serisi alıyorsanız",
+        "yorum": "Modelleri, renkleri ve sipariş adedini birlikte belirleyin. Paket ölçülerini öğrenerek taşıma maliyetini hesaplayın.",
+        "kosullar": [
+          "Model başına en az adedi sorun.",
+          "Paket ölçülerini ve ağırlığını sorun.",
+          "Tekrar üretim ve teslim süresini sorun."
+        ],
+        "teklif_urun": "Mağaza için mobilya serisi"
+      }
+    },
+    {
+      "kimlik": "busan",
+      "ad": "Büsan Özel Organize Sanayi Sitesi",
+      "tur": "sanayi bölgesi",
+      "il": "Konya",
+      "yer_etiketi": "Konya, Karatay içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Makine parçaları",
+      "sektor_kodu": "makine",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Büsan, makine yedek parça üretimini faaliyetleri arasında açıklar.",
+        "source_url": [
+          "https://www.busanorganizesanayi.com/kurumsal/hakkimizda-b6"
+        ],
+        "bagi": "https://www.busanorganizesanayi.com/kurumsal/hakkimizda-b6",
+        "bag_metni": "Kaynak: Büsan",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Makinenize özel parça yaptırıyorsanız",
+        "yorum": "Parça çizimini, malzemeyi ve ölçüleri paylaşın. İlk parçayı onaylama koşulunu seri siparişten önce belirleyin.",
+        "kosullar": [
+          "Parça çizimini ve malzemeyi yazın.",
+          "Ölçü toleransını üreticiyle doğrulayın.",
+          "İlk parça onayını ve teslimi sorun."
+        ],
+        "teklif_urun": "Makine için özel parça üretimi"
+      }
+    },
+    {
+      "kimlik": "aykent",
+      "ad": "Aykent Ayakkabıcılar Sitesi",
+      "tur": "sanayi bölgesi",
+      "il": "Konya",
+      "yer_etiketi": "Konya, Karatay içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Ayakkabı",
+      "sektor_kodu": "ayakkabi",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Aykent'te ayakkabı ve deri ürünleri üreten işletmeler bulunur.",
+        "source_url": [
+          "https://canmestleri.com.tr/iletisim.html",
+          "https://www.greenfoot.com.tr/iletisim/",
+          "https://amiralayakkabi.com/"
+        ],
+        "bagi": "https://canmestleri.com.tr/iletisim.html",
+        "bag_metni": "Kaynak: Aykent üreticilerinin adresleri",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanız için ayakkabı çeşitlerini artırıyorsanız",
+        "yorum": "Numara ve renk dağılımını satışınıza göre belirleyin. Numuneyle üretim siparişini ayrı fiyatlandırın.",
+        "kosullar": [
+          "Numara ve renk dağılımını yazın.",
+          "Numune maliyetini ve üretim süresini sorun.",
+          "Koli içeriğini ve teslimi sorun."
+        ],
+        "teklif_urun": "Mağaza için ayakkabı çeşitleri"
+      }
+    },
+    {
+      "kimlik": "konya-matbaacilar",
+      "ad": "Konya Matbaacılar Sitesi",
+      "tur": "sanayi bölgesi",
+      "il": "Konya",
+      "yer_etiketi": "Konya, Karatay içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Baskı",
+      "sektor_kodu": "baski",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Konya Matbaacılar Sitesi'nde katalog, kitap ve defter baskısı yapan işletmeler bulunur.",
+        "source_url": [
+          "https://birikimmatbaacilik.com/",
+          "https://www.yagmurofset.com/contact.html"
+        ],
+        "bagi": "https://birikimmatbaacilik.com/",
+        "bag_metni": "Kaynak: Birikim Matbaacılık",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "İşletmeniz için katalog veya defter bastırıyorsanız",
+        "yorum": "Baskı adedini ve sayfa ölçüsünü belirleyin. Kâğıt, renk ve cilt seçeneklerini aynı kapsamla karşılaştırın.",
+        "kosullar": [
+          "Sayfa ölçüsünü ve adedi yazın.",
+          "Kâğıt türünü ve ciltlemeyi sorun.",
+          "Baskı örneğini ve teslimi sorun."
+        ],
+        "teklif_urun": "İşletme için katalog ve defter baskısı"
+      }
+    },
+    {
+      "kimlik": "imes-dilovasi",
+      "ad": "İMES OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Kocaeli",
+      "yer_etiketi": "Kocaeli, Dilovası içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Makine",
+      "sektor_kodu": "makine",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Dilovası İMES OSB, makine imalatçılarını kendi firma rehberinde listeler.",
+        "source_url": [
+          "https://www.imesdilovasi.org/firma-kategoriler/makina/",
+          "https://www.imesdilovasi.org/firmalar/"
+        ],
+        "bagi": "https://www.imesdilovasi.org/firma-kategoriler/makina/",
+        "bag_metni": "Kaynak: Dilovası İMES OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Fabrikanızın makine hattını yeniliyorsanız",
+        "yorum": "Üretim hedefini ve mevcut hat bağlantılarını paylaşın. Makinenin teslim, kurulum ve kabul koşullarını yazılı isteyin.",
+        "kosullar": [
+          "Hedef kapasiteyi ve bağlantıları yazın.",
+          "Kurulum ve deneme çalışmasını sorun.",
+          "Bakım ve yedek parça koşullarını sorun."
+        ],
+        "teklif_urun": "Fabrika için üretim makinesi"
+      }
+    },
+    {
+      "kimlik": "tosb",
+      "ad": "TOSB",
+      "tur": "sanayi bölgesi",
+      "il": "Kocaeli",
+      "yer_etiketi": "Kocaeli, Çayırova içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Otomotiv parçaları",
+      "sektor_kodu": "otomotiv",
+      "grup": "imalat",
+      "fact": {
+        "metin": "TOSB, otomotiv parçası üreticilerini üye listesinde gösterir.",
+        "source_url": [
+          "https://www.tosb.com.tr/uyelerimiz.html",
+          "https://www.tosb.com.tr/adres-bilgileri.html"
+        ],
+        "bagi": "https://www.tosb.com.tr/uyelerimiz.html",
+        "bag_metni": "Kaynak: TOSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Seri üretim için otomotiv parçaları alıyorsanız",
+        "yorum": "Parça kodunu ve dönemlik alım planını paylaşın. Ölçüm, numune ve teslim takvimini aynı teklifte isteyin.",
+        "kosullar": [
+          "Parça kodunu ve alım planını yazın.",
+          "Numune ve ölçüm koşullarını sorun.",
+          "Parti bazında teslim takvimini sorun."
+        ],
+        "teklif_urun": "Seri üretim için otomotiv parçaları"
+      }
+    },
+    {
+      "kimlik": "gebze-osb",
+      "ad": "Gebze OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Kocaeli",
+      "yer_etiketi": "Kocaeli, Gebze içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Kalıp imalatı",
+      "sektor_kodu": "kalip",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Gebze OSB'de kalıp tasarımı ve üretimi yapan işletmeler bulunur.",
+        "source_url": [
+          "https://www.ocakkalip.com/",
+          "https://www.gosb.com.tr/"
+        ],
+        "bagi": "https://www.ocakkalip.com/",
+        "bag_metni": "Kaynak: Ocak Kalıp",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Ürününüz için üretim kalıbı yaptırıyorsanız",
+        "yorum": "Ürünün çizimini, malzemesini ve üretim adedini belirtin. Kalıp denemesi ve değişiklik koşullarını önceden konuşun.",
+        "kosullar": [
+          "Ürün çizimini ve malzemeyi yazın.",
+          "Kalıp denemesinin kapsamını sorun.",
+          "Bakım ve değişiklik koşullarını sorun."
+        ],
+        "teklif_urun": "Ürün için üretim kalıbı"
+      }
+    },
+    {
+      "kimlik": "adana-osb",
+      "ad": "Hacı Sabancı OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Adana",
+      "yer_etiketi": "Adana, Sarıçam içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Tekstil",
+      "sektor_kodu": "tekstil",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Hacı Sabancı OSB, tekstil üreticilerini kendi firma rehberinde listeler.",
+        "source_url": [
+          "https://adanaorganize.org.tr/firma-kategorisi/tekstil-urunlerinin-imalati/?_sayfa=2"
+        ],
+        "bagi": "https://adanaorganize.org.tr/firma-kategorisi/tekstil-urunlerinin-imalati/?_sayfa=2",
+        "bag_metni": "Kaynak: Hacı Sabancı OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Tekstil üretiminize malzeme tedarik ediyorsanız",
+        "yorum": "İçerik, ağırlık ve miktar beklentinizi belirtin. Numune ile teslim edilecek ürünün aynı özellikte olmasını isteyin.",
+        "kosullar": [
+          "Malzeme içeriğini ve miktarını yazın.",
+          "Numune ve kalite ölçülerini sorun.",
+          "Parti takibini ve teslimi sorun."
+        ],
+        "teklif_urun": "Üretim için tekstil malzemesi"
+      }
+    },
+    {
+      "kimlik": "denizli-osb",
+      "ad": "Denizli OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Denizli",
+      "yer_etiketi": "Denizli, Honaz içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Tekstil",
+      "sektor_kodu": "tekstil",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Denizli OSB'nin tekstil rehberinde dokuma ve ev tekstili işletmeleri yer alır.",
+        "source_url": [
+          "https://www.dosb.org.tr/tekstil",
+          "https://www.dosb.org.tr/firmalar"
+        ],
+        "bagi": "https://www.dosb.org.tr/tekstil",
+        "bag_metni": "Kaynak: Denizli OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanız için dokuma ürünleri alıyorsanız",
+        "yorum": "Ürünün ölçüsünü ve kumaş içeriğini belirleyin. Yıkama sonrası ölçü değişimini ve tekrar siparişi sorun.",
+        "kosullar": [
+          "Ölçüyü ve kumaş içeriğini yazın.",
+          "Yıkama sonrası çekme oranını sorun.",
+          "Renk devamlılığını ve teslimi sorun."
+        ],
+        "teklif_urun": "Mağaza için dokuma tekstil ürünleri"
+      }
+    },
+    {
+      "kimlik": "buldan",
+      "ad": "Buldan dokuma bölgesi",
+      "tur": "ilçe",
+      "il": "Denizli",
+      "yer_etiketi": "Denizli, Buldan ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Dokuma",
+      "sektor_kodu": "tekstil",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Buldan Belediyesi, ilçenin dokuma üretimini ve Buldan bezini tanıtır.",
+        "source_url": [
+          "https://buldan.bel.tr/buldan-bezi-2/",
+          "https://buldan.bel.tr/22-buldan-dokuma-kultur-ve-el-sanatlari-festivali-2/"
+        ],
+        "bagi": "https://buldan.bel.tr/buldan-bezi-2/",
+        "bag_metni": "Kaynak: Buldan Belediyesi",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanız için dokuma kumaş alıyorsanız",
+        "yorum": "Kumaşın içeriğini, desenini ve metresini belirleyin. Üretim yöntemini numuneyle birlikte değerlendirin.",
+        "kosullar": [
+          "Kumaş içeriğini ve enini sorun.",
+          "Dokuma yöntemini ve numuneyi sorun.",
+          "Desen devamlılığını ve teslimi sorun."
+        ],
+        "teklif_urun": "Mağaza için dokuma kumaş"
+      }
+    },
+    {
+      "kimlik": "babadag",
+      "ad": "Babadağ dokuma bölgesi",
+      "tur": "ilçe",
+      "il": "Denizli",
+      "yer_etiketi": "Denizli, Babadağ ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Dokuma",
+      "sektor_kodu": "tekstil",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Babadağ Belediyesi, dokumayı ilçenin ekonomik faaliyetleri arasında açıklar.",
+        "source_url": [
+          "https://www.babadag.bel.tr/index.php?icerik=387"
+        ],
+        "bagi": "https://www.babadag.bel.tr/index.php?icerik=387",
+        "bag_metni": "Kaynak: Babadağ Belediyesi",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Tekstil işletmeniz için dokuma işi yaptırıyorsanız",
+        "yorum": "İplik içeriğini, dokuma ölçüsünü ve miktarı belirtin. Numune ve üretim takvimini siparişten önce belirleyin.",
+        "kosullar": [
+          "İplik içeriğini ve dokuma ölçüsünü yazın.",
+          "Numune üretim koşulunu sorun.",
+          "Üretim takvimini ve teslimi sorun."
+        ],
+        "teklif_urun": "İşletme için dokuma üretimi"
+      }
+    },
+    {
+      "kimlik": "cerkezkoy",
+      "ad": "Çerkezköy OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Tekirdağ",
+      "yer_etiketi": "Tekirdağ, Çerkezköy içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Tekstil",
+      "sektor_kodu": "tekstil",
+      "grup": "tekstil",
+      "fact": {
+        "metin": "Çerkezköy OSB, tekstil üreticilerini ve adreslerini firma listesinde gösterir.",
+        "source_url": [
+          "https://cosb.org.tr/firmalar/"
+        ],
+        "bagi": "https://cosb.org.tr/firmalar/",
+        "bag_metni": "Kaynak: Çerkezköy OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Kumaş siparişinizi üretim takvimine bağlıyorsanız",
+        "yorum": "Kumaş özelliklerini ve parti miktarlarını birlikte belirleyin. Teslim günlerini üretim planınızla karşılaştırın.",
+        "kosullar": [
+          "Kumaş özelliklerini ve parti miktarını yazın.",
+          "Numune onayını ve renk tutarlılığını sorun.",
+          "Parti bazında teslim gününü sorun."
+        ],
+        "teklif_urun": "Üretim planına göre kumaş tedariki"
+      }
+    },
+    {
+      "kimlik": "manisa-osb",
+      "ad": "Manisa OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Manisa",
+      "yer_etiketi": "Manisa, Yunusemre içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Beyaz eşya",
+      "sektor_kodu": "beyaz-esya",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Manisa OSB'nin firma rehberinde beyaz eşya üreticileri bulunur.",
+        "source_url": [
+          "https://www.mosb.org.tr/firmalar/vestel-beyaz-esya-san-ve-tic-a-s-manisa-subesi/"
+        ],
+        "bagi": "https://www.mosb.org.tr/firmalar/vestel-beyaz-esya-san-ve-tic-a-s-manisa-subesi/",
+        "bag_metni": "Kaynak: Manisa OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Mağazanız için beyaz eşya tedariki arıyorsanız",
+        "yorum": "Ürün modellerini ve planlanan adedi belirtin. Üreticinin satış kanalını öğrenerek alım koşullarını değerlendirin.",
+        "kosullar": [
+          "Modeli ve alım adedini yazın.",
+          "Bayi veya dağıtıcı üzerinden satışı sorun.",
+          "Servis ve teslim koşullarını sorun."
+        ],
+        "teklif_urun": "Mağaza için beyaz eşya tedariki"
+      }
+    },
+    {
+      "kimlik": "eskisehir-osb",
+      "ad": "Eskişehir OSB",
+      "tur": "sanayi bölgesi",
+      "il": "Eskişehir",
+      "yer_etiketi": "Eskişehir, Odunpazarı içinde sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Makine imalatı",
+      "sektor_kodu": "makine",
+      "grup": "imalat",
+      "fact": {
+        "metin": "Eskişehir OSB'nin firma rehberinde makine işletmeleri üretim halinde gösterilir.",
+        "source_url": [
+          "https://www.eosb.org.tr/eosb_firm_detay/1816"
+        ],
+        "bagi": "https://www.eosb.org.tr/eosb_firm_detay/1816",
+        "bag_metni": "Kaynak: Eskişehir OSB",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+      },
+      "editorial": {
+        "ihtiyac": "Üretiminiz için makine imalatçısı arıyorsanız",
+        "yorum": "İşlenecek ürünü ve gereken kapasiteyi açıklayın. Deneme çalışmasıyla teslim kabulünü siparişten önce belirleyin.",
+        "kosullar": [
+          "Ürünü ve kapasite ihtiyacını yazın.",
+          "Deneme çalışmasının kapsamını sorun.",
+          "Kurulum ve bakım koşullarını sorun."
+        ],
+        "teklif_urun": "Üretim için makine imalatı"
+      }
+    }
+  ],
+  "alim_plani": {
+    "ust": "Çok çeşit satan mağazalar için",
+    "baslik": "Ucuzluk mağazanızın alım listesini hazırlayın.",
+    "aciklama": "Ev gereçleri, kırtasiye ve temizlik ürünleri satıyorsanız ürünlerin toplam maliyetini karşılaştırın.",
+    "kontrol_basligi": "Teklif isterken bu dört bilgiyi karşılaştırın:",
+    "kontroller": [
+      "Her ürün için alacağınız adedi bir listede yazın.",
+      "Bir kolide kaç adet ürün olduğunu sorun.",
+      "Taşıma dahil toplam maliyeti karşılaştırın.",
+      "Eksilen ürünü yeniden sipariş etme koşulunu sorun."
     ],
-    "bagi": "https://ci.turkpatent.gov.tr/Files/GeographicalSigns/194.pdf",
-    "bag_metni": "Kaynak: Türk Patent ve Marka Kurumu, Buldan bezi belgesi",
-    "yer_notu": "Belgenin 1. ve 2. sayfası"
-   },
-   "editorial": {
-    "ihtiyac": "Mağazanız için dokuma ürünler arıyorsanız",
-    "yorum": "Mağazanızda satacağınız ürün için kumaş ve ölçü seçeneklerini karşılaştırın.",
-    "kosullar": ["Kumaşın içeriğini sorun.", "Ürünün ölçüsünü ve yıkama sonrası çekmesini sorun.", "Aynı renk ve deseni yeniden alıp alamayacağınızı sorun."],
-    "teklif_urun": "Buldan bezi ev tekstili ürünleri"
-   }
-  },
-  {
-   "kimlik": "surmene",
-   "ad": "Sürmene",
-   "tur": "ilçe",
-   "il": "Trabzon",
-   "yer_etiketi": "Trabzon'un ilçesi",
-   "checked_at": "2026-11-11",
-   "fact": {
-    "metin": "Sürmene'de mutfak ve kasap bıçağı üretiminin geçmişi vardır.",
-    "source_url": [
-     "https://ci.turkpatent.gov.tr/Files/GeographicalSigns/65d834cb-5d2e-4104-a3d1-f961aae52cb0.pdf",
-     "https://ci.turkpatent.gov.tr/cografi-isaretler/detay/38340"
-    ],
-    "bagi": "https://ci.turkpatent.gov.tr/Files/GeographicalSigns/65d834cb-5d2e-4104-a3d1-f961aae52cb0.pdf",
-    "bag_metni": "Kaynak: Türk Patent ve Marka Kurumu, Sürmene bıçağı belgesi",
-    "yer_notu": "Belgenin 2. sayfası, ilk paragraf"
-   },
-   "editorial": {
-    "ihtiyac": "Mağazanıza veya mutfağınıza bıçak alıyorsanız",
-    "kosullar": ["Bıçağın hangi işte kullanılacağını belirtin.", "Çelik ve sap malzemesini sorun.", "Ambalajı ve bakım koşullarını karşılaştırın."],
-    "teklif_urun": "Mutfak ve kasap bıçakları"
-   }
-  },
-  {
-   "kimlik": "inegol",
-   "ad": "İnegöl",
-   "tur": "ilçe",
-   "il": "Bursa",
-   "yer_etiketi": "Bursa'nın ilçesi",
-   "checked_at": "2026-11-11",
-   "fact": {
-    "metin": "İnegöl'de mobilya üretimi uzun bir geçmişe sahiptir. Koltuk ve yemek odası gibi farklı ürünler üretilir.",
-    "source_url": ["https://www.itso.org.tr/inegol-mobilyasi"],
-    "bagi": "https://www.itso.org.tr/inegol-mobilyasi",
-    "bag_metni": "Kaynak: İnegöl Ticaret ve Sanayi Odası, İnegöl mobilyası sayfası",
-    "yer_notu": "Sayfanın tamamı"
-   },
-   "editorial": {
-    "ihtiyac": "Mobilya mağazanızın ürünlerini yeniliyorsanız",
-    "kosullar": ["Ölçü ve malzeme bilgisini isteyin.", "Üretim süresini sorun.", "Nakliye ve montajın fiyata dahil olup olmadığını sorun."],
-    "teklif_urun": "Mağaza için mobilya"
-   }
-  },
-  {
-   "kimlik": "merter",
-   "ad": "Merter",
-   "tur": "semt",
-   "il": "İstanbul",
-   "yer_etiketi": "İstanbul'da bir semt",
-   "checked_at": "2026-11-11",
-   "fact": {
-    "metin": "Merter'de tekstil ve hazır giyim işletmeleri bir arada bulunur.",
-    "source_url": [
-     "https://www.mesiad.tr/kurumsal/hakkimizda",
-     "https://www.mesiad.tr/baskanin-mesajlari/baskanin-mesaji"
-    ],
-    "bagi": "https://www.mesiad.tr/kurumsal/hakkimizda",
-    "bag_metni": "Kaynak: MESİAD, Hakkımızda sayfası",
-    "yer_notu": "Hakkımızda sayfası ve başkanın mesajı"
-   },
-   "editorial": {
-    "ihtiyac": "Giyim mağazanızın beden ve renklerini tamamlıyorsanız",
-    "kosullar": ["Bir paketteki beden dağılımını sorun.", "Kumaş içeriğini ve renk seçeneklerini karşılaştırın.", "Eksilen bedeni yeniden sipariş etme koşullarını sorun."],
-    "teklif_urun": "Mağaza için hazır giyim"
-   }
+    "not": "Bu maddeler, satın alırken kontrol etmeniz için bir öneridir."
   }
- ],
- "alim_plani": {
-  "ust": "Çok çeşit satan mağazalar için",
-  "baslik": "Ucuzluk mağazanızın alım listesini hazırlayın.",
-  "aciklama": "Ev gereçleri, kırtasiye ve temizlik ürünleri satıyorsanız ürünlerin toplam maliyetini karşılaştırın.",
-  "kontrol_basligi": "Teklif isterken bu dört bilgiyi karşılaştırın:",
-  "kontroller": ["Her ürün için alacağınız adedi bir listede yazın.", "Bir kolide kaç adet ürün olduğunu sorun.", "Taşıma dahil toplam maliyeti karşılaştırın.", "Eksilen ürünü yeniden sipariş etme koşulunu sorun."],
-  "not": "Bu maddeler, satın alırken kontrol etmeniz için bir öneridir."
- }
 }

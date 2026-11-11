@@ -1,0 +1,17 @@
+{
+ "typescript": "5.9.3",
+ "ayar": {
+  "tsconfig.json": "82e93e6b4cb6f3df4c88a20b866c2f0f337d16a4e083d8a060a04a5e938fc84a",
+  "package-lock.json": "22023c4b08a36e3682cbcd68e6ca746e5d2a83311c7c87adf222059317adc492"
+ },
+ "kaynak": {
+  "baslat.ts": "c7b268c69e1e7d8a94838dedaadf774444ddd615f122cc01e21c7592e3598d3b",
+  "sahne.ts": "6843714e39f6aaae7dbdc6aef58ed7ccd9a06a2746e673ab13f6b7ffad872b05",
+  "uyarlama.ts": "8623ad849209fe6eb2e40f948256c12e3e96528eb716f349fff20d9e78548c7e"
+ },
+ "cikti": {
+  "baslat.js": "5f5de0adab6dca9b659888426dfccecd038e7dadb0a1a3a90156cbe5ce9cc5a3",
+  "sahne.js": "e13b6931c1c247632c79605b756b25b77c8a3e7ec78129856095cda4bf5f6909",
+  "uyarlama.js": "10e2eae85b837383bb81f1d20f3cf237fe0681dfdefc263538df6503cf02f5a0"
+ }
+}

@@ -8,7 +8,8 @@ Mevcut bölümleri ve bileşenleri güncelleyin.
 
 `index.html` dosyasını elle değiştirmeyin.
 Şablonları ve `build.py` dosyasını değiştirin.
-Önizlemeyi `python3 build.py` komutuyla üretin.
+Önce `npm ci --ignore-scripts` ile sabit derleyiciyi kurun.
+Önizlemeyi `npm run build` komutuyla üretin.
 GitHub Pages bu önizlemeyi sunar ve `noindex` taşır.
 `--yayin` seçeneği planlanan bölümleri kaldırır.
 Bu seçenek GitHub Pages önizlemesi için kullanılmaz.
@@ -35,9 +36,9 @@ Tab ile başlayan odak göstergesi dolgu veya alt çizgidir.
 
 ## Kontroller
 
-1. `python3 build.py` komutunu çalıştırın.
-2. `node kapi.mjs` komutunu çalıştırın.
-3. `node kapi.mjs --sinama` komutunu çalıştırın.
+1. `npm run build` komutunu çalıştırın.
+2. `npm run check` komutunu çalıştırın.
+3. `node motion-testi.mjs <adres> --motor=chromium` komutunu çalıştırın.
 4. Açık önizlemede `node tarayici-testi.mjs <adres>` komutunu çalıştırın.
 
 Tarayıcı araçları kurulu Playwright paketini kullanır.
@@ -79,8 +80,17 @@ Kısa metni, gerçek okurun anladığına kanıt saymayın.
 
 Bölgesel içerikte önce işletmenin alım ihtiyacını açıklayın.
 Yerin seçilme nedenini kaynakla destekleyin.
-İlçe ve semt adlarını doğru türle yazın.
-Üretim bilgilerini `data/bolgeler.json` dosyasında tutun.
+İlçe, semt, ticaret merkezi ve sanayi bölgesini doğru türle yazın.
+Ticaret ve üretim bilgilerini `data/bolgeler.json` dosyasında tutun.
+Alıcı bölgelerini `data/alicilar.json` dosyasında tutun.
+Tedarik listesi 45 kayıt, alıcı listesi 24 kayıt içerir.
+Her merkez için en fazla iki sektör seçin.
+Sınırı şehre değil, aynı adlı merkez veya bölgeye uygulayın.
+İki veri dosyasının sektörlerini birlikte sayın.
+Kaynak faaliyetinden gerçek satın alma talebi sonucu çıkarmayın.
+Planlanan alıcı listesini gerçek profil listesi gibi sunmayın.
+Arama sonuçlarını ve boş durumunu görünür biçimde açıklayın.
+Betik çalışmazsa bütün merkezler okunabilsin.
 Kaynaklı olguları editoryal alım önerilerinden ayırın.
 Her olgunun kaynak adresi ve denetim günü bulunsun.
 Bölgenin anılması platformda satıcı bulunduğu anlamına gelmez.
@@ -91,7 +101,14 @@ Odaklanan alan sabit çubukların altında kalmasın.
 
 Yönlü hareket yalnız dekoratif katmanlarda kullanılır.
 Metin ve eylem alanları bu hareketle yer değiştirmez.
-React Bits örnekleri görsel referanstır. Bu projede kodları kopyalanmaz.
+React Bits hesapları, kaynak atfıyla TypeScript'e uyarlanır.
+Kaynak commit ve lisans `THIRD_PARTY_NOTICES.md` dosyasında kayıtlıdır.
+Üçüncü taraf lisansını derlenmiş çıktıda da koruyun.
+`src/hareket` kaynaklarını değiştirin. `hareket` çıktılarını elle değiştirmeyin.
+Derleme damgasını ve gerçek tür denetimini birlikte çalıştırın.
+Bütçeler ve kaynak farkları `HAREKET-TASARIMI.md` dosyasındadır.
+Normal harekette merkezi pozitif süreyi ve Cubic eğrisini kullanın.
+Hareket paketi azaltılmış hareket ve veri tasarrufunda indirilmez.
 Three.js veya başka grafik bağımlılığı eklenmez.
 Hareket azaltmada yüzeyler sabit kalır.
 Gizli sekmede ve ekran dışındaki yüzeylerde hareket hesaplanmaz.

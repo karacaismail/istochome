@@ -32,7 +32,8 @@ def norm(text):
 
 def split(text):
     """Metni cümlelere böler. En az iki kelimeli parçalar alınır."""
-    return [p for p in re.split(r"(?<=[.?!])\s+", text) if len(p.split()) >= 2]
+    # Sayıdan hemen sonraki nokta cümle sonu sayılmaz (sıra sayısı). Örnek: "Topkapı 2. Matbaacılar Sitesi" tek parçadır.
+    return [p for p in re.split(r"(?<=[.?!])(?<!\d\.)\s+", text) if len(p.split()) >= 2]
 
 
 PLAN_TAGS = ("Planlanan hizmet", "Planlanan içerik")

@@ -696,7 +696,10 @@ Tam tarayıcı takımı bu metin değişikliğinde yeniden çalıştırılmadı.
 Gerçek cihaz ve ekran okuyucu kontrolü yapılmadı. Gerçek okurla denenmedi.
 
 
-## 19. Bölgesel tedarik ve yönlü arka planlar
+## 19. Önceki sürümün kaydı: bölgesel tedarik
+
+Bu bölüm `96f52a8` sürümünün geçmiş kaydıdır.
+Güncel seçim ve hareket kararı 20. bölümdedir.
 
 Bu ekleme yalnız ana sayfayı değiştirir.
 Onaylanan üst bölüm, alt bölüm ve mevcut ürün dizini korunur.
@@ -785,3 +788,108 @@ Tam tarayıcı takımı bu eklemede yeniden çalıştırılmadı.
 WebKit hatası sayfanın çalışmadığını kanıtlamaz. Bu sürümün WebKit sonucu doğrulanmamıştır.
 Firefox çalıştırılmadı. Gerçek Safari, iOS, Android ve ekran okuyucu kontrolleri yapılmadı.
 Pages önizlemesi arama motorlarına kapalı kalır.
+
+## 20. TypeScript hareketleri ve ticaret merkezleri
+
+Bu ekleme ana sayfanın arka planlarını ve bölgesel tedarik bölümünü günceller.
+Ayrı içerik sayfası üretilmez.
+Üst bölüm, alt bölüm ve mevcut alışveriş akışı korunur.
+
+### 20.1 Tedarik için 45 merkez ve alıcılar için 24 bölge
+
+Kurumsal kaynaklarla doğrulanan ticaret ve üretim faaliyetleri esas alınır.
+Her satır ihtiyacı, seçimin gerekçesini ve üç kontrol sorusunu taşır.
+Olgu cümlesi ile editoryal öneri veri dosyasında ayrıdır.
+
+12 İstanbul merkezi ve son istenen 28 merkez listede bulunur.
+Beş merkez önceki kayıtlarla eşleştiği için tek kayıtta birleştirildi.
+Son genişletmede mevcut merkezlerden hiçbiri çıkarılmadı. Tedarik listesi 45 kayıt içerir.
+Her merkez en fazla iki sektörle temsil edilir.
+Sınır şehre değil, aynı merkez veya bölgeye uygulanır.
+Denizli OSB'nin ilçesi resmi adres doğrultusunda Honaz olarak düzeltildi.
+
+Tedarik bölümünde ilk altı merkez açık görünür.
+Diğer merkezler aynı bölümde açılır.
+Merkez, şehir ve sektör araması eşleşen satırları gösterir.
+Betik çalışmazsa bütün merkezler okunabilir.
+
+Alıcı bölümünde 24 bölge ve işletme türü bulunur.
+Alıcı, işletmesine uygun alanı seçerek talep hazırlamaya başlar.
+Satıcı, bu işletmelerin olası alım ihtiyaçlarını görür.
+Liste gerçek alıcı profilleri veya yayımlanmış talepler içermez.
+Sektör filtreleri ve ilk altı kayıt uzun listeyi yönetir.
+
+Kaynaklar ve seçim sınırları `BOLGE-STRATEJISI.md` dosyasındadır.
+Platformda bu merkezlerden satıcı bulunduğu iddia edilmez.
+Form bağlantısı kullanıcının yazdığı ürünü korur.
+Seçilen alıcı alanı formda ayrıca açıklanır.
+
+### 20.2 Gerçek kaynak uyarlaması
+
+React Bits hesapları TypeScript'e uyarlanır.
+Waves, GridMotion, DotGrid ve MagnetLines kaynakları kullanılır.
+Kaynak commit ve lisans, `THIRD_PARTY_NOTICES.md` dosyasında kayıtlıdır.
+WebGL çizimi yerine SVG ve HTML katmanları kullanılır.
+React veya Three.js çalışma zamanı eklenmez.
+Altı sahne yön, kavis, ölçek ve karşıt katman hareketlerini paylaşır.
+Ayrıntılı kararlar `HAREKET-TASARIMI.md` dosyasındadır.
+
+TypeScript 5.9.3 kilit dosyasında sabittir.
+`npm run build` JavaScript çıktılarını ve ana sayfayı üretir.
+`npm run check` türleri, derleme damgasını ve proje kurallarını denetler.
+Azaltılmış harekette ve veri tasarrufunda ana hareket paketi istenmez.
+Sonlu geçişler merkezi süre ve Cubic eğrisi kullanır.
+
+### 20.3 Doğrulama kaydı
+
+Kontroller 11 Kasım 2026 tarihinde macOS üzerinde yapıldı.
+Tarayıcılar izole Playwright oturumlarında çalıştırıldı.
+Node 24.21.0, TypeScript 5.9.3 ve Playwright 1.64.1 kullanıldı.
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run build` | Geçti. Önizleme üretildi. |
+| `npm run check` | Geçti. Tür denetimi ve 828 stil kuralı denetlendi. |
+| `node kapi.mjs --sinama` | 123 bozulma örneğinin tamamı reddedildi. |
+| `node tarayici-testi.mjs <adres> --bolge --motor=chromium` | 157 kontrol geçti. Başarısız kontrol yok. |
+| `node motion-testi.mjs <adres> --motor=chromium` | 71 kontrol geçti. Başarısız kontrol yok. |
+| Türkçe metin denetimi | Yeni metinlerde hata bulunmadı. Uzun kelime uyarıları elle incelendi. |
+| WebKit | İlk sekme süre sınırında açılamadı. Davranış sonucu `not_run` kaldı. |
+
+Hareket testi önce 320 CSS px genişlikte çalışır.
+Sonra 360, 375, 390, 844, 768 ve 1440 genişliklerini denetler.
+844 genişlikte ekran yüksekliği 390 olur. Bu, yatay telefon denemesidir.
+Bölge akışı 320 ve 1440 genişliklerde denetlendi.
+Kontroller, fare ve klavye davranışlarını ve hareket azaltma tercihini kapsar.
+Veri tasarrufu tercihi hareket testinde benzetimle denendi.
+Bu sonuç gerçek bir mobil ağ ölçümü değildir.
+
+Bağımsız incelemede arama sayısı ve ASCII yazım eşleşmesi düzeltilmiştir.
+“OSB” ve “Organize Sanayi Bölgesi” aynı bölge olarak denetlenir.
+Arama sırasında panel adı, gizlenen düğmedeki eski sayıyı taşımaz.
+Alıcı verisi de derleme sırasında kaynak ve alan kontrollerinden geçer.
+
+Sürekli kaydırmada eski geçiş art arda duraklayan kareler üretiyordu.
+Tarayıcı ölçümü art arda üç duraklayan kare gösterdi.
+Yeni geçişler merkezi Cubic eğrisini birlikte hesaplar.
+Girdi sürerken iki kare boyunca duraklamayı yakalayan kontrol geçer.
+Tek hedef değişimi merkezi eğriyi tam olarak korur.
+Girdi durunca hareket sonlu süre içinde biter.
+
+Görsellerde metin katmanı sabittir. Dekorasyon kartların arkasından geçebilir.
+Satıcı bölümünün kenarında şekiller saydamlaşır.
+Başlıkların son görünümü geçişler bittikten sonra ayrıca denetlendi.
+320 genişlikte ilk başlık görünür ve başka öğeyle örtülmez.
+
+Tam tarayıcı takımı bu eklemede yeniden çalıştırılmadı.
+Firefox çalıştırılmadı.
+Gerçek Safari, iOS, Android ve ekran okuyucu kontrolleri yapılmadı.
+Gerçek okurla denenmedi.
+
+Bağımsız son incelemede incelenen kapsam için engelleyici bulgu kalmadı.
+Bu karar tam site denetimi anlamına gelmez.
+
+Yerel kanıtlar `.pane/prompts` klasöründedir. Bu klasör yayımlanmaz.
+Son hareket kaydı `motion-frozen/chromium.json` dosyasıdır.
+Bölge kaydı `final-bolge-chromium.log` dosyasıdır.
+Yerel başarı, GitHub Pages yayınının doğrulandığı anlamına gelmez.

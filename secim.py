@@ -434,6 +434,10 @@ BETIK_METNI = [
     "seçildi. Fiyatlar bu para biriminde gösteriliyor.",
     "İstek özeti:", ". Adedi de yazın.", "Adedi 1 ya da daha büyük bir tam sayıyla yazın. Örneğin 500 ya da 1.000.",
     "İsteğiniz gönderilmedi. Bu sayfa bir tasarım önerisidir. Gerçek isteği istoc.com'da gönderirsiniz.",
+    # Alıcı talep alanlarının grup süzgeci
+    "Tüm gruplarda", "Bu grupta", "alan var.", "Seçtiğiniz alım alanı:",
+    # Tedarik merkezi araması
+    "merkez listeleniyor.",
 ]
 
 

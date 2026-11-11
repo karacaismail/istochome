@@ -7,7 +7,7 @@
   <!-- Karşılama: değer önerisi, arama ve hızlı teklif isteği. İki dönüşüm yolu ilk ekrandadır. -->
   <div class="band band--ink band--hero on-ink" data-spot>
     <span class="spot" aria-hidden="true"><i></i></span>
-    {{s_dalga}}
+    {{sc_flow}}
     <div class="wrap">
       <div class="row--hero">
         <section class="mod hero" aria-labelledby="hero-baslik">
@@ -58,6 +58,8 @@
               <label for="t-adet">Kaç adet?</label>
               <div class="field"><input id="t-adet" type="text" inputmode="numeric" placeholder="Örnek: 500" autocomplete="off"></div>
             </div>
+            <!-- Seçilen alım alanı: alıcı talep alanından gelinince betik yazar. Teslimat adresi değildir, yalnız hangi alanın seçildiğini söyler. -->
+            <p class="rfqbox__alan" data-rfq-alan hidden></p>
             <!-- Özet: ürün ve adet yazıldıkça anında güncellenir. Canlı bölge değildir, her tuşta okunmaz. Gönderim sonucunu #durum okur. -->
             <p class="rfqbox__sum" id="teklif-ozeti" data-rfq-sum>{{i_belge}}<span data-rfq-sum-t>İstek özeti, ürünü ve adedi yazınca burada görünür.</span></p>
             <div class="secure">
@@ -151,7 +153,7 @@
 
   <!-- Üreticiler -->
   <section class="mod band band--tint" id="ureticiler" aria-labelledby="uretici-baslik">
-    {{s_nokta}}
+    {{sc_grid}}
     <div class="wrap">
       {{h_uretici}}
       <ul class="crail sgrid" data-reveal-rail data-scroller>
@@ -164,7 +166,7 @@
   <!-- Sipariş süreci: adımlar, ödeme yöntemleri ve örnek sipariş. -->
   <section class="mod band band--ink flow on-ink" id="surec" aria-labelledby="surec-baslik" data-spot>
     <span class="spot" aria-hidden="true"><i></i></span>
-    {{s_rota}}
+    {{sc_route}}
     <div class="wrap">
       <div class="flow__grid">
         <div>
@@ -255,7 +257,7 @@
 
   <!-- Satıcılar için: ikinci kişinin yolu. Gerekçeler solda, başvuru yolu sağda durur. -->
   <section class="mod band band--tint" id="saticilar" aria-labelledby="satici-baslik">
-    {{s_nokta}}
+    {{sc_rise}}
     <div class="wrap">
       {{h_satici}}
       <div class="sell">
@@ -301,4 +303,7 @@
   <!-- Bölgesel tedarik: işletme ihtiyacı, yerin üretim alanı, teklifte sorulacak koşullar ve teklif isteği.
        Veri data/bolgeler.json dosyasındadır. Bölüm ayrı sayfa üretmez ve satıcı varlığı yazmaz. -->
   {{b_bolge}}
+
+  <!-- Alıcı talep alanları: planlanan hizmet, yalnız önizlemede. Veri data/alicilar.json dosyasındadır. -->
+  {{b_talep}}
 </main>
