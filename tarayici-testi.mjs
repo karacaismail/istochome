@@ -1,6 +1,8 @@
 // Tarayıcı denetimi.
 //   node tarayici-testi.mjs [adres] [ekran görüntüsü klasörü]
 //     Chromium ve WebKit'te (Safari ailesi) yerleşimi, renk rollerini, karşıtlığı, odağı ve etkileşimleri sınar.
+//     İki denetim yalnız Chromium'da çalışır: büyütülmüş kök yazı boyutu ve zorlanmış renkler.
+//     WebKit bu iki ayarı öykünmez. Çıktıda NOT_RUN satırı bunu yazar.
 //   node tarayici-testi.mjs [adres] --sinama
 //     Test kendini sınar. Bilinen her bozulma kaynağa uygulanır. İlgili denetim FAIL vermelidir.
 // Playwright, komşu site klasöründeki kurulumdan alınır. Önizleme sunucusu açık olmalıdır.
@@ -10,13 +12,19 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
-// Playwright önce bu klasörde aranır. Bulunamazsa komşu site klasöründeki kurulum kullanılır.
+// Playwright önce PLAYWRIGHT_PACKAGE_DIR ile verilen klasörde aranır (içinde node_modules olan klasör).
+// Sonra bu klasörde, en son komşu site klasöründe aranır. Test paket kurmaz.
 let playwright;
-try {
-  playwright = createRequire(join(here, "package.json"))("@playwright/test");
-} catch {
-  playwright = createRequire(join(here, "..", "site", "package.json"))("@playwright/test");
+const pwDirs = [process.env.PLAYWRIGHT_PACKAGE_DIR, here, join(here, "..", "site")].filter(Boolean);
+for (const dir of pwDirs) {
+  try {
+    playwright = createRequire(join(dir, "package.json"))("@playwright/test");
+    break;
+  } catch {
+    // Sonraki klasör denenir.
+  }
 }
+if (!playwright) throw new Error(`Playwright bulunamadı. Denenen klasörler: ${pwDirs.join(", ")}`);
 const { chromium, webkit } = playwright;
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
@@ -28,14 +36,19 @@ const url = args[0] || "http://localhost:4391/";
 const shots = args[1] || "";
 // Sayfadaki olgular bu dosyadan gelir. Test, sayfanın veriyle aynı olduğunu da sınar.
 const facts = JSON.parse(readFileSync(join(here, "data", "ana-sayfa.json"), "utf8"));
-const usdRate = JSON.parse(readFileSync(join(here, "data", "kur.json"), "utf8")).TRY.USD;
-// Bir ürünün sayfada beklenen koşulları: KDV dahil birim fiyat (USD) ve en az sipariş adedi.
-const expected = (slug) => {
+const rates = JSON.parse(readFileSync(join(here, "data", "kur.json"), "utf8")).TRY;
+const topCats = JSON.parse(readFileSync(join(here, "data", "kategoriler.json"), "utf8")).length;
+const SYM = { GBP: "£", USD: "$", EUR: "€", TRY: "₺" };
+// Bir ürünün KDV dahil, yuvarlanmamış birim tutarı. build.py ile aynı işlem ve aynı sıra: sekiz ondalık.
+// Toplam bu değerden hesaplanır. Yuvarlanmış birim fiyat adetle çarpılsaydı toplam, çevrilen gerçek tutardan sapardı.
+const unitOf = (slug, cur = "USD") => {
   const f = facts.urunler[slug];
-  return { unit: Number((f.fiyat_try * (1 + f.kdv / 100) * usdRate).toFixed(2)), moq: f.en_az_adet, lead: f.hazirlik };
+  return Number((f.fiyat_try * (1 + f.kdv / 100) * rates[cur]).toFixed(8));
 };
+// Bir ürünün sayfada beklenen koşulları: yuvarlanmamış birim tutar (USD) ve en az sipariş adedi.
+const expected = (slug) => ({ unit: unitOf(slug), moq: facts.urunler[slug].en_az_adet, lead: facts.urunler[slug].hazirlik });
 // Tutarlar Türkçe sayı biçimiyle yazılır: binlik ayırıcı nokta, ondalık ayırıcı virgül.
-const money = (n) => "$" + n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (n, cur = "USD") => SYM[cur] + n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const sizes = [[320, 568], [320, 700], [360, 740], [375, 760], [390, 844], [844, 390], [768, 1024], [1024, 768], [1440, 900]];
 const results = [];
 const notRun = [];
@@ -63,12 +76,26 @@ function measure() {
     return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
   };
   const over = (top, bottom) => top.slice(0, 3).map((c, i) => c * top[3] + bottom[i] * (1 - top[3])).concat(1);
+  // Koyu bandın üstünde işaretçi ışığı gezer. Işığın en parlak yeri ortasıdır.
+  // Karşıtlık o noktaya göre ölçülür: ışığın rengi ve saydamlığı katmanın kendi stilinden okunur.
+  const spotLayer = (band) => {
+    const light = band.querySelector(":scope > .spot i");
+    const m = light && getComputedStyle(light).backgroundImage.match(/rgba?\(([^)]+)\)/);
+    if (!m) return null;
+    const p = m[1].split(/[,\s/]+/).filter(Boolean).map(Number);
+    return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
+  };
   // Öğenin arkasındaki etkin zemin: saydam olmayan ilk üst öğeye kadar katmanlar birleştirilir.
+  // Zemin ışıklı bir bantsa ışık katmanı da hesaba katılır.
   const backdrop = (e) => {
     const layers = [];
     for (let n = e; n; n = n.parentElement) {
       const c = rgba(getComputedStyle(n).backgroundColor);
-      if (c && c[3] > 0) { layers.push(c); if (c[3] === 1) break; }
+      if (c && c[3] > 0) {
+        if (c[3] === 1 && n.hasAttribute("data-spot")) { const light = spotLayer(n); if (light) layers.push(light); }
+        layers.push(c);
+        if (c[3] === 1) break;
+      }
     }
     let base = [255, 255, 255, 1];
     for (const c of layers.reverse()) base = over(c, base);
@@ -112,7 +139,7 @@ function measure() {
   // Ubuntu ailesinde dört kalınlık vardır. Ara bir değer tarayıcıda başka bir kalınlığa yuvarlanır.
   out.oddWeights = [...new Set(texts.map((e) => getComputedStyle(e).fontWeight))].filter((x) => !["300", "400", "500", "700"].includes(x));
   // Tıklanamayan öğe (pointer-events: none) hedef sayılmaz.
-  out.small = [...document.querySelectorAll("a, button, summary")].filter((e) => visible(e) && getComputedStyle(e).pointerEvents !== "none").map((e) => [e, e.getBoundingClientRect()])
+  out.small = [...document.querySelectorAll("a, button")].filter((e) => visible(e) && getComputedStyle(e).pointerEvents !== "none").map((e) => [e, e.getBoundingClientRect()])
     .filter(([, r]) => r.width < 44 || r.height < 44).map(([e]) => name(e) + ":" + e.textContent.trim().slice(0, 16) + ":" + Math.round(e.getBoundingClientRect().height));
   out.coarse = matchMedia("(any-pointer: coarse)").matches;
   out.deadLinks = [...document.querySelectorAll("a")].filter((a) => { const h = a.getAttribute("href"); return !h || h === "#"; }).map(name);
@@ -212,7 +239,7 @@ function measure() {
   out.sameBands = [];
   for (let i = 1; i < bands.length; i++) if (ratioOf(solid(bands[i - 1]), solid(bands[i])) < 1.08) out.sameBands.push(`${name(bands[i - 1])} | ${name(bands[i])}`);
   out.bandCount = bands.length;
-  out.flatCards = [...document.querySelectorAll(".rfqbox, .reason, .dir__item, .pc, .sc, .op, .nudge, .sell__panel, .dgroup, .ptile, .pref")].filter((c) => {
+  out.flatCards = [...document.querySelectorAll(".rfqbox, .reason, .dir__item, .pc, .sc, .op, .nudge, .sell__panel, .dgroup, .pref")].filter((c) => {
     const under = solid(c.closest(".band, .footer"));
     const top = rgba(getComputedStyle(c).backgroundColor) || [0, 0, 0, 0];
     return ratioOf(over(top, under), under) < 1.08;
@@ -235,6 +262,20 @@ function measure() {
   // Bölüm başlıkları sırayla numaralıdır: 01, 02, 03. Numara, bölümün nerede başladığını gösterir.
   out.numbers = [...document.querySelectorAll("main .mh__no")].map((e) => e.textContent.trim());
   out.numbersVisible = [...document.querySelectorAll("main .mh__no")].every(visible);
+  // Bölüm başlığı bölümün adını da okutur: bölüm adı başlığın içinde durur, gözle okunan üst satır okuyucudan gizlidir.
+  // Böylece bölgenin adı yalnız slogan olmaz ("Ürünler: Fiyatı sormayın.").
+  out.sloganNames = [...document.querySelectorAll("main .mh")].filter((h) => {
+    const kicker = h.querySelector(".mh__kicker").textContent.trim();
+    return !h.querySelector("h2").textContent.trim().startsWith(kicker + ":") || h.querySelector(".mh__top").getAttribute("aria-hidden") !== "true";
+  }).length;
+  // Seçenek kutusunda ad, seçim işaretine değmez. İşaret seçili olmayan kutuda da yerinde durur, bu yüzden her kutu ölçülür.
+  out.prefOverlap = [...document.querySelectorAll(".pref")].filter(visible).filter((p) => {
+    const a = p.querySelector(".pref__t").getBoundingClientRect();
+    const b = p.querySelector(".pref__on").getBoundingClientRect();
+    const inside = (r) => r.left >= p.getBoundingClientRect().left - 0.5 && r.right <= p.getBoundingClientRect().right + 0.5;
+    const text = [...p.querySelectorAll(".pref__t b, .pref__t small")].every((n) => n.scrollWidth <= n.clientWidth + 1);
+    return (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) || !inside(a) || !text;
+  }).map((p) => p.dataset.deger);
 
   // Renk rolü: turuncu yalnız izinli öğelerde bulunur ve bir modülde en çok bir turuncu düğme olur.
   const allowed = ".btn--brand, .search button, .count, .hl, .bottomnav__main i";
@@ -356,11 +397,28 @@ async function layout(page, engine, w, h) {
   check(engine, size, "kart yüzeyi bandından ayrılır", m.flatCards.length === 0, [...new Set(m.flatCards)].join(", "));
   check(engine, size, "aynı banttaki modüller birbirine değmez", m.touching.length === 0, m.touching.join(", "));
   check(engine, size, "bölüm başlıkları sırayla numaralı", m.numbersVisible && m.numbers.length >= 8 && m.numbers.every((n, i) => n === String(i + 1).padStart(2, "0")), m.numbers.join(" "));
+  check(engine, size, "bölüm başlığı bölümün adını da okutur", m.sloganNames === 0, `${m.sloganNames}`);
+  check(engine, size, "seçenek adı seçim işaretine değmez", m.prefOverlap.length === 0, m.prefOverlap.join(", "));
   check(engine, size, "her modülün adı var", m.unnamedMods === 0, `${m.unnamedMods}`);
   check(engine, size, "turuncu yalnız izinli öğelerde", m.strayOrange.length === 0, m.strayOrange.join(", "));
   check(engine, size, "bileşende en çok bir turuncu düğme", m.crowded.length === 0, m.crowded.join(", "));
   check(engine, size, "turuncu ilk ekranın yüzde 5'inden az", m.orangeShare < 0.05, `${(m.orangeShare * 100).toFixed(1)}%`);
   check(engine, size, "piktogramlar etiketli", m.barePictos === 0, `${m.barePictos}`);
+  // Kapalı grupların içeriği de ölçülür. Dar ekranda dizin grupları ve alt bölüm sütunları kapalı başlar.
+  // Kapalı içerik ilk ölçümde görünmez. Bu yüzden bütün gruplar açılır ve sayfa bir kez daha ölçülür.
+  const opened = await page.evaluate(() => {
+    const closed = [...document.querySelectorAll('[data-fold][data-open="false"]')].filter((g) => g.querySelector(".fold__btn").getClientRects().length);
+    closed.forEach((g) => g.querySelector(".fold__btn").click());
+    return closed.length;
+  });
+  if (opened) {
+    await page.waitForTimeout(900);
+    const m2 = await page.evaluate(measure);
+    check(engine, size, "açılan gruplarda yatay taşma yok", m2.overflow <= 0, `taşma ${m2.overflow}px`);
+    check(engine, size, "açılan gruplarda en küçük metin 14 px", m2.minFont >= 14, `${m2.minFont}px`);
+    check(engine, size, "açılan gruplarda metin karşıtlığı yeterli", m2.lowContrast.length === 0, m2.lowContrast.slice(0, 5).join(" | "));
+    check(engine, size, "açılan gruplarda dokunma hedefi en az 44 px", m2.small.length === 0, m2.small.slice(0, 6).join(", "));
+  }
   if (shots) {
     await page.evaluate(() => scrollTo(0, 0));
     await page.screenshot({ path: join(shots, `${engine}-${size}.png`) });
@@ -646,7 +704,7 @@ async function behavior(page, engine, w, h) {
   // Para birimi: seçenekler bir radyo grubudur. Ok tuşu seçimi ve odağı birlikte taşır.
   // Seçim sayfadaki fiyatları gerçekten değiştirir. Beklenen tutar veri dosyasından hesaplanır.
   const firstSlug = await page.evaluate(() => document.querySelector(".pc").dataset.slug);
-  const tryPrice = "₺" + (facts.urunler[firstSlug].fiyat_try * (1 + facts.urunler[firstSlug].kdv / 100)).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const tryPrice = money(unitOf(firstSlug, "TRY"), "TRY");
   await page.focus('[data-tercih="para"] [aria-checked="true"]');
   // Klavye modu yalnız Tab ile açılır. Geri ve ileri sekme odağı yine seçili seçeneğe getirir.
   await page.keyboard.press(shiftTab);
@@ -670,6 +728,28 @@ async function behavior(page, engine, w, h) {
   });
   check(engine, size, "para birimi klavyeyle seçilir", pc.focus === "TRY" && pc.checked === "TRY" && pc.stops === 1, JSON.stringify(pc));
   check(engine, size, "para birimi seçimi fiyatları değiştirir", pc.price === tryPrice && pc.cart.startsWith("₺") && /TRY$/.test(pc.label) && /para biriminde/.test(pc.said), JSON.stringify({ ...pc, want: tryPrice }));
+  // Sepetin ve örnek siparişin toplamı yeni para biriminde yeniden hesaplanır. Sepette örnek siparişin ürünü durur.
+  // Beklenen tutar veri dosyasından, yuvarlanmamış birim tutardan hesaplanır.
+  const tryTotal = money(wantQty * unitOf(sampleSlug, "TRY"), "TRY");
+  const totals = await page.evaluate(() => ({
+    cart: document.querySelector("[data-cart-total]").textContent, order: document.querySelector("[data-total]").textContent,
+    sr: document.querySelector("[data-total-sr]").textContent, least: document.querySelector(".pc .terms [data-para]").textContent,
+  }));
+  const tryLeast = money(expected(firstSlug).moq * unitOf(firstSlug, "TRY"), "TRY");
+  check(engine, size, "para birimi değişince sepet ve sipariş toplamı yeniden hesaplanır",
+    totals.cart === tryTotal && totals.order === tryTotal && totals.sr === "Toplam " + tryTotal && totals.least === tryLeast, JSON.stringify({ ...totals, tryTotal, tryLeast }));
+  // Kartta yazan en az sipariş tutarı, sepetin göstereceği toplamla aynı işlemden çıkar: yuvarlanmamış birim tutar çarpı adet.
+  // Dört para biriminde ve bütün kartlarda sınanır. Birim tutar da veri dosyasındaki fiyatla aynı olmalıdır.
+  const cards = await page.evaluate(() => [...document.querySelectorAll(".pc")].map((c) => {
+    const least = c.querySelector(".terms [data-para]").dataset;
+    return { slug: c.dataset.slug, moq: Number(c.dataset.moq), unit: { GBP: c.dataset.unitGbp, USD: c.dataset.unitUsd, EUR: c.dataset.unitEur, TRY: c.dataset.unitTry }, least: { GBP: least.gbp, USD: least.usd, EUR: least.eur, TRY: least.try } };
+  }));
+  const drift = [];
+  for (const c of cards) for (const cur of Object.keys(SYM)) {
+    if (c.unit[cur] !== unitOf(c.slug, cur).toFixed(8)) drift.push(`${c.slug} ${cur} birim ${c.unit[cur]}`);
+    else if (money(Number(c.unit[cur]) * c.moq, cur) !== money(Number(c.least[cur]), cur)) drift.push(`${c.slug} ${cur} ${c.least[cur]}`);
+  }
+  check(engine, size, "en az sipariş tutarı sepetin toplamıyla aynı hesaplanır", cards.length === Object.keys(facts.urunler).length && drift.length === 0, drift.slice(0, 4).join(", "));
   // Dil: seçim etikete yazılır. Bu öneride sayfa çevrilmez ve duyuru bunu açıkça söyler.
   await page.locator('[data-tercih="dil"] [data-deger="en"]').evaluate((el) => el.scrollIntoView({ block: "center" }));
   await page.click('[data-tercih="dil"] [data-deger="en"]');
@@ -772,31 +852,60 @@ async function behavior(page, engine, w, h) {
     check(engine, size, "kart şeridi oku ve konum çubuğu çalışır", r.x > 50 && r.pos > 0 && r.prev === "false", JSON.stringify(r));
   }
 
-  // Dizin: her grup ürünleri başka bir yoldan bulur. Dar ekranda yalnız ilk grup açık başlar,
-  // kapalı grubun başlığına dokununca grup açılır. Geniş ekranda gruplar hep açıktır ve başlık bir düğme değildir.
-  const dz = await page.evaluate(() => {
+  // Dizin: her grup ürünleri başka bir yoldan bulur. Dar ekranda yalnız ilk grup açık başlar ve başlık bir düğmedir.
+  // Geniş ekranda gruplar hep açıktır ve başlık düz yazıdır: ekranda işe yaramayan bir düğme durmaz.
+  const dzState = () => page.evaluate(() => {
     const groups = [...document.querySelectorAll(".dgroup")];
     const links = [...document.querySelectorAll(".dlink")];
+    const panel = (g) => g.querySelector(".fold__panel");
     return {
-      groups: groups.length, open: groups.filter((g) => g.open).length, links: links.length,
+      groups: groups.length, links: links.length,
+      open: groups.filter((g) => getComputedStyle(panel(g)).visibility === "visible" && panel(g).getBoundingClientRect().height > 40).length,
       live: links.every((l) => l.href.startsWith("https://istoc.com/")), counted: links.filter((l) => l.querySelector(".dlink__n")).length,
-      stops: groups.filter((g) => g.querySelector("summary").tabIndex === 0).length,
+      buttons: groups.filter((g) => g.querySelector(".fold__btn").getClientRects().length > 0).length,
+      labels: groups.filter((g) => g.querySelector(".fold__label").getClientRects().length > 0).length,
+      synced: groups.every((g) => g.dataset.open === g.querySelector(".fold__btn").getAttribute("aria-expanded")),
     };
   });
+  const dz = await dzState();
   check(engine, size, "dizin grupları canlı adreslere gider", dz.groups >= 6 && dz.links >= 30 && dz.live && dz.counted >= 20, JSON.stringify(dz));
   if (w < 700) {
-    check(engine, size, "dar ekranda yalnız ilk dizin grubu açık başlar", dz.open === 1 && dz.stops === dz.groups, JSON.stringify(dz));
-    const second = page.locator(".dgroup:nth-of-type(2) summary");
+    check(engine, size, "dar ekranda yalnız ilk dizin grubu açık başlar", dz.open === 1 && dz.buttons === dz.groups && dz.labels === 0 && dz.synced, JSON.stringify(dz));
+    const second = page.locator(".dgroup:nth-of-type(2) .fold__btn");
+    const g2 = () => page.evaluate(() => {
+      const g = document.querySelector(".dgroup:nth-of-type(2)");
+      const p = g.querySelector(".fold__panel");
+      const a = document.activeElement;
+      return { open: g.dataset.open, exp: g.querySelector(".fold__btn").getAttribute("aria-expanded"), vis: getComputedStyle(p).visibility, h: Math.round(p.getBoundingClientRect().height), focus: !!a && g.contains(a), inPanel: !!a && p.contains(a) };
+    });
     await second.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await second.click();
-    const opened = await page.evaluate(() => { const g = document.querySelector(".dgroup:nth-of-type(2)"); return { open: g.open, h: Math.round(g.querySelector("ul").getBoundingClientRect().height) }; });
-    check(engine, size, "dizin grubu dar ekranda açılır", opened.open && opened.h > 100, JSON.stringify(opened));
+    const o1 = await g2();
+    check(engine, size, "dizin grubu dar ekranda açılır, durum anında güncellenir", o1.open === "true" && o1.exp === "true", JSON.stringify(o1));
+    await page.waitForTimeout(900);
+    const o2 = await g2();
+    check(engine, size, "dizin grubu geçişten sonra görünür", o2.vis === "visible" && o2.h > 100, JSON.stringify(o2));
+    await second.click();
+    await page.waitForTimeout(900);
+    const o3 = await g2();
+    check(engine, size, "kapalı dizin grubu klavyeden ve okuyucudan gizli", o3.open === "false" && o3.exp === "false" && o3.vis === "hidden" && o3.h < 2, JSON.stringify(o3));
+    // Ekran döner: önce genişler, sonra yeniden daralır. Kullanıcının açtığı grup açık kalır, odak kaybolmaz.
+    await second.click();
+    await second.focus();
+    await page.setViewportSize({ width: 900, height: h });
+    await page.waitForTimeout(500);
+    const turned = { ...(await g2()), ...(await dzState()) };
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(700);
+    const back = await g2();
+    check(engine, size, "açılan grup ekran dönünce açık kalır, odak kaybolmaz",
+      turned.buttons === 0 && turned.open === turned.groups && turned.inPanel && back.open === "true" && back.vis === "visible" && back.focus, JSON.stringify({ turned: { buttons: turned.buttons, open: turned.open, inPanel: turned.inPanel }, back }));
   } else {
-    check(engine, size, "geniş ekranda dizin grupları hep açık", dz.open === dz.groups && dz.stops === 0, JSON.stringify(dz));
+    check(engine, size, "geniş ekranda dizin grupları hep açık, başlık düz yazı", dz.open === dz.groups && dz.buttons === 0 && dz.labels === dz.groups, JSON.stringify(dz));
   }
-  // Sık arananlar: her kutucuk canlı sitedeki arama sonucuna gider.
+  // Örnek aramalar: her kutucuk canlı sitedeki arama sonucuna gider.
   const chips = await page.evaluate(() => [...document.querySelectorAll(".chip")].map((c) => c.href));
-  check(engine, size, "sık arananlar canlı aramaya gider", chips.length >= 4 && chips.every((x) => x.startsWith("https://istoc.com/urunler?q=")), chips.join(" "));
+  check(engine, size, "örnek aramalar canlı aramaya gider", chips.length >= 4 && chips.every((x) => x.startsWith("https://istoc.com/urunler?q=")), chips.join(" "));
   // Konum çubuğu: sayfa kaydıkça ilerler. Değer kaydırmaya bağlıdır.
   await page.evaluate(() => scrollTo(0, 0));
   await page.waitForTimeout(250);
@@ -817,18 +926,45 @@ async function behavior(page, engine, w, h) {
       await page.mouse.move(box.x + 200, box.y + 150);
       await page.mouse.move(box.x + 320, box.y + 210);
       await page.waitForTimeout(800);
+      // Işığın yeri ışık katmanına yazılır. Bandın bütününe yazılsaydı bandın içeriği her karede yeniden hesaplanırdı.
       const spot = await page.evaluate(() => {
         const band = document.querySelector(".band--hero");
-        const light = band.querySelector(".spot i").getBoundingClientRect();
+        const layer = band.querySelector(":scope > .spot");
+        const light = layer.querySelector("i").getBoundingClientRect();
         const r = band.getBoundingClientRect();
-        return { mx: band.style.getPropertyValue("--mx"), my: band.style.getPropertyValue("--my"), cx: Math.round(light.left + light.width / 2 - r.left), cy: Math.round(light.top + light.height / 2 - r.top) };
+        return { mx: layer.style.getPropertyValue("--mx"), my: layer.style.getPropertyValue("--my"), onBand: band.style.getPropertyValue("--mx"), cx: Math.round(light.left + light.width / 2 - r.left), cy: Math.round(light.top + light.height / 2 - r.top) };
       });
-      check(engine, size, "ışık işaretçiyi izler", spot.mx === "320px" && spot.my === "210px" && Math.abs(spot.cx - 320) < 3 && Math.abs(spot.cy - 210) < 3, JSON.stringify(spot));
+      check(engine, size, "ışık işaretçiyi izler", spot.mx === "320px" && spot.my === "210px" && spot.onBand === "" && Math.abs(spot.cx - 320) < 3 && Math.abs(spot.cy - 210) < 3, JSON.stringify(spot));
       await page.locator(".pc").first().scrollIntoViewIfNeeded();
       await page.locator(".pc .pc__body").first().hover();
       await page.waitForTimeout(500);
       const glow = await page.evaluate(() => { const card = document.querySelector(".pc"); return { on: getComputedStyle(card, "::after").opacity, gx: card.style.getPropertyValue("--gx"), move: getComputedStyle(card).transform }; });
       check(engine, size, "kartın üstünde ışık belirir, kart oynamaz", glow.on === "1" && /px$/.test(glow.gx) && glow.move === "none", JSON.stringify(glow));
+      // Tıklanmayan öğe üzerine gelince değişmez: gerekçe kartı, ödeme yöntemi ve alt bölümdeki ödeme satırı.
+      // Üzerine gelince değişen öğe tıklanır sanılır.
+      const changed = [];
+      for (const sel of [".reasons .reason", ".sell__list .reason", ".ptile", ".paylist li"]) {
+        const el = page.locator(sel).first();
+        await el.scrollIntoViewIfNeeded();
+        // Öğe ekrana girince belirir. Durağan hal, beliriş geçişi bittikten sonra ölçülür.
+        // Geçiş, sınıf eklendikten sonraki karede başlar. Bu yüzden önce iki kare beklenir.
+        await el.evaluate(async (e) => {
+          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+          await Promise.all(e.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => {})));
+        });
+        const snap = () => el.evaluate((e) => {
+          const st = getComputedStyle(e);
+          const after = getComputedStyle(e, "::after");
+          return [st.backgroundColor, st.boxShadow, st.transform, st.color, st.textDecorationLine, after.content === "none" ? "" : after.opacity + after.backgroundImage].join("|");
+        });
+        await page.mouse.move(4, 300);
+        await page.waitForTimeout(400);
+        const rest = await snap();
+        await el.hover();
+        await page.waitForTimeout(500);
+        if ((await snap()) !== rest) changed.push(sel);
+      }
+      check(engine, size, "tıklanmayan öğe üzerine gelince değişmez", changed.length === 0, changed.join(", "));
       await page.mouse.move(4, 300);
     }
   }
@@ -866,7 +1002,7 @@ async function behavior(page, engine, w, h) {
     const behind = await page.evaluate(async () => {
       const nav = document.querySelector(".bottomnav").getBoundingClientRect();
       const out = [];
-      for (const sel of [".dir__subs a", ".faq:nth-of-type(3) button", ".dgroup:nth-of-type(3) summary", ".fgroup:nth-of-type(2) summary", '[data-tercih="dil"] [role="radio"]', ".footer__legal li a"]) {
+      for (const sel of [".dir__subs a", ".faq:nth-of-type(3) button", ".dgroup:nth-of-type(3) .fold__btn", ".fgroup:nth-of-type(2) .fold__btn", '[data-tercih="dil"] [role="radio"]', ".footer__legal li a"]) {
         const el = document.querySelector(sel);
         window.scrollTo(0, window.scrollY + el.getBoundingClientRect().bottom - window.innerHeight + 6);
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -907,7 +1043,6 @@ async function behavior(page, engine, w, h) {
   await page.goto(url, { waitUntil: "load" });
   await page.waitForTimeout(600);
   await page.emulateMedia({ media: "print" });
-  // Ortam değişikliği olayı bir sonraki karede gelir. Alt bölüm gruplarının açılması için kısa süre beklenir.
   await page.waitForTimeout(250);
   const pr = await page.evaluate(() => ({
     hidden: [...document.querySelectorAll("[data-reveal], [data-intro]")].filter((e) => getComputedStyle(e).opacity !== "1").length,
@@ -915,7 +1050,11 @@ async function behavior(page, engine, w, h) {
     nav: getComputedStyle(document.querySelector(".bottomnav")).display,
     picto: getComputedStyle(document.querySelector(".sell__list .picto .s")).strokeDashoffset,
     steps: [...document.querySelectorAll(".tl li > div")].filter((e) => getComputedStyle(e).opacity !== "1").length,
-    closedGroups: [...document.querySelectorAll("details[data-fold]")].filter((g) => !g.open).length,
+    // Kâğıtta katlanan gruplar açıktır ve başlıkları düz yazıdır.
+    closedGroups: [...document.querySelectorAll("[data-fold]")].filter((g) => {
+      const p = g.querySelector(".fold__panel");
+      return getComputedStyle(p).visibility !== "visible" || p.getBoundingClientRect().height < 20 || g.querySelector(".fold__btn").getClientRects().length > 0;
+    }).length,
   }));
   check(engine, size, "yazdırmada bütün içerik görünür", pr.hidden === 0 && pr.faq === 0 && pr.nav === "none" && pr.picto === "0px" && pr.steps === 0 && pr.closedGroups === 0, JSON.stringify(pr));
   await page.emulateMedia({ media: "screen" });
@@ -939,7 +1078,7 @@ async function behavior(page, engine, w, h) {
   }).map((c) => c.slug);
   check(engine, size, "ürün kartı koşulları veriyle aynı", shown.cards.length === Object.keys(facts.urunler).length && wrong.length === 0, wrong.join(", "));
   check(engine, size, "karşılamadaki sayılar veriyle aynı ve günü yazıyor",
-    shown.counts[0] === String(facts.urun_toplami) && shown.counts[2] === String(facts.dogrulanmis_magaza) && shown.counts[3] === String(facts.para_birimleri.length) && /\d{4}/.test(shown.src),
+    shown.counts[0] === String(facts.urun_toplami) && shown.counts[1] === String(topCats) && shown.counts[2] === String(facts.dogrulanmis_magaza) && shown.counts[3] === String(facts.para_birimleri.length) && /\d{4}/.test(shown.src),
     JSON.stringify(shown.counts) + " " + shown.src);
 }
 
@@ -1038,6 +1177,23 @@ async function tourProbe(force) {
       const large = px >= 24 || (px >= 18.66 && parseFloat(s.fontWeight) >= 700);
       if (r2 < (large ? 3 : 4.5)) t.dim.push(label + " içindeki \"" + node.textContent.trim().slice(0, 12) + "\" " + r2.toFixed(2));
     }
+    // Odaktaki öğenin içindeki simge de zemininden seçilmelidir (en az 3:1). Kendi kutusu olan simge o kutuya göre ölçülür.
+    // Etkin olmayan düğmenin soluk simgesi ve gizli duran simge (örneğin sepetteki onay işareti) sayılmaz.
+    if (el.getAttribute("aria-disabled") !== "true") {
+      for (const icon of el.querySelectorAll("svg")) {
+        if (!icon.getClientRects().length) continue;
+        let seen = 1;
+        for (let n = icon; n && n !== el; n = n.parentElement) seen *= parseFloat(getComputedStyle(n).opacity);
+        if (seen < 0.05) continue;
+        const ink = rgba(getComputedStyle(icon).color);
+        if (!ink) continue;
+        ink[3] *= seen;
+        const bg = under(icon);
+        const [hi3, lo3] = [lum(over(ink, bg)), lum(bg)].sort((p, q) => q - p);
+        const r3 = (hi3 + 0.05) / (lo3 + 0.05);
+        if (r3 < 3) t.dim.push(label + " içindeki simge " + r3.toFixed(2));
+      }
+    }
   }
   return false;
 }
@@ -1099,7 +1255,7 @@ async function focusTour(page, engine, w, h) {
   if (await active(".cartbar")) reached.push(await visit("sepet çubuğu bağlantısı"));
   const res = await page.evaluate(() => ({ stops: window.__tour.stops, weak: window.__tour.weak, ring: window.__tour.ring, bare: window.__tour.bare, covered: window.__tour.covered, dim: window.__tour.dim, kb: document.documentElement.dataset.kb }));
   check(engine, size, "klavye odağı her denetimde görünür", res.kb === "on" && res.stops >= 40 && res.weak.length === 0, `${res.stops} durak. Zayıf: ${res.weak.slice(0, 6).join(" | ")}`);
-  check(engine, size, "odaktaki öğenin metni okunur", res.dim.length === 0, res.dim.slice(0, 6).join(" | "));
+  check(engine, size, "odaktaki öğenin metni ve simgesi okunur", res.dim.length === 0, res.dim.slice(0, 6).join(" | "));
   check(engine, size, "klavye turu açık durumlara da ulaşır", reached.length === 5, reached.join(", "));
   check(engine, size, "odaklanan öğe başka bir katmanın altında kalmaz", res.covered.length === 0, res.covered.slice(0, 6).join(", "));
   check(engine, size, "metin alanında odak çizgisi belirir", res.bare.length === 0, res.bare.join(", "));
@@ -1123,13 +1279,25 @@ async function noScript(browser, engine, prepare) {
     button: getComputedStyle(document.querySelector(".nav__all--js")).display,
   }));
   check(engine, size, "JavaScript kapalıyken kategori bağlantısı görünür", fallback.link !== "none" && fallback.button === "none", JSON.stringify(fallback));
-  // Katlanan gruplar (dizin ve alt bölüm) betik olmadan açık durur. Dizin çubukları da çizilmiş görünür.
+  // Katlanan gruplar (dizin ve alt bölüm) betik olmadan açık durur ve başlıkları düz yazıdır. Dizin çubukları da çizilmiş görünür.
+  const shownCount = (q) => nojs.evaluate((sel) => [...document.querySelectorAll(sel)].filter((e) => e.getClientRects().length > 0).length, q);
   const folds = await nojs.evaluate(() => ({
-    closed: [...document.querySelectorAll("details[data-fold]")].filter((g) => !g.open).length,
+    closed: [...document.querySelectorAll("[data-fold]")].filter((g) => {
+      const p = g.querySelector(".fold__panel");
+      return getComputedStyle(p).visibility !== "visible" || p.getBoundingClientRect().height < 20;
+    }).length,
+    groups: document.querySelectorAll("[data-fold]").length,
     bar: getComputedStyle(document.querySelector(".dlink__bar")).transform,
-    prefs: document.querySelectorAll('[role="radio"]').length,
   }));
-  check(engine, size, "JavaScript kapalıyken katlanan gruplar açık", folds.closed === 0 && folds.bar !== "matrix(0, 0, 0, 1, 0, 0)" && folds.prefs === 8, JSON.stringify(folds));
+  folds.buttons = await shownCount(".fold__btn");
+  check(engine, size, "JavaScript kapalıyken katlanan gruplar açık", folds.groups >= 15 && folds.closed === 0 && folds.buttons === 0 && folds.bar !== "matrix(0, 0, 0, 1, 0, 0)", JSON.stringify(folds));
+  // Betik yokken çalışmayan denetim ve doğru olmayan cümle ekranda durmaz. Dil ve para birimi kutuları betikle çalışır.
+  // Yerlerine, fiyatların hangi para biriminde yazdığını söyleyen durağan cümle görünür.
+  const dead = {
+    radios: await shownCount('[role="radio"]'), jsOnly: await shownCount(".js-only"), fixed: await shownCount(".prefs .nojs-only"),
+    text: await nojs.evaluate(() => (document.querySelector(".prefs .nojs-only") || {}).textContent || ""),
+  };
+  check(engine, size, "JavaScript kapalıyken çalışmayan seçenek ve doğru olmayan cümle görünmez", dead.radios === 0 && dead.jsOnly === 0 && dead.fixed === 1 && /olarak gösterilir/.test(dead.text), JSON.stringify(dead));
   // İlk durak içeriğe atla bağlantısıdır. Üçüncü durakta odak dolgusu ve alt çizgi görünmelidir.
   // Dolgu, sayfadaki odak dolgularından biridir: lacivert, beyaz, vurgu mavisi ya da logonun ara tonu.
   await nojs.keyboard.press(tab);
@@ -1175,6 +1343,273 @@ async function touch(browser, engine, prepare) {
   await ctx.close();
 }
 
+// Yatay telefon: sabit çubuklar ekranın büyük bölümünü örtmez. Sepete bir ürün eklenir, iki çubuk birlikte ölçülür.
+async function landscape(page, engine, w, h) {
+  const size = `${w}x${h}`;
+  await page.setViewportSize({ width: w, height: h });
+  await page.goto(url, { waitUntil: "load" });
+  await page.waitForTimeout(1200);
+  await page.locator(".pc__add").first().scrollIntoViewIfNeeded();
+  await page.locator(".pc__add").first().click();
+  await page.waitForTimeout(900);
+  const bars = await page.evaluate(() => {
+    const el = document.querySelector(".cartbar");
+    const bar = el.getBoundingClientRect();
+    const nav = document.querySelector(".bottomnav").getBoundingClientRect();
+    const note = el.querySelector(".cartbar__note").getBoundingClientRect();
+    const items = [...document.querySelectorAll(".bottomnav a")].map((a) => a.getBoundingClientRect());
+    return {
+      on: el.classList.contains("is-on"), bar: Number((bar.height / innerHeight).toFixed(3)), both: Number(((innerHeight - bar.top) / innerHeight).toFixed(3)), nav: Math.round(nav.height),
+      note: note.width > 0 && note.left >= bar.left - 1 && note.right <= bar.right + 1 && note.bottom <= bar.bottom + 1, link: Math.round(el.querySelector("a").getBoundingClientRect().height),
+      navFits: items.every((r) => r.left >= -1 && r.right <= innerWidth + 1 && r.height >= 44), overflow: document.documentElement.scrollWidth - innerWidth,
+    };
+  });
+  check(engine, size, "yatay telefonda sepet çubuğu ekranın dörtte birinden az yer kaplar", bars.on && bars.bar < 0.25 && bars.note && bars.link >= 44, JSON.stringify(bars));
+  check(engine, size, "yatay telefonda sabit çubuklar birlikte ekranın yüzde 40'ından az yer kaplar", bars.both < 0.4 && bars.navFits && bars.overflow <= 0, JSON.stringify(bars));
+  // Odaklanan öğe iki çubuğun arkasında kalmaz.
+  const hidden = await page.evaluate(async () => {
+    const out = [];
+    for (const sel of [".faq:nth-of-type(2) button", ".footer__legal li a"]) {
+      const el = document.querySelector(sel);
+      window.scrollTo(0, window.scrollY + el.getBoundingClientRect().bottom - window.innerHeight + 6);
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      el.focus();
+      await new Promise((r) => setTimeout(r, 250));
+      const top = Math.min(document.querySelector(".cartbar").getBoundingClientRect().top, document.querySelector(".bottomnav").getBoundingClientRect().top);
+      const r1 = el.getBoundingClientRect();
+      if (r1.bottom > top + 1) out.push(sel + " " + Math.round(r1.bottom - top) + "px arkada");
+    }
+    return out;
+  });
+  check(engine, size, "yatay telefonda odaklanan öğe çubukların arkasında kalmaz", hidden.length === 0, hidden.join(", "));
+}
+
+// Sayfada çalışır: büyütülmüş yazıda metnin kutusuna ve ekrana sığıp sığmadığını ölçer.
+function fits() {
+  const visible = (e) => {
+    if (e.closest("[inert], [hidden], .sr-only")) return false;
+    const r = e.getBoundingClientRect();
+    const st = getComputedStyle(e);
+    if (!(r.width > 0 && r.height > 0) || st.visibility === "hidden" || st.display === "none") return false;
+    for (let n = e; n; n = n.parentElement) if (parseFloat(getComputedStyle(n).opacity) < 0.05) return false;
+    return true;
+  };
+  const name = (e) => (e.className && e.className.baseVal === undefined ? e.className : e.tagName).toString().slice(0, 24) + ":" + e.textContent.trim().slice(0, 18);
+  // Yatay kayan şeridin içindeki öğe ve dönen örnek arama bilerek kırpılır. Onlar sayılmaz.
+  const free = (e) => !e.closest("[data-scroller], .search__ghost");
+  const texts = [...document.querySelectorAll("body *")].filter((e) => visible(e) && free(e) && [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()));
+  const out = {};
+  out.root = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  out.body = parseFloat(getComputedStyle(document.querySelector(".hero__lead")).fontSize);
+  out.overflow = document.documentElement.scrollWidth - window.innerWidth;
+  // Ekranın dışına çıkan metin
+  out.out = texts.filter((e) => { const r = e.getBoundingClientRect(); return r.right > innerWidth + 1 || r.left < -1; }).map(name);
+  // Kutusuna sığmayan metin: içeriği kutusundan geniştir. Satır içi öğenin kutusu yoktur, o sayılmaz.
+  out.cut = texts.filter((e) => getComputedStyle(e).display !== "inline" && e.clientWidth > 0 && e.scrollWidth > e.clientWidth + 1).map((e) => name(e) + " " + e.scrollWidth + ">" + e.clientWidth);
+  out.minFont = Math.min(...texts.map((e) => parseFloat(getComputedStyle(e).fontSize)));
+  const nav = [...document.querySelectorAll(".bottomnav a")].filter(visible).map((a) => a.getBoundingClientRect());
+  out.navFits = nav.every((r) => r.left >= -1 && r.right <= innerWidth + 1);
+  // Yan yana duran iki gezinme öğesi birbirine değmez.
+  const all = document.querySelector(".nav__all--js").getBoundingClientRect();
+  const aside = document.querySelector(".nav__aside").getBoundingClientRect();
+  out.navRow = aside.width === 0 || aside.top >= all.bottom - 1 || aside.left - all.right >= 8;
+  return out;
+}
+
+// Kök yazı boyutu büyütülünce dar ekran bozulmaz. Kullanıcı bu ayarı tarayıcıdan yapar.
+// Chromium'da sınanır: varsayılan yazı boyutu tarayıcı başlatılırken verilir. Böylece yazı boyutuna bağlı
+// ekran sorguları (em) da gerçek ayara göre çalışır. WebKit bu ayarı öykünmez.
+async function textScale(engine, px, w, h, prepare) {
+  const size = `${w}x${h} yazı ${px}px`;
+  const browser = await chromium.launch({ args: [`--blink-settings=defaultFontSize=${px}`] });
+  const ctx = await browser.newContext({ viewport: { width: w, height: h } });
+  if (prepare) await prepare(ctx);
+  const page = await ctx.newPage();
+  await page.goto(url, { waitUntil: "load" });
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => {
+    document.querySelectorAll("[data-reveal]").forEach((e) => e.classList.add("is-in"));
+    document.querySelectorAll('[data-fold][data-open="false"] .fold__btn').forEach((b) => { if (b.getClientRects().length) b.click(); });
+  });
+  await page.waitForTimeout(1300);
+  const f = await page.evaluate(fits);
+  if (Math.abs(f.root - px) > 0.5) notRun.push(`${engine} ${size}: tarayıcı yazı boyutu ayarını uygulamadı (kök ${f.root}px), denetim çalışmadı`);
+  else {
+    check(engine, size, "büyütülen yazıda gövde metni büyür", f.body >= px - 0.5 && f.minFont >= 14, `gövde ${f.body}px, en küçük ${f.minFont}px`);
+    check(engine, size, "büyütülen yazıda yatay taşma yok", f.overflow <= 0, `taşma ${f.overflow}px`);
+    check(engine, size, "büyütülen yazıda metin kutusuna ve ekrana sığar", f.out.length === 0 && f.cut.length === 0, [...f.out, ...f.cut].slice(0, 6).join(" | "));
+    check(engine, size, "büyütülen yazıda gezinme öğeleri ekrana sığar", f.navFits && f.navRow, JSON.stringify({ alt: f.navFits, ust: f.navRow }));
+  }
+  if (shots) await page.screenshot({ path: join(shots, `${engine}-${w}x${h}-yazi${px}.png`), fullPage: true });
+  await browser.close();
+}
+
+// Zorlanmış renkler (örneğin Windows yüksek karşıtlık). Yazarın dolguları silinir.
+// Odak, klavye modunda çerçeveyle gösterilir. Çerçevenin izinli olduğu tek durum budur.
+// Yalnız dolguyla anlatılan seçili durum da sistem rengiyle ayırt edilir.
+async function forcedColors(browser, engine, prepare) {
+  const size = "1024x768 zorlanmış renk";
+  const ctx = await browser.newContext({ viewport: { width: 1024, height: 768 }, forcedColors: "active" });
+  if (prepare) await prepare(ctx);
+  const page = await ctx.newPage();
+  await page.goto(url, { waitUntil: "load" });
+  await page.waitForTimeout(1200);
+  if (!(await page.evaluate(() => matchMedia("(forced-colors: active)").matches))) {
+    notRun.push(`${engine} ${size}: bu motor zorlanmış renkleri öykünmedi, denetim çalışmadı`);
+    await ctx.close();
+    return;
+  }
+  await page.focus("#mod-urun");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  const kbd = await page.evaluate(() => { const st = getComputedStyle(document.activeElement); return { id: document.activeElement.id, style: st.outlineStyle, width: st.outlineWidth, kb: document.documentElement.dataset.kb }; });
+  check(engine, size, "zorlanmış renklerde klavye odağı çerçeveyle görünür", kbd.kb === "on" && kbd.id === "mod-urun" && kbd.style === "solid" && kbd.width === "2px", JSON.stringify(kbd));
+  await page.locator('[data-filter="mutfak"]').scrollIntoViewIfNeeded();
+  await page.click('[data-filter="mutfak"]');
+  const ptr = await page.evaluate(() => { const el = document.querySelector('[data-filter="mutfak"]'); return { style: getComputedStyle(el).outlineStyle, kb: document.documentElement.dataset.kb || "", pressed: el.getAttribute("aria-pressed") }; });
+  check(engine, size, "zorlanmış renklerde fareyle basılan öğede çerçeve yok", ptr.kb === "" && ptr.style === "none" && ptr.pressed === "true", JSON.stringify(ptr));
+  const sel = await page.evaluate(() => {
+    const bg = (q) => getComputedStyle(document.querySelector(q)).backgroundColor;
+    return {
+      filter: bg('.filter[aria-pressed="true"]'), filterOff: bg('.filter[aria-pressed="false"]'), tab: bg('.seg button[aria-selected="true"]'), tabOff: bg('.seg button[aria-selected="false"]'),
+      pref: bg('.pref[aria-checked="true"]'), prefOff: bg('.pref[aria-checked="false"]'), bar: bg(".header__bar"), page: getComputedStyle(document.body).backgroundColor,
+    };
+  });
+  check(engine, size, "zorlanmış renklerde seçili durum ayırt edilir", sel.filter !== sel.filterOff && sel.tab !== sel.tabOff && sel.pref !== sel.prefOff && sel.bar !== sel.page, JSON.stringify(sel));
+  await ctx.close();
+}
+
+// Altıncı sürümün bölümleri: karşılamadaki iki yol, teklif özeti, planlanan bölgeler, araç ayrıntıları,
+// içerik kütüphanesi ve hareketli yüzeyler. Durum tıklama anında okunur, geçiş beklenmez.
+async function planned(page, engine, w, h) {
+  const size = `${w}x${h}`;
+  await page.setViewportSize({ width: w, height: h });
+  await page.goto(url, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  const hero = await page.evaluate(() => ({
+    h1: document.querySelector("h1").textContent.replace(/\s+/g, " ").trim(),
+    paths: [...document.querySelectorAll(".paths .path")].map((a) => a.getAttribute("href")),
+  }));
+  check(engine, size, "karşılama alıcıyı ve satıcıyı iki yolla anlatır", hero.h1.endsWith("Toptan alın. Yeni müşterilere satın.") && hero.paths.join(" ") === "#urunler #saticilar", JSON.stringify(hero));
+  // Teklif özeti yazma anında güncellenir.
+  await page.fill("#t-urun", "saklama kabı");
+  await page.fill("#t-adet", "500");
+  const sum = await page.evaluate(() => document.querySelector("[data-rfq-sum-t]").textContent);
+  check(engine, size, "teklif özeti ürün ve adet yazılınca anında güncellenir", sum === "İsteğiniz hazır: 500 adet saklama kabı.", sum);
+  // Özet her tuşta okunmaz: canlı bölge değildir. Gönderim sonucunu sayfanın durum satırı (#durum) okur.
+  const live = await page.evaluate(() => document.querySelector("[data-rfq-sum]").getAttribute("aria-live"));
+  check(engine, size, "teklif özeti her tuşta okunmaz", live === null, String(live));
+  // Adet katı pozitif tam sayıdır. Türkçe binlik gruplama (1.000) kabul edilir. Başka biçim hazır sayılmaz.
+  const qtyCases = [["-5", null], ["1,5", null], ["5x10", null], ["1.5", null], ["0", null], ["99999999999999999999", null], ["1.000", "1.000"], ["12.500", "12.500"], ["500", "500"]];
+  const bad = [];
+  for (const [input, shown] of qtyCases) {
+    await page.fill("#t-adet", input);
+    const st = await page.evaluate(() => ({ t: document.querySelector("[data-rfq-sum-t]").textContent, inv: document.querySelector("#t-adet").getAttribute("aria-invalid"), desc: document.querySelector("#t-adet").getAttribute("aria-describedby") }));
+    const ok = shown === null
+      ? st.t === "Adedi pozitif bir tam sayı olarak yazın." && st.inv === "true" && st.desc === "teklif-ozeti"
+      : st.t === `İsteğiniz hazır: ${shown} adet saklama kabı.` && st.inv === null;
+    if (!ok) bad.push(`${input}: ${st.t} (${st.inv})`);
+  }
+  check(engine, size, "adet yalnız pozitif tam sayı olarak kabul edilir", bad.length === 0, bad.join(" | "));
+  await page.fill("#t-adet", "500");
+  // Gerekçe kartının sıra numarası başlığa ve piktograma değmez. Kartlar ve akış adımları aynı hizada başlar.
+  const lay = await page.evaluate(() => {
+    const hits = [];
+    for (const li of document.querySelectorAll(".reason")) {
+      const r = li.getBoundingClientRect();
+      const ps = getComputedStyle(li, "::before");
+      const c = document.createElement("canvas").getContext("2d");
+      c.font = `${ps.fontWeight} ${ps.fontSize} ${ps.fontFamily}`;
+      const w = c.measureText("06").width;
+      const box = { left: r.right - parseFloat(ps.right) - w, top: r.top + parseFloat(ps.top), bottom: r.top + parseFloat(ps.top) + parseFloat(ps.lineHeight || ps.fontSize) * 1 };
+      if (!isFinite(box.bottom)) box.bottom = box.top + parseFloat(ps.fontSize) * 1.5;
+      const range = document.createRange();
+      range.selectNodeContents(li.querySelector("h3"));
+      const rects = [...range.getClientRects(), li.querySelector(".picto").getBoundingClientRect()];
+      if (rects.some((q) => q.right > box.left && q.left < r.right && q.bottom > box.top && q.top < box.bottom)) hits.push(li.querySelector("h3").textContent.trim().slice(0, 24));
+    }
+    const rows = (sel, inner) => {
+      const by = {};
+      for (const li of document.querySelectorAll(sel)) {
+        const r = li.getBoundingClientRect();
+        if (!r.height) continue;
+        (by[Math.round(r.top + scrollY)] ||= []).push(Math.round(li.querySelector(inner).getBoundingClientRect().top - r.top));
+      }
+      return Object.values(by).filter((row) => row.some((x) => x !== row[0]));
+    };
+    return { hits, reason: rows(".reason", "h3"), flow: rows(".pp__flow li", ".pp__who") };
+  });
+  check(engine, size, "gerekçe kartında numara başlığa değmez", lay.hits.length === 0, lay.hits.join(" | "));
+  check(engine, size, "kartlar ve akış adımları aynı hizada başlar", !lay.reason.length && !lay.flow.length, JSON.stringify(lay));
+  // Planlanan her bölge görünür etiketini taşır. Gezinme ve alt bölüm araçlara ve kütüphaneye gider.
+  const plan = await page.evaluate(() => ({
+    regions: [...document.querySelectorAll("[data-plan]")].map((r) => [r.id, !!r.querySelector(".plan-tag")]),
+    links: ["araclar", "kutuphane"].map((id) => document.querySelectorAll(`a[href="#${id}"]`).length),
+    tools: document.querySelectorAll("#araclar .tool").length,
+    groups: document.querySelectorAll("#araclar .tgroup").length,
+    lib: [...document.querySelectorAll("#kutuphane .lib__type")].map((t) => t.querySelectorAll(".libq").length),
+  }));
+  check(engine, size, "planlanan bölgeler etiketli", plan.regions.length >= 5 && plan.regions.every((r) => r[1]), JSON.stringify(plan.regions));
+  check(engine, size, "araçlarda 3 grup ve 12 araç var", plan.tools === 12 && plan.groups === 3, JSON.stringify(plan));
+  check(engine, size, "kütüphanede 6 tür ve türde 3 ya da 4 öğe var", plan.lib.length === 6 && plan.lib.every((n) => n >= 3 && n <= 4), JSON.stringify(plan.lib));
+  check(engine, size, "araçlara ve kütüphaneye en az iki bağlantı gider", plan.links.every((n) => n >= 2), JSON.stringify(plan.links));
+  // Araç ayrıntısı: tıklama ve klavye ile açılır, durum anında yazılır.
+  const btn = page.locator("#arac-1-1-b");
+  await btn.scrollIntoViewIfNeeded();
+  await btn.click();
+  const open = await page.evaluate(() => {
+    const b = document.querySelector("#arac-1-1-b");
+    const p = document.getElementById(b.getAttribute("aria-controls"));
+    return { exp: b.getAttribute("aria-expanded"), state: p.dataset.open, inert: p.inert, text: p.textContent };
+  });
+  check(engine, size, "araç ayrıntısı tıklama anında açılır", open.exp === "true" && open.state === "true" && open.inert === false && open.text.includes("henüz hesaplama yapmaz"), JSON.stringify(open));
+  await page.focus("#arac-1-1-b");
+  await page.keyboard.press("Enter");
+  const closed = await page.evaluate(() => document.querySelector("#arac-1-1-b").getAttribute("aria-expanded"));
+  check(engine, size, "araç ayrıntısı Enter ile kapanır", closed === "false", closed);
+  const lb = page.locator("#lib-b1-1");
+  await lb.scrollIntoViewIfNeeded();
+  await lb.click();
+  const libOpen = await page.evaluate(() => document.querySelector("#lib-b1-1").getAttribute("aria-expanded"));
+  check(engine, size, "kütüphane öğesi sayfa içinde açılır", libOpen === "true", libOpen);
+  // Yüzey denetimleri temiz bir sayfada başlar. Önceki adımlar sayfayı aşağı kaydırıp yüzeyleri çizdirmiş olabilir.
+  await page.goto(url, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  // Hareketli yüzeyler: süstür, tıklanmaz. Ekran dışındaki yüzey çizilmez. Gizli sekmede çizim başlamaz.
+  const surf = await page.evaluate(() => {
+    const list = [...document.querySelectorAll("[data-surface]")];
+    return {
+      n: list.length,
+      hidden: list.every((e) => e.getAttribute("aria-hidden") === "true" && getComputedStyle(e).pointerEvents === "none"),
+      far: document.querySelector("#yeniden-siparis [data-surface]").classList.contains("is-on"),
+    };
+  });
+  check(engine, size, "yüzeyler gizli ve tıklanmaz", surf.n >= 8 && surf.hidden, JSON.stringify(surf));
+  check(engine, size, "ekran dışındaki yüzey çizilmez", surf.far === false, JSON.stringify(surf));
+  await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, get: () => true }); });
+  await page.evaluate(() => document.querySelector("#yeniden-siparis").scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(400);
+  const asleep = await page.evaluate(() => document.querySelector("#yeniden-siparis [data-surface]").classList.contains("is-on"));
+  await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, get: () => false }); document.dispatchEvent(new Event("visibilitychange")); });
+  const awake = await page.evaluate(() => document.querySelector("#yeniden-siparis [data-surface]").classList.contains("is-on"));
+  check(engine, size, "gizli sekmede yüzey çizilmez, görünür olunca çizilir", asleep === false && awake === true, JSON.stringify({ asleep, awake }));
+  // İşaretçi yüzeyi aydınlatır, metin ve denetimin yeri değişmez.
+  if (w >= 1024) {
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.waitForTimeout(300);
+    const before = await page.evaluate(() => [document.querySelector("h1"), document.querySelector("#q-ana")].map((e) => { const r = e.getBoundingClientRect(); return [r.x, r.y, r.width, r.height].map(Math.round).join(","); }));
+    await page.mouse.move(200, 300);
+    await page.mouse.move(260, 340);
+    await page.waitForTimeout(300);
+    const after = await page.evaluate(() => ({
+      boxes: [document.querySelector("h1"), document.querySelector("#q-ana")].map((e) => { const r = e.getBoundingClientRect(); return [r.x, r.y, r.width, r.height].map(Math.round).join(","); }),
+      near: document.querySelector(".band--hero [data-surface]").classList.contains("is-near"),
+    }));
+    check(engine, size, "işaretçi yüzeyi aydınlatır, içerik yerinde kalır", after.near && after.boxes.join("|") === before.join("|"), JSON.stringify({ before, after }));
+  }
+}
+
 async function all() {
   for (const [engine, type] of [["chromium", chromium], ["webkit", webkit]]) {
     const browser = await type.launch();
@@ -1187,6 +1622,11 @@ async function all() {
     await behavior(page, engine, 320, 568);
     await behavior(page, engine, 390, 844);
     await behavior(page, engine, 1440, 900);
+    await planned(page, engine, 320, 568);
+    await planned(page, engine, 1440, 900);
+    // Yatay telefon: sabit çubuklar. En küçük yatay ekran da sınanır.
+    await landscape(page, engine, 844, 390);
+    await landscape(page, engine, 568, 320);
     await focusTour(page, engine, 320, 568);
     await focusTour(page, engine, 390, 844);
     await focusTour(page, engine, 1440, 900);
@@ -1200,7 +1640,21 @@ async function all() {
       drawn: getComputedStyle(document.querySelector(".reasons .picto .s")).strokeDashoffset,
     }));
     check(engine, "390x844", "hareket azaltmada içerik hemen görünür", rm.shown && rm.drawn === "0px", JSON.stringify(rm));
+    // Hareket azaltmada yüzeyler çizilmiş haliyle durur, geçiş yoktur.
+    const rs = await reduced.evaluate(() => {
+      const list = [...document.querySelectorAll("[data-surface]")];
+      const path = document.querySelector("[data-surface] path");
+      return { on: list.every((e) => e.classList.contains("is-on")), offset: getComputedStyle(path).strokeDashoffset, dur: getComputedStyle(path).transitionDuration };
+    });
+    check(engine, "390x844", "hareket azaltmada yüzeyler durağan ve çizili", rs.on && rs.offset === "0px" && /^0s/.test(rs.dur), JSON.stringify(rs));
     await noScript(browser, engine);
+    // Büyütülmüş yazı ve zorlanmış renkler yalnız Chromium'da öykünülür.
+    if (engine === "chromium") {
+      await forcedColors(browser, engine);
+      for (const [px, w, h] of [[20, 320, 568], [24, 320, 568], [20, 390, 844], [24, 390, 844]]) await textScale(engine, px, w, h);
+    } else {
+      notRun.push(`${engine}: bu motor kök yazı boyutu ayarını ve zorlanmış renkleri öykünmez, bu iki denetim yalnız Chromium'da çalıştı`);
+    }
     check(engine, "tümü", "konsol hatası yok", errors.length === 0, errors.slice(0, 3).join(" | "));
     await browser.close();
   }
@@ -1220,15 +1674,47 @@ async function all() {
 const swap = (from, to) => (text) => text.replace(from, to);
 const add = (css) => (text) => text + "\n" + css;
 const BREAKS = [
+  // Beşinci incelemenin bulguları. Her bozulma, düzeltilen bir kusuru geri getirir.
+  { name: "seçenek adı seçim işaretinin altına giriyor", file: "styles.css", run: "layout:320x568", expect: "seçenek adı seçim işaretine değmez",
+    apply: add(".pref { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 12px; } .pref__mark { grid-column: 1; } .pref__t { grid-column: 2; grid-row: 1; } .pref__on { grid-column: 3; }") },
+  { name: "kapalı grubun içinde küçük yazı", file: "styles.css", run: "layout:320x568", expect: "açılan gruplarda en küçük metin 14 px",
+    apply: add(".dlink__k { font-size: 12px; }") },
+  { name: "bölüm adı başlıkta okunmuyor", file: "index.html", run: "layout:1440x900", expect: "bölüm başlığı bölümün adını da okutur",
+    apply: swap('<span class="sr-only">Ürünler: </span>', "") },
+  { name: "ışığın altında metin soluk kalıyor", file: "styles.css", run: "layout:1024x768", expect: "metin karşıtlığı yeterli",
+    apply: swap("background: radial-gradient(closest-side, rgba(79, 136, 207, 0.24), rgba(79, 136, 207, 0));\n  transform", "background: radial-gradient(closest-side, rgba(79, 136, 207, 0.5), rgba(79, 136, 207, 0));\n  transform") },
+  { name: "para birimi değişince sipariş toplamı eski kalıyor", file: "app.js", run: "behavior:390x844", expect: "para birimi değişince sepet ve sipariş toplamı yeniden hesaplanır",
+    apply: swap("          order.repaint(true);\n", "") },
+  { name: "toplam her para biriminde dolar tutarından hesaplanıyor", file: "app.js", run: "behavior:1440x900", expect: "para birimi değişince sepet ve sipariş toplamı yeniden hesaplanır",
+    apply: swap('parseFloat(el.dataset["unit" + para.code.charAt(0) + para.code.slice(1).toLowerCase()])', "parseFloat(el.dataset.unitUsd)") },
+  { name: "toplam yuvarlanmış birim fiyattan hesaplanıyor", file: "index.html", run: "behavior:320x568", expect: "en az sipariş tutarı sepetin toplamıyla aynı hesaplanır",
+    apply: (t) => t.replace(/data-unit-(gbp|usd|eur)="(\d+\.\d\d)\d+"/g, 'data-unit-$1="$2"') },
+  { name: "tıklanmayan öğe üzerine gelince değişiyor", file: "styles.css", run: "behavior:1440x900", expect: "tıklanmayan öğe üzerine gelince değişmez",
+    apply: add(".ptile:hover { background-color: var(--ink-fill-hover); }") },
+  { name: "ekran dönünce odak kayboluyor", file: "app.js", run: "behavior:320x568", expect: "açılan grup ekran dönünce açık kalır, odak kaybolmaz",
+    apply: swap("if (active === g.btn && !button) {", "if (active === null) {") },
+  { name: "açılan grup ekran dönünce kapanıyor", file: "app.js", run: "behavior:390x844", expect: "açılan grup ekran dönünce açık kalır, odak kaybolmaz",
+    // Ekran dönünce her grup kapanır. Odağı taşıyan grubu yeniden açan dal da kaldırılır.
+    apply: swap('} else if (button && g.el.dataset.open !== "true" && g.panel.contains(active)) set(g, true);', "} else set(g, false);") },
+  { name: "betik yokken seçenek kutuları görünüyor", file: "styles.css", run: "noscript", expect: "JavaScript kapalıyken çalışmayan seçenek ve doğru olmayan cümle görünmez",
+    apply: swap("html:not(.js) .js-only, html.js .nojs-only { display: none; }", "html.js .nojs-only { display: none; }") },
+  { name: "odakta simge kendi kutusunun üstünde okunmuyor", file: "styles.css", run: "focus:390x844", expect: "odaktaki öğenin metni ve simgesi okunur",
+    apply: add('html[data-kb="on"] :is(a, button):focus-visible i { color: inherit; }') },
+  { name: "yatay telefonda sepet çubuğu yüksek", file: "styles.css", run: "landscape:844x390", expect: "yatay telefonda sepet çubuğu ekranın dörtte birinden az yer kaplar",
+    apply: swap("@media (max-height: 480px) and (max-width: 1023px) {\n  .bottomnav a { flex-direction: row;", "@media not all {\n  .bottomnav a { flex-direction: row;") },
+  { name: "büyütülen yazıda başlık taşıyor", file: "styles.css", run: "scale:24:320x568", expect: "büyütülen yazıda metin kutusuna ve ekrana sığar",
+    apply: swap("--t-display: min(clamp(2.375rem, 1.2rem + 5.4vw, 5rem), 12vw);", "--t-display: clamp(2.375rem, 1.2rem + 5.4vw, 5rem);") },
+  { name: "zorlanmış renklerde seçili durum kayboluyor", file: "styles.css", run: "forced", expect: "zorlanmış renklerde seçili durum ayırt edilir",
+    apply: swap('  .filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .mega__cat[aria-expanded="true"] { background-color: Highlight; color: HighlightText; }\n', "") },
   // Beşinci sürümün kuralları
   { name: "komşu iki bant aynı yüzeyde", file: "styles.css", run: "layout:1440x900", expect: "komşu bantlar farklı yüzeyde",
     apply: add(".band--tint { background-color: var(--surface); }") },
   { name: "kart bandıyla aynı yüzeyde", file: "styles.css", run: "layout:1440x900", expect: "kart yüzeyi bandından ayrılır",
     apply: add(".dir__item, .sc { background: var(--sunken); }") },
   { name: "bölüm numarası atlanmış", file: "index.html", run: "layout:1440x900", expect: "bölüm başlıkları sırayla numaralı",
-    apply: swap('<b class="mh__no" aria-hidden="true">03</b>', '<b class="mh__no" aria-hidden="true">04</b>') },
-  { name: "odaklanan dizin bağlantısında yazı koyu kalıyor", file: "styles.css", run: "focus:1440x900", expect: "odaktaki öğenin metni okunur",
-    apply: (t) => t.split(":is(small, b, svg, i, h3, .dlink__t, .dlink__n)").join(":is(small, b, svg, i, h3)") },
+    apply: swap('<b class="mh__no">03</b>', '<b class="mh__no">04</b>') },
+  { name: "odaklanan dizin bağlantısında yazı koyu kalıyor", file: "styles.css", run: "focus:1440x900", expect: "odaktaki öğenin metni ve simgesi okunur",
+    apply: (t) => t.split(":is(small, b, svg, h3, .dlink__t, .dlink__n)").join(":is(small, b, svg, h3)") },
   { name: "yazı tipi Ubuntu değil", file: "styles.css", run: "layout:390x844", expect: "font Ubuntu",
     apply: swap('--font: "Ubuntu",', '--font: "Georgia",') },
   { name: "Ubuntu ailesinde olmayan ara kalınlık", file: "styles.css", run: "layout:390x844", expect: "yazı kalınlığı Ubuntu ailesinde",
@@ -1237,14 +1723,14 @@ const BREAKS = [
     apply: swap("          paintPrices();\n          cart.repaint(true);", "          cart.repaint(true);") },
   { name: "radyo grubunda ok tuşu çalışmıyor", file: "app.js", run: "behavior:1440x900", expect: "para birimi klavyeyle seçilir",
     apply: swap("          select(radios[(i + step + radios.length) % radios.length], true);", "") },
-  { name: "dizin grubu dar ekranda açılmıyor", file: "app.js", run: "behavior:320x568", expect: "dizin grubu dar ekranda açılır",
-    apply: swap('$("summary", g.el).addEventListener("click", function (e) { if (g.mq.matches) e.preventDefault(); });', '$("summary", g.el).addEventListener("click", function (e) { e.preventDefault(); });') },
+  { name: "dizin grubu dar ekranda açılmıyor", file: "app.js", run: "behavior:320x568", expect: "dizin grubu dar ekranda açılır, durum anında güncellenir",
+    apply: swap('g.btn.addEventListener("click", function () { set(g, g.el.dataset.open !== "true"); });', "") },
   { name: "menüdeki teklif bağlantısı menüyü kapatmıyor", file: "app.js", run: "behavior:320x568", expect: "menüdeki teklif bağlantısı menüyü kapatır",
     apply: swap('$$("[data-mega-kapat]", panel).forEach(function (a) { a.addEventListener("click", function () { set(false, false); }); });', "") },
   { name: "konum çubuğu ilerlemiyor", file: "app.js", run: "behavior:390x844", expect: "konum çubuğu kaydırmayla ilerler",
     apply: swap('if (bar) bar.style.setProperty("--p",', 'if (!bar) bar.style.setProperty("--p",') },
   { name: "ışık işaretçiyi izlemiyor", file: "app.js", run: "behavior:1440x900", expect: "ışık işaretçiyi izler",
-    apply: swap('if (band) place(band, e, "--mx", "--my");', "") },
+    apply: swap('spot.style.setProperty("--dx", Math.round(x - restX) + "px");', "") },
   { name: "ışık kartı yerinden oynatıyor", file: "styles.css", run: "behavior:1440x900", expect: "kartın üstünde ışık belirir, kart oynamaz",
     apply: add("[data-glow]:hover { transform: translateY(-4px); }") },
   { name: "JavaScript yokken dizin çubukları çizilmiyor", file: "styles.css", run: "noscript", expect: "JavaScript kapalıyken katlanan gruplar açık",
@@ -1263,15 +1749,15 @@ const BREAKS = [
   { name: "odakta çevreleyen halka", file: "styles.css", run: "focus:1440x900", expect: "hiçbir durakta çevreleyen halka yok",
     apply: add('html[data-kb="on"] .btn:focus-visible { box-shadow: 0 0 0 3px #2870c3; }') },
   { name: "içeriğe atlayınca piktogramlar renk değiştiriyor", file: "styles.css", run: "behavior:390x844", expect: "içeriğe atlayınca sayfa renk değiştirmez",
-    apply: swap('html[data-kb="on"] :is(a, button, summary, [role="option"], [role="tab"]):focus-visible :is(.picto, .pref__mark),', 'html[data-kb="on"] :focus-visible :is(.picto, .pref__mark),') },
+    apply: swap('html[data-kb="on"] :is(a, button, [role="option"], [role="tab"]):focus-visible :is(.picto, .pref__mark),', 'html[data-kb="on"] :focus-visible :is(.picto, .pref__mark),') },
   { name: "fare üzerindeyken odak dolgusu eziliyor", file: "styles.css", run: "behavior:1440x900", expect: "fare üzerindeyken de odak dolgusu görünür",
-    apply: swap('html[data-kb="on"]:root :is(a, button, summary, [role="option"], [role="tab"]):focus-visible,', 'html[data-kb="on"] :is(a, button, summary, [role="option"], [role="tab"]):focus-visible,') },
+    apply: swap('html[data-kb="on"]:root :is(a, button, [role="option"], [role="tab"]):focus-visible,', 'html[data-kb="on"] :is(a, button, [role="option"], [role="tab"]):focus-visible,') },
   { name: "sepet çubuğu dar ekranda yükseliyor", file: "styles.css", run: "behavior:320x568", expect: "sepet çubuğu ekranın dörtte birinden az yer kaplar",
     apply: swap(".cartbar__note { flex: 1 0 100%; }", ".cartbar__note { flex: 0 1 72px; }") },
   { name: "seçili para birimi kutusunda odak görünmüyor", file: "styles.css", run: "behavior:320x568", expect: "seçili para birimi kutusu klavye odağını gösterir",
     apply: swap('.on-ink .btn--light, .pref[aria-checked="true"] { --focus-bg', '.on-ink .btn--light { --focus-bg') },
   { name: "JavaScript yokken odak göstergesi yok", file: "styles.css", run: "noscript", expect: "JavaScript kapalıyken klavye odağı görünür",
-    apply: swap('html:not(.js):root :is(a, button, summary, [role="option"], [role="tab"]):focus-visible {', 'html.yok:root :is(a, button, summary, [role="option"], [role="tab"]):focus-visible {') },
+    apply: swap('html:not(.js):root :is(a, button, [role="option"], [role="tab"]):focus-visible {', 'html.yok:root :is(a, button, [role="option"], [role="tab"]):focus-visible {') },
   { name: "işaretçiyle odaklanan şerit bağlantısı yerinden oynuyor", file: "app.js", run: "behavior:320x568", expect: "şeritteki bağlantıya dokunmak onu açar",
     apply: swap('if (root.dataset.kb !== "on") return;', "") },
   { name: "şeritte odaklanan bağlantı okun altında kalıyor", file: "app.js", run: "focus:320x568", expect: "odaklanan öğe başka bir katmanın altında kalmaz",
@@ -1317,6 +1803,18 @@ const BREAKS = [
     apply: swap('c.addEventListener("click", function () { openCat(c, !wide.matches); });', 'c.addEventListener("click", function () { setTimeout(function () { openCat(c, !wide.matches); }, 400); });') },
 ];
 
+// Altıncı sürümün bozulmaları: yeni davranışların testi bunları yakalamalıdır.
+BREAKS.push(
+  { name: "teklif özeti adetle güncellenmiyor", file: "app.js", run: "planned:390x844", expect: "teklif özeti ürün ve adet yazılınca anında güncellenir",
+    apply: swap('qty.addEventListener("input", summary);', "") },
+  { name: "araç ayrıntısı açılmıyor", file: "app.js", run: "planned:390x844", expect: "araç ayrıntısı tıklama anında açılır",
+    apply: swap('$$(".faq, .tool, .libq")', '$$(".faq, .libq")') },
+  { name: "gizli sekmede yüzey çiziliyor", file: "app.js", run: "planned:390x844", expect: "gizli sekmede yüzey çizilmez, görünür olunca çizilir",
+    apply: swap("if (document.hidden) waiting.push(en.target);\n          else draw(en.target);", "draw(en.target);") },
+  { name: "yüzey tıklamayı tutuyor", file: "styles.css", run: "planned:390x844", expect: "yüzeyler gizli ve tıklanmaz",
+    apply: add(".surface { pointer-events: auto; }") },
+);
+
 async function selfCheck() {
   // Bozulmalar varsayılan olarak Chromium'da denenir. Yalnız Safari ailesinde görülen bozulma WebKit'te denenir.
   const engines = { chromium, webkit };
@@ -1347,16 +1845,20 @@ async function selfCheck() {
     notRun.length = 0;
     let crash = "";
     try {
-      const [kind, dims] = run.split(":");
+      const [kind, dims, extra] = run.split(":");
       if (kind === "touch") await touch(browser, engine, prepare);
       else if (kind === "noscript") await noScript(browser, engine, prepare);
+      else if (kind === "forced") await forcedColors(browser, engine, prepare);
+      else if (kind === "scale") await textScale(engine, Number(dims), ...extra.split("x").map(Number), prepare);
       else {
         const ctx = await browser.newContext();
         await prepare(ctx);
         const page = await ctx.newPage();
         const [w, h] = dims.split("x").map(Number);
         if (kind === "layout") await layout(page, engine, w, h);
+        else if (kind === "landscape") await landscape(page, engine, w, h);
         else if (kind === "focus") await focusTour(page, engine, w, h);
+        else if (kind === "planned") await planned(page, engine, w, h);
         else await behavior(page, engine, w, h);
         await ctx.close();
       }

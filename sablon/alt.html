@@ -13,12 +13,14 @@
         <div class="socials">{{soc}}</div>
       </div>
       <!-- Dil ve para birimi: seçenekler görsel kutulardır. Her grup bir radyo grubudur.
-           Para birimi seçimi sayfadaki fiyatları gerçekten değiştirir. Dil seçimi bu öneride sayfayı çevirmez. -->
+           Para birimi seçimi sayfadaki fiyatları gerçekten değiştirir. Dil seçimi bu öneride sayfayı çevirmez.
+           Seçenekler betikle çalışır. Betik yoksa kutular görünmez, yerine durağan bir cümle görünür. -->
       <div class="prefs" id="dil">
         <p class="footer__label" id="tercih-baslik">Dil ve para birimi</p>
-        <div class="prefs__group" role="radiogroup" aria-label="Dil" data-tercih="dil">{{dil_tiles}}</div>
-        <div class="prefs__group" role="radiogroup" aria-label="Para birimi" data-tercih="para">{{para_tiles}}</div>
-        <p class="prefs__note">Fiyatlar seçtiğiniz para biriminde gösterilir. Bu öneride dil seçimi sayfanın dilini değiştirmez.</p>
+        <div class="prefs__group js-only" role="radiogroup" aria-label="Dil" data-tercih="dil">{{dil_tiles}}</div>
+        <div class="prefs__group js-only" role="radiogroup" aria-label="Para birimi" data-tercih="para">{{para_tiles}}</div>
+        <p class="prefs__note js-only">Fiyatlar seçtiğiniz para biriminde gösterilir. Tutarlar Türk lirası fiyatından çevrilir. Bu öneride dil seçimi sayfanın dilini değiştirmez.</p>
+        <p class="prefs__note nojs-only">{{para_sabit}} Tutarlar Türk lirası fiyatından çevrilir.</p>
       </div>
     </div>
 
@@ -37,10 +39,12 @@
       <div class="footer__cols footer__cols--types">
         {{tgroups}}
       </div>
-      {{planlanan}}
     </nav>
 
-    <!-- 4. Ödeme yöntemleri -->
+    <!-- 3b. İçerik kütüphanesi: planlanan içerik türleri. Ayrı sayfa yoktur, her öğe burada açılır. Yalnız önizlemede. -->
+    {{kutuphane}}
+
+    <!-- 4. Ödeme yöntemleri. Düz satırdır, çünkü tıklanmaz. -->
     <div class="footer__pay">
       <p class="footer__label" id="alt-odeme">Ödeme yöntemleri</p>
       <ul class="paylist" aria-labelledby="alt-odeme">{{odeme_chips}}</ul>

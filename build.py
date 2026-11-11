@@ -5,18 +5,22 @@
 # Çıktı: index.html
 # Kapsam: yalnız ana sayfa. Kategori, arama ve mağaza sayfaları üretilmez, menü öğesi olarak yer alır.
 # Kural: sayfadaki her sayı ve her olgu data/ klasöründen gelir. Bu dosyada olgu yazmaz.
+import hashlib
 import html
 import json
 import os
 import re
 import sys
+from decimal import ROUND_HALF_UP, Decimal
 from urllib.parse import parse_qs, quote, unquote, urlencode, urlsplit
 
 from piktogram import icon, picto
-from metin import classify, norm, squeeze
+from metin import classify, hidden_known, hidden_texts, norm, norm_hidden, split, squeeze, walk_texts
 from secim import (
-    ALT_KISI, ALT_PLAN, ALT_TUR, BETIK_METNI, DILLER, DIZIN, DIZIN_EN_AZ, DIZIN_OGE, ETIKETLER, GRUPLAR, IDDIALAR, ODEME_YONTEMLERI,
-    ONIZLEME_ETIKET, ONIZLEME_TASARIM, ORNEK_SIPARIS, ORNEK_URUN, PARA, PARA_VARSAYILAN, TASARIM_METNI, URETICILER, URUNLER, VERI_METNI,
+    ALT_KISI, ALT_TUR, BETIK_METNI, DILLER, DIZIN, DIZIN_EN_AZ, DIZIN_OGE, ETIKETLER, GORSELLER, GRUPLAR, IDDIALAR, ODEME_YONTEMLERI,
+    ONIZLEME_ETIKET, ONIZLEME_OZNITELIK, ONIZLEME_TASARIM, ORNEK_SIPARIS, ORNEK_URUN, OZNITELIK_METNI, PARA, PARA_VARSAYILAN, SOSYAL,
+    TASARIM_METNI, URETICILER, URUNLER, VERI_METNI,
+    ARACLAR, DEGER_BOLUMLERI, KUTUPHANE, ODEME_FAYDA, ODEME_PLAN, PLAN_ETIKET, PLAN_METNI,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -65,7 +69,15 @@ DZ = load("dizin.json")
 RATES = load("kur.json")["TRY"]  # 1 TRY kaç birim eder: USD, EUR, GBP, TRY
 CURS = FACTS["para_birimleri"]
 assert set(CURS) == set(PARA), "Para birimi listesi değişmiş: %s. secim.py içindeki PARA sözlüğünü güncelleyin." % CURS
-assert FACTS["alindi"] == DZ["alindi"], "Veri dosyaları aynı gün alınmamış. python3 veri.py çalıştırın."
+# Veri dosyaları tek bir koşudan gelmelidir. veri.py her koşunun sonunda dosyaların özetini yazar (kosu.json).
+# Bir dosya sonradan değiştiyse ya da yazma yarıda kaldıysa özet tutmaz ve sayfa üretilmez.
+KOSU = load("kosu.json")
+for _name, _sum in KOSU["dosyalar"].items():
+    _body = open(os.path.join(HERE, "data", _name), "rb").read()
+    assert hashlib.sha256(_body).hexdigest() == _sum, "data/%s son veri koşusuyla aynı değil. python3 veri.py çalıştırın." % _name
+assert FACTS["alindi"] == KOSU["alindi"], "Veri dosyaları son koşudan gelmiyor. python3 veri.py çalıştırın."
+# Kaynaklı metinler. Bir bağlantı etiketi kaynaklıysa etiket listesine ayrıca girmez.
+SOURCED = [m[0] for m in IDDIALAR]
 N_CHILD = sum(len(c["children"]) for c in CATS)
 
 
@@ -131,25 +143,88 @@ RAIL_CTL = (
 
 
 def head(no, kicker, hid, title, lead="", link="", split=True):
-    """Bölüm başlığı. Her bölüm aynı başlıkla başlar: sıra numarası, bölüm adı, ayırıcı çizgi, başlık ve açıklama."""
+    """Bölüm başlığı. Her bölüm aynı başlıkla başlar: sıra numarası, bölüm adı, ayırıcı çizgi, başlık ve açıklama.
+    Üst satır gözle okunur. Ekran okuyucu bölüm adını başlığın içinde okur. Böylece bölgenin adı yalnız slogan olmaz."""
     side = '<div class="mh__side">%s%s</div>' % ('<p class="mh__lead">%s</p>' % lead if lead else "", link) if lead or link else ""
     return (
         '<header class="mh%s" data-reveal>'
-        '<p class="mh__top"><b class="mh__no" aria-hidden="true">%s</b><span class="mh__kicker">%s</span><span class="mh__bar" aria-hidden="true"></span></p>'
-        '<h2 id="%s">%s</h2>%s</header>' % (" mh--split" if split else "", no, kicker, hid, title, side)
+        '<p class="mh__top" aria-hidden="true"><b class="mh__no">%s</b><span class="mh__kicker">%s</span><span class="mh__bar"></span></p>'
+        '<h2 id="%s"><span class="sr-only">%s: </span>%s</h2>%s</header>' % (" mh--split" if split else "", no, kicker, hid, kicker, title, side)
     )
 
 
+# Bölüm sırası. Planlanan bölümler yalnız önizleme derlemesinde vardır.
+# Numara derlemeye göre sırayla verilir. Böylece yayın derlemesinde numara atlanmaz.
+SIRA = ["alici", "kat", "urun", "uretici", "surec", "odeme_plan", "sss", "satici", "yeni-musteri", "yeniden-siparis", "araclar", "dizin"]
+PLANLI = {"odeme_plan", "yeni-musteri", "yeniden-siparis", "araclar"}
+NO = {k: "%02d" % i for i, k in enumerate([k for k in SIRA if not (YAYIN and k in PLANLI)], 1)}
+
+
+# --- Hareketli yüzeyler ---------------------------------------------------------
+# Her bölümün arkasında kendi yüzeyi durur: ticaret ağı, nokta alanı ya da sipariş rotası.
+# Yüzey süstür. Okuyucudan gizlidir, tıklanmaz ve içeriğin yerini değiştirmez.
+# Hareket kısadır ve olayla başlar: yüzey ekrana girince bir kez çizilir (app.js is-on yazar).
+# İşaretçi yüzeyin üstündeyken yakınındaki çizgiler belirginleşir. Sonsuz hareket yoktur, bu yüzden durdurma düğmesi gerekmez.
+AG_DUGUM = [(80, 120), (230, 60), (360, 190), (520, 90), (660, 210), (820, 70), (980, 170), (1130, 90), (140, 330), (300, 420),
+            (470, 330), (640, 450), (790, 340), (950, 440), (1100, 330), (210, 560), (420, 600), (700, 580), (900, 590), (1150, 540)]
+
+
+def _ag(seed):
+    """Ticaret ağı: düğümler ve her düğümü en yakın iki komşusuna bağlayan çizgiler. seed ağı yansıtır."""
+    nodes = [((1200 - x) if seed % 2 else x, y) for x, y in AG_DUGUM]
+    edges = set()
+    for i, (x, y) in enumerate(nodes):
+        near = sorted((j for j in range(len(nodes)) if j != i), key=lambda j: (nodes[j][0] - x) ** 2 + (nodes[j][1] - y) ** 2)[:2]
+        edges |= {tuple(sorted((i, j))) for j in near}
+    lines = "".join('<path pathLength="1" d="M%d %dL%d %d" style="--i:%d"/>' % (nodes[a] + nodes[b] + (k % 8,)) for k, (a, b) in enumerate(sorted(edges)))
+    dots = "".join('<circle cx="%d" cy="%d" r="3" style="--i:%d"/>' % (x, y, k % 8) for k, (x, y) in enumerate(nodes))
+    return lines + dots
+
+
+def _rota(seed):
+    """Sipariş rotası: yüzeyi boydan boya geçen bir yol ve yol üstündeki duraklar."""
+    path = "M-20 %d C 220 %d, 380 %d, 600 %d S 980 %d, 1220 %d" % ((420, 300, 520, 380, 250, 330) if seed % 2 else (200, 330, 120, 260, 420, 300))
+    stops = [(150, 300), (420, 420), (600, 380), (860, 290), (1080, 320)] if seed % 2 else [(150, 260), (400, 190), (600, 260), (850, 360), (1080, 310)]
+    return '<path pathLength="1" d="%s"/>' % path + "".join('<circle cx="%d" cy="%d" r="5" style="--i:%d"/>' % (x, y, k + 2) for k, (x, y) in enumerate(stops))
+
+
+def surface(kind, seed=0):
+    """Bir bölümün hareketli yüzeyi. kind: ag, rota ya da nokta. Nokta alanı yalnız CSS ile çizilir."""
+    if kind == "nokta":
+        return '<span class="surface surface--nokta" aria-hidden="true" data-surface></span>'
+    body = _ag(seed) if kind == "ag" else _rota(seed)
+    svg = '<svg class="%s" viewBox="0 0 1200 640" preserveAspectRatio="xMidYMid slice" focusable="false">%s</svg>'
+    return '<span class="surface surface--%s" aria-hidden="true" data-surface>%s%s</span>' % (kind, svg % ("surface__lo", body), svg % ("surface__hi", body))
+
+
 # --- Para: her tutar dört para biriminde hesaplanır ---------------------------
-# Tutarlar burada hesaplanır ve sayfaya yazılır. app.js yalnız hazır değeri gösterir, kendi yuvarlama yapmaz.
+# Canlı sitede fiyat Türk lirasıdır. Diğer para birimlerindeki tutar, canlı sitenin kuruyla çevrilir.
+# Toplam, yuvarlanmamış birim tutardan hesaplanır. Yuvarlanmış birim fiyat adetle çarpılsaydı
+# toplam, çevrilen gerçek tutardan sapardı (250 adette yüzde 1'e kadar).
+class Html(str):
+    """Hazır HTML. Yalnız bu dosyanın ürettiği parça bu sınıfı taşır. Veriden gelen metin her zaman kaçışla yazılır."""
+
+
+def r2(x):
+    """İki ondalığa yuvarlar. Kural tarayıcının sayı biçimiyle aynıdır: sayının en kısa ondalık yazımı alınır,
+    tam yarıda kalan değer yukarı yuvarlanır. Böylece build.py ile app.js aynı tutarı yazar."""
+    return str(Decimal(repr(float(x))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
 def amounts(try_amount):
-    """TRY tutarının her para birimindeki karşılığı. Örnek: 180 TRY, USD için "3.59" olur."""
-    return {c: "%.2f" % (try_amount * RATES[c]) for c in CURS}
+    """TRY tutarının her para birimindeki karşılığı, iki ondalıkla. Örnek: 180 TRY, USD için "3.59" olur."""
+    return {c: r2(try_amount * RATES[c]) for c in CURS}
 
 
-def times(amts, n):
-    """Birim tutarın n katı. Gösterilen birim fiyattan hesaplanır ki ekrandaki çarpım tutsun."""
-    return {c: "%.2f" % (float(v) * n) for c, v in amts.items()}
+def units(try_amount):
+    """Birim tutarın her para birimindeki yuvarlanmamış karşılığı. app.js toplamı bu değerden hesaplar."""
+    return {c: "%.8f" % (try_amount * RATES[c]) for c in CURS}
+
+
+def totals(unit, n):
+    """n adedin toplamı. app.js ile aynı işlemi yapar: yuvarlanmamış birim tutar adetle çarpılır, sonuç yuvarlanır.
+    Böylece kartta yazan en az sipariş tutarı, sepetin göstereceği toplamla aynıdır."""
+    return {c: r2(float(v) * n) for c, v in unit.items()}
 
 
 def money(cur, value):
@@ -160,11 +235,12 @@ def money(cur, value):
 
 def para(amts):
     """Para birimi değişince güncellenen tutar. Değerler özniteliklerde hazır durur."""
-    return "<span data-para%s>%s</span>" % ("".join(' data-%s="%s"' % (c.lower(), amts[c]) for c in CURS), money(PARA_VARSAYILAN, amts[PARA_VARSAYILAN]))
+    return Html("<span data-para%s>%s</span>" % ("".join(' data-%s="%s"' % (c.lower(), amts[c]) for c in CURS), money(PARA_VARSAYILAN, amts[PARA_VARSAYILAN])))
 
 
-def unit_attrs(amts):
-    return "".join(' data-unit-%s="%s"' % (c.lower(), amts[c]) for c in CURS)
+def unit_attrs(unit):
+    """Yuvarlanmamış birim tutarlar. app.js sepetin ve örnek siparişin toplamını bu değerlerden hesaplar."""
+    return "".join(' data-unit-%s="%s"' % (c.lower(), unit[c]) for c in CURS)
 
 
 # --- Kategori menüsü (menü öğeleri) -----------------------------------------
@@ -202,16 +278,18 @@ def product(slug):
     """Seçilen ürünün sayfada kullanılan bütün olguları. Hepsi canlı siteden alınmış veridir."""
     f = FACTS["urunler"][slug]
     assert f["birim"] == "Adet", "Birim beklenmiyor: %s" % f["birim"]
-    inc = amounts(f["fiyat_try"] * (1 + f["kdv"] / 100))
+    # KDV dahil birim fiyat, TRY. veri.py bu varsayımı canlı sitedeki liste kaydıyla doğrular.
+    unit = units(f["fiyat_try"] * (1 + f["kdv"] / 100))
     return {
         "slug": slug,
         "href": "%s/urun/%s" % (U, quote(slug, safe="")),
         # Canlı sitedeki ad korunur. Yalnız "Ve" bağlacı küçük harfe çevrilir.
         "name": re.sub(r"\bVe\b", "ve", f["ad"]),
         "ex": amounts(f["fiyat_try"]),
-        "inc": inc,
+        "inc": {c: r2(float(v)) for c, v in unit.items()},
+        "unit": unit,
         "moq": int(f["en_az_adet"]),
-        "least": times(inc, int(f["en_az_adet"])),
+        "least": totals(unit, int(f["en_az_adet"])),
         "lead": f["hazirlik"],
         "sup": f["uretici"],
         "city": f["uretici_sehir"],
@@ -223,8 +301,9 @@ def product(slug):
 
 
 def terms(pairs):
-    # Değer veriden gelir. Hazır HTML olarak verilen değer (tutar) olduğu gibi yazılır.
-    return "".join("<div><dt>%s</dt><dd data-veri>%s</dd></div>" % (esc(k), v if v.startswith("<span data-para") else esc(v)) for k, v in pairs if v)
+    # Değer veriden gelir ve kaçışla yazılır. Yalnız bu dosyanın ürettiği tutar (Html) olduğu gibi yazılır.
+    # Satıcının canlı siteye girdiği bir metin, HTML gibi görünse de sayfaya işaret olarak giremez.
+    return "".join("<div><dt>%s</dt><dd data-veri>%s</dd></div>" % (esc(k), v if isinstance(v, Html) else esc(v)) for k, v in pairs if v)
 
 
 def product_card(i, slug, img, cat):
@@ -248,7 +327,7 @@ def product_card(i, slug, img, cat):
         </article>
       </li>""" % dict(
         i=i, col=i % 4, slug=esc(slug), name=esc(p["name"]), sup=esc(p["sup"]), inc=para(p["inc"]), ex=para(p["ex"]), moq=p["moq"], href=p["href"], img=img, cat=cat,
-        unit=unit_attrs(p["inc"]), badge=badge,
+        unit=unit_attrs(p["unit"]), badge=badge,
         terms=terms([("En az sipariş adedi", "%d adet" % p["moq"]), ("En az sipariş tutarı", para(p["least"])), ("Hazırlık süresi", p["lead"])]),
         plus=icon("arti", 20, "i-off"), check=icon("onay", 20, "i-on"),
     )
@@ -335,16 +414,7 @@ def tl_html():
     return "".join(out)
 
 
-# Sosyal hesaplar: canlı sitenin alt bölümündeki adresler.
-SOC = [
-    ("Instagram", "https://www.instagram.com/istoc_com", '<rect x="4" y="4" width="16" height="16" rx="4.5"/><circle cx="12" cy="12" r="3.5"/><circle cx="16.7" cy="7.3" r=".6"/>'),
-    ("Facebook", "https://www.facebook.com/istoccom", '<path d="M14 21v-7h2.5l.5-3H14V9.2c0-1 .4-1.7 1.8-1.7H17V4.8c-.5-.1-1.3-.2-2.2-.2C12.5 4.6 11 6 11 8.7V11H8.5v3H11v7"/>'),
-    ("X", "https://x.com/istoc_com", '<path d="M5 4.5 19 19.5M19 4.5 5 19.5"/>'),
-    ("LinkedIn", "https://www.linkedin.com/company/istoc-com", '<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 10.5V16M8 7.8v.1M11.5 16v-5.5M11.5 13c0-1.5 1-2.5 2.3-2.5S16 11.4 16 13v3"/>'),
-    ("YouTube", "https://youtube.com/@istoccom", '<rect x="3" y="6" width="18" height="12" rx="4"/><path d="m10.5 9.5 4 2.5-4 2.5z"/>'),
-]
-
-
+# Sosyal hesaplar secim.py içindedir (SOSYAL). veri.py her adresin canlı sitede geçtiğini denetler.
 def soc_icon(p):
     return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">%s</svg>' % p
 
@@ -369,6 +439,12 @@ def filters_html():
 # --- Dizin: programatik arama motoru stratejileri (menü öğeleri) ---------------
 # Her grup bir veri boyutudur. Öğeler canlı sitede çalışan adreslere gider ve yanlarında canlı sonuç sayısı yazar.
 AUTO_LABELS = []  # Dizin ve alt bölüm öğelerinin etiketleri. Sınıflandırmaya etiket olarak eklenir.
+
+
+def auto_label(text):
+    """Etiketi kaydeder. Kaynaklı bir ad (canlı sitedeki bölüm adı) kanıt defterinde durur, etiket listesine girmez."""
+    if text not in SOURCED:
+        AUTO_LABELS.append(text)
 
 
 def dizin_items(group):
@@ -403,7 +479,7 @@ def dizin_html():
         links = []
         for label, href, count, from_data, kind in rows:
             if not from_data:
-                AUTO_LABELS.append(label)
+                auto_label(label)
             name = '<span class="dlink__t"%s>%s</span>' % (" data-veri" if from_data else "", esc(label))
             tag = '<small class="dlink__k">%s</small>' % kind if kind else ""
             if count is None:
@@ -412,15 +488,23 @@ def dizin_html():
                 # Çubuk, öğenin gruptaki en büyük sayıya oranını gösterir. Sayının kendisi yanında yazar.
                 share = max(0.04, count / top)
                 links.append(
-                    '<li><a class="dlink" href="%s" style="--p:%.3f">%s%s<span class="dlink__n">%s<span class="sr-only"> ürün</span></span>'
+                    # Çubuk bağlantının alt kenarına değer. Bu yüzden çubuklu bağlantının alt köşeleri yuvarlak değildir (dlink--n).
+                    '<li><a class="dlink dlink--n" href="%s" style="--p:%.3f">%s%s<span class="dlink__n">%s<span class="sr-only"> ürün</span></span>'
                     '<span class="dlink__bar" aria-hidden="true"></span></a></li>' % (esc(href), share, name, tag, tr_num(count))
                 )
+        # Katlanan grup. Dar ekranda başlık bir düğmedir ve grup onunla açılır. Geniş ekranda ve betik yokken
+        # başlık düz yazıdır, grup hep açıktır. Başlığın iki hali de sayfada durur, CSS genişliğe göre birini gösterir.
+        # İlk grup dar ekranda da açık başlar. Böylece ziyaretçi grubun içinde ne olduğunu görür.
+        state = "true" if i == 0 else "false"
+        title = '%s<span class="dgroup__t"><span class="fold__name">%s</span><small>%s</small></span>' % (picto(group["piktogram"], "sm"), group["baslik"], group["aciklama"])
         out.append(
-            # İlk grup dar ekranda da açık başlar. Böylece ziyaretçi grubun içinde ne olduğunu görür.
-            '<details class="dgroup" data-fold="700"%s open data-reveal style="--i:%d"><summary>%s<span class="dgroup__t"><h3>%s</h3><small>%s</small></span>%s</summary>'
-            "<ul>%s</ul></details>" % (" data-ilk" if i == 0 else "", i % 3, picto(group["piktogram"], "sm"), group["baslik"], group["aciklama"], icon("asagi", 20), "".join(links))
+            '<div class="dgroup" data-fold data-open="%s" data-reveal style="--i:%d">'
+            '<h3 class="fold__h"><span class="fold__label">%s</span>'
+            '<button class="fold__btn" type="button" aria-expanded="%s" aria-controls="dz-%d">%s%s</button></h3>'
+            '<div class="fold__panel" id="dz-%d"><div><ul>%s</ul></div></div></div>'
+            % (state, i % 3, title, state, i + 1, title, icon("asagi", 20, "chev"), i + 1, "".join(links))
         )
-        AUTO_LABELS.append(group["baslik"])
+        auto_label(group["baslik"])
     return "\n      ".join(out)
 
 
@@ -431,19 +515,24 @@ CAT_NAMES = {c["name"] for c in CATS}
 def flinks(items):
     out = []
     for label, href in items:
-        AUTO_LABELS.append(label)
+        auto_label(label)
         out.append('<li><a href="%s">%s</a></li>' % (href if href.startswith("#") else U + href, esc(label)))
     return "".join(out)
 
 
-def fgroups(groups, with_picto):
+def fgroups(groups, with_picto, key):
+    """Alt bölüm sütunları. Dizin gruplarıyla aynı katlanan grup yapısını kullanır. Dar ekranda sütunlar kapalı başlar."""
     out = []
-    for g in groups:
+    for n, g in enumerate(groups, 1):
         pic, title, items = g if with_picto else ("",) + tuple(g)
-        AUTO_LABELS.append(title)
+        auto_label(title)
+        head = "%s<span>%s</span>" % (icon(pic, 20, "fgroup__i") if pic else "", title)
         out.append(
-            '<details class="fgroup" data-fold="1024" open><summary>%s<span>%s</span>%s</summary><ul>%s</ul></details>'
-            % (icon(pic, 20, "fgroup__i") if pic else "", title, icon("asagi", 20, "chev"), flinks(items))
+            '<div class="fgroup" data-fold data-open="false">'
+            '<div class="fold__h"><span class="fold__label">%s</span>'
+            '<button class="fold__btn" type="button" aria-expanded="false" aria-controls="%s-%d">%s%s</button></div>'
+            '<div class="fold__panel" id="%s-%d"><div><ul>%s</ul></div></div></div>'
+            % (head, key, n, head, icon("asagi", 20, "chev"), key, n, flinks(items))
         )
     return "\n        ".join(out)
 
@@ -467,11 +556,11 @@ def jsonld(*objs):
 
 PRODUCTS = [product(slug) for slug, _img, _cat in URUNLER]
 LD = jsonld(
-    {"@context": "https://schema.org", "@type": "Organization", "name": "iStoc", "legalName": "iStoc Private Company Limited", "url": U + "/", "logo": U + "/images/istoc-logo.png",
-     "sameAs": [href for _n, href, _p in SOC]},
+    {"@context": "https://schema.org", "@type": "Organization", "name": "iStoc", "legalName": "iStoc Private Company Limited", "url": U + "/", "logo": U + GORSELLER["logo"],
+     "sameAs": [href for _n, href, _p in SOSYAL]},
     {"@context": "https://schema.org", "@type": "WebSite", "name": "iStoc", "url": U + "/", "inLanguage": "tr",
      "potentialAction": {"@type": "SearchAction", "target": {"@type": "EntryPoint", "urlTemplate": U + "/urunler?q={search_term_string}"}, "query-input": "required name=search_term_string"}},
-    {"@context": "https://schema.org", "@type": "ItemList", "name": "Fiyatı ve koşulu açık ürünler", "numberOfItems": len(PRODUCTS),
+    {"@context": "https://schema.org", "@type": "ItemList", "name": "Ürünler", "numberOfItems": len(PRODUCTS),
      "itemListElement": [{"@type": "ListItem", "position": i, "name": p["name"], "url": p["href"]} for i, p in enumerate(PRODUCTS, 1)]},
     {"@context": "https://schema.org", "@type": "FAQPage",
      "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQS]},
@@ -497,11 +586,95 @@ ONERI_NOTU = (
     '<a class="lnk" href="%s/"><span>Canlı siteye gidin</span>%s</a>'
     "</div></aside>"
 ) % (U, OK18)
-# Planlanan içerik türleri: canlı sitede karşılığı olmayan öneriler. Bağlantı değildir ve yalnız önizlemede görünür.
-PLANLANAN = (
-    '<div class="plan"><p class="plan__t">Planlanan içerik türleri</p><ul>%s</ul>'
-    '<p class="plan__note">Bu türler öneridir. Canlı sitede henüz yoktur.</p></div>'
-) % "".join("<li>%s</li>" % esc(x) for x in ALT_PLAN)
+# --- Planlanan hizmetler ve içerik (yalnız önizleme) -------------------------------
+# Bu bölgeler data-plan taşır ve "Planlanan hizmet" ya da "Planlanan içerik" etiketini gösterir.
+# Metinleri plan sınıfındadır. Aşağıdaki denetim her plan metninin bu bölgelerde durduğunu sınar.
+def plan_tag(kind):
+    return '<p class="plan-tag">%s<span>%s</span></p>' % (icon("bilgi", 18), PLAN_ETIKET[kind])
+
+
+def degerler_html():
+    """Değer bölümleri: yeni müşteri ve yeniden sipariş. Her kart alıcının ve satıcının faydasını ayrı yazar.
+    Bantlar sırayla açık ve tonludur. Böylece komşu bantlar zemin rengiyle ayrılır."""
+    out = []
+    for n, (sid, kicker, title, items) in enumerate(DEGER_BOLUMLERI):
+        cards = "".join(
+            '<li class="val" data-reveal style="--i:%d">%s<div><h3>%s</h3><p class="val__side"><b>Alıcı</b>%s</p><p class="val__side"><b>Satıcı</b>%s</p></div></li>'
+            % (i % 3, picto(p), esc(t), esc(a), esc(b)) for i, (p, t, a, b) in enumerate(items)
+        )
+        out.append(
+            '<section class="mod band%s" id="%s" aria-labelledby="%s-baslik" data-plan>%s<div class="wrap">%s%s'
+            '<ul class="vals" role="list">%s</ul><p class="plan-note">Hizmetlerin koşulları henüz belirlenmedi.</p></div></section>'
+            % (" band--tint" if n % 2 else "", sid, sid, surface("nokta" if n % 2 else "ag", 1),
+               head(NO[sid], kicker, sid + "-baslik", title, "Bu hizmetler öneridir. Canlı sitede henüz yoktur."), plan_tag("hizmet"), cards)
+        )
+    return "\n".join(out)
+
+
+def odeme_plan_html():
+    steps = "".join(
+        '<li data-reveal style="--i:%d"><span class="pp__who">%s<b>%s</b></span><p>%s</p></li>' % (i % 4, picto(p, "sm"), esc(who), esc(t))
+        for i, (p, who, t) in enumerate(ODEME_PLAN)
+    )
+    gains = "".join('<div class="pp__gain" data-reveal><h3>%s</h3><p>%s</p></div>' % (esc(h), esc(t)) for h, t in ODEME_FAYDA)
+    return (
+        '<section class="mod band band--tint" id="guvenli-odeme" aria-labelledby="gp-baslik" data-plan>%s<div class="wrap">%s%s'
+        '<div class="pp"><p class="pp__now" data-reveal>%s<span>Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.</span></p>'
+        '<ol class="pp__flow" role="list">%s</ol><div class="pp__gains">%s</div>'
+        '<p class="plan-note">Bu model henüz yoktur. Süreler ve ücretler henüz belirlenmedi. Koşulları ödeme kuruluşuyla yapılacak sözleşme belirler.</p></div></div></section>'
+    ) % (surface("rota", 1), head(NO["odeme_plan"], "Güvenli ödeme", "gp-baslik", "Güvenli ödeme modeli", "Planlanan modelde ödeme, lisanslı bir ödeme kuruluşunda bekler."),
+         plan_tag("hizmet"), icon("bilgi", 18), steps, gains)
+
+
+def araclar_html():
+    """Hesaplama araçları: üç grup, her grupta dört araç. Her araç kısa faydasını yazar.
+    "Neyi hesaplar?" düğmesi aracın girişini, çıktısını ve sınırını sayfa içinde açar. Betik yoksa açıklama açık durur."""
+    groups = []
+    for g, (name, tools) in enumerate(ARACLAR, 1):
+        items = []
+        for k, (t, who, gain, inp, outp, limit) in enumerate(tools, 1):
+            tid = "arac-%d-%d" % (g, k)
+            detail = "".join("<p>%s</p>" % esc(x) for x in [inp, outp, limit, "Bu öneride araç henüz hesaplama yapmaz."] if x)
+            items.append(
+                '<li class="tool"><h4 id="%s-ad">%s</h4><p class="tool__who">%s</p><p class="tool__gain">%s</p>'
+                '<button class="tool__btn" type="button" id="%s-b" aria-expanded="false" aria-controls="%s" aria-describedby="%s-ad"><span>Neyi hesaplar?</span>%s</button>'
+                '<div class="faq__panel tool__panel" id="%s" role="region" aria-labelledby="%s-b %s-ad" data-open="false"><div>%s</div></div></li>'
+                % (tid, esc(t), esc(who), esc(gain), tid, tid, tid, icon("asagi", 18, "chev"), tid, tid, tid, detail)
+            )
+        groups.append('<div class="tgroup" data-reveal style="--i:%d"><h3>%s</h3><ul class="tools" role="list">%s</ul></div>' % (g - 1, esc(name), "".join(items)))
+    return (
+        '<section class="mod band band--ink on-ink" id="araclar" aria-labelledby="arac-baslik" data-plan>%s<div class="wrap">%s%s'
+        '<div class="tgroups">%s</div><div class="band__cta">%s</div></div></section>'
+    ) % (surface("nokta"), head(NO["araclar"], "Araçlar", "arac-baslik", "Siparişten önce hesabı görün.", "Bu araçlar öneridir. Canlı sitede henüz yoktur."),
+         plan_tag("hizmet"), "".join(groups), lnk("İçerik kütüphanesini görün", "#kutuphane"))
+
+
+def kutuphane_html():
+    types = []
+    for n, (p, name, desc, items) in enumerate(KUTUPHANE, 1):
+        rows = "".join(
+            '<li class="libq"><h4><button type="button" id="lib-b%d-%d" aria-expanded="false" aria-controls="lib-%d-%d">%s%s</button></h4>'
+            '<div class="faq__panel libq__panel" id="lib-%d-%d" role="region" aria-labelledby="lib-b%d-%d" data-open="false"><div><p>%s</p></div></div></li>'
+            % (n, k, n, k, esc(t), icon("asagi", 18, "chev"), n, k, n, k, esc(d)) for k, (t, d) in enumerate(items, 1)
+        )
+        extra = lnk("Hesaplama araçlarına gidin", "#araclar") if name == "Hesaplayıcılar" else ""
+        types.append('<div class="lib__type">%s<h3>%s</h3><p class="lib__d">%s</p><ul class="lib__list" role="list">%s</ul>%s</div>' % (picto(p, "sm"), esc(name), esc(desc), rows, extra))
+    return (
+        '<section class="lib" id="kutuphane" aria-labelledby="lib-baslik" data-plan><div class="lib__head">%s<h2 id="lib-baslik">İçerik kütüphanesi</h2>'
+        '<p class="lib__note">Bu içerikler öneridir. Canlı sitede henüz yoktur. Ayrı sayfaları henüz yoktur.</p></div><div class="lib__grid">%s</div></section>'
+    ) % (plan_tag("icerik"), "".join(types))
+
+
+# Planlanan bölümlerin metinleri: sabit liste, etiketler ve yapılardaki cümleler.
+PLAN = [] if YAYIN else sorted(set(
+    PLAN_METNI + list(PLAN_ETIKET.values())
+    + [x for _s, k, h, items in DEGER_BOLUMLERI for x in [k, h] + [y for _p, t, a, b in items for y in [t] + split(a) + split(b)]]
+    + [x for _p, who, t in ODEME_PLAN for x in [who] + split(t)] + [x for h, t in ODEME_FAYDA for x in [h] + split(t)]
+    + [x for _p, n, d, items in KUTUPHANE for x in [n] + split(d) + [y for t, e in items for y in [t] + split(e)]]
+    + [x for g, tools in ARACLAR for x in [g] + [y for tool in tools for z in tool for y in ([z] if z in tool[:2] else split(z))]]
+))
+# Gezinmede planlanan bölümlere giden bağlantılar
+NAV_PLAN = "" if YAYIN else '<a href="#araclar">Araçlar</a><a href="#kutuphane">İçerik kütüphanesi</a>'
 
 DIZIN_HTML = dizin_html()
 TL_LABELS = [label for _p, _t, _d, tags in TL for _i, label in tags]
@@ -509,10 +682,21 @@ TL_LABELS = [label for _p, _t, _d, tags in TL for _i, label in tags]
 CTX = {
     "u": U,
     "oneri_notu": "" if YAYIN else ONERI_NOTU,
-    "planlanan": "" if YAYIN else PLANLANAN,
+    "kutuphane": "" if YAYIN else kutuphane_html(),
+    "b_degerler": "" if YAYIN else degerler_html(),
+    "b_odeme_plan": "" if YAYIN else odeme_plan_html(),
+    "b_araclar": "" if YAYIN else araclar_html(),
+    "nav_plan": NAV_PLAN,
+    # Alıcının ve satıcının bölümünden araçlara giden kısa yol. Yalnız önizlemede.
+    "arac_alici": "" if YAYIN else lnk("Alıcının hesaplama araçları", "#araclar"),
+    "arac_satici": "" if YAYIN else lnk("Satıcının hesaplama araçları", "#araclar"),
+    # Hareketli yüzeyler
+    "s_ag": surface("ag"), "s_ag2": surface("ag", 2), "s_rota": surface("rota"), "s_nokta": surface("nokta"),
     "title": "iStoc: Üreticiden toptan alım | B2B toptan pazaryeri",
-    "description": "Doğrulanmış üreticilerin birim fiyatını, en az sipariş adedini ve hazırlık süresini karşılaştırın. Teklif isteyin, toptan alımı yerinizden yapın.",
+    "description": "Doğrulanmış üreticilerin birim fiyatlarını karşılaştırın. En az sipariş adedini ve hazırlık süresini görün. Teklif isteyin, toptan alımı yerinizden yapın.",
     "canonical": U + "/",
+    # Paylaşım görseli canlı sitedeki görseldir. veri.py açıldığını denetler.
+    "og_image": U + GORSELLER["paylasim"],
     # Önizleme derlemesi bir tasarım önerisidir. Arama motoru onu dizine eklememelidir.
     "robots": "index,follow" if YAYIN else "noindex,nofollow",
     # Dil seçenekleri canlı sitedeki gibi yalnız tr ve x-default olarak bildirilir.
@@ -535,21 +719,22 @@ CTX = {
     # Piktogramlar
     "p_teklif": picto("teklif"), "p_ekran": picto("ekran-carsi"), "p_isletme": picto("isletme"), "p_fiyat": picto("fiyat"), "p_kayit": picto("kayit"),
     "p_fatura": picto("fatura"), "p_uretici": picto("uretici"), "p_sure": picto("sure"), "p_kalkan": picto("kalkan"),
-    "p_odeme": picto("banka"), "p_destek": picto("destek"),
+    "p_odeme": picto("banka"), "p_destek": picto("destek"), "p_sepet": picto("sepet", "sm"), "p_magaza": picto("magaza", "sm"),
     # Bölüm başlıkları
-    "h_alici": head("01", "Alıcılar için", "alici-baslik", "Söze değil, kayda güvenin.", "İşletmenizin toptan alımını yerinizden yaparsınız. Altı nedeni var."),
-    "h_kat": head("02", "Kategoriler", "kat-baslik", "Sektörünüzü seçin. Üreticiyi bulun.",
+    "h_alici": head(NO["alici"], "Alıcılar için", "alici-baslik", "Söze değil, kayda güvenin.", "İşletmenizin toptan alımını yerinizden yaparsınız. Altı nedeni var."),
+    "h_kat": head(NO["kat"], "Kategoriler", "kat-baslik", "Sektörünüzü seçin. Üreticiyi bulun.",
                   "%d üst kategori ve %s alt kategori var. Ürünü en çok olan kategoriler önde durur." % (len(CATS), tr_num(N_CHILD)), lnk("%d kategorinin tümü" % len(CATS), U + "/kategoriler")),
-    "h_urun": head("03", "Ürünler", "urun-baslik", "Fiyatı sormayın. Kartta yazıyor.",
-                   "Büyük yazan fiyata KDV dahildir. Para birimini sayfanın altından değiştirirsiniz.", lnk("%s ürünün tümü" % tr_num(FACTS["urun_toplami"]), U + "/urunler")),
-    "h_uretici": head("04", "Üreticiler", "uretici-baslik", "Kiminle çalıştığınızı bilin.",
+    "h_urun": head(NO["urun"], "Ürünler", "urun-baslik", "Fiyatı sormayın. Kartta yazıyor.",
+                   # Para birimi yalnız betikle değişir. Betik yoksa bu cümle görünmez.
+                   'Büyük yazan fiyata KDV dahildir. <span class="js-only">Para birimini sayfanın altından değiştirirsiniz.</span>', lnk("%s ürünün tümü" % tr_num(FACTS["urun_toplami"]), U + "/urunler")),
+    "h_uretici": head(NO["uretici"], "Üreticiler", "uretici-baslik", "Kiminle çalıştığınızı bilin.",
                       "iStoc'ta %d mağaza var. %d mağazanın işletme doğrulaması tamamlandı." % (FACTS["magaza_toplami"], FACTS["dogrulanmis_magaza"]), lnk("Tüm üreticiler", U + "/ureticiler")),
-    "h_surec": head("05", "Sipariş süreci", "surec-baslik", "Her sipariş kayıt altında.",
+    "h_surec": head(NO["surec"], "Sipariş süreci", "surec-baslik", "Her sipariş kayıt altında.",
                     "Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez. Sipariş koşullarınızı iStoc saklar ve siparişinizi teslimata kadar izler.", split=False),
-    "h_sss": head("06", "Sık sorulanlar", "sss-baslik", "Sormadan sipariş vermeyin.", link=lnk("Yardım Merkezi", U + "/yardim-merkezi"), split=False),
-    "h_satici": head("07", "Satıcılar için", "satici-baslik", "Aracıya pay bırakmayın.", "iStoc sizi toptan alıcıyla doğrudan buluşturur. Şu an satışlardan komisyon alınmaz."),
-    "h_dizin": head("08", "Dizin", "dizin-baslik", "Aradığınıza kısa yoldan gidin.",
-                    "Ürünleri %d ayrı yoldan bulursunuz. Her bağlantının yanında canlı sitedeki sonuç sayısı yazar." % len(DIZIN)),
+    "h_sss": head(NO["sss"], "Sık sorulanlar", "sss-baslik", "Sormadan sipariş vermeyin.", link=lnk("Yardım Merkezi", U + "/yardim-merkezi"), split=False),
+    "h_satici": head(NO["satici"], "Satıcılar için", "satici-baslik", "Aracıya pay bırakmayın.", "iStoc sizi toptan alıcıyla doğrudan buluşturur. Şu an satışlardan komisyon alınmaz."),
+    "h_dizin": head(NO["dizin"], "Dizin", "dizin-baslik", "Aradığınıza kısa yoldan gidin.",
+                    "Ürünleri %d ayrı yoldan bulursunuz. Bağlantının yanındaki sayı, canlı sitedeki sonuç sayısıdır." % len(DIZIN)),
     # İçerik
     "kyb_sayi": "%d mağazanın %d tanesi doğrulandı." % (FACTS["magaza_toplami"], FACTS["dogrulanmis_magaza"]),
     "quick": "".join('<li><a class="chip" href="%s">%s%s</a></li>' % (esc(search_url(w)), icon("ara", 18), esc(w)) for w in ORNEK_URUN),
@@ -558,7 +743,7 @@ CTX = {
     "prods": "\n      ".join(product_card(i, slug, img, cat) for i, (slug, img, cat) in enumerate(URUNLER)),
     "sups": "\n      ".join(supplier_card(i, *s) for i, s in enumerate(URETICILER)),
     "tl": tl_html(),
-    "odeme_tiles": "".join('<li class="ptile" data-glow>%s<span>%s</span></li>' % (picto(p, "sm"), esc(n)) for p, n in ODEME_YONTEMLERI),
+    "odeme_tiles": "".join('<li class="ptile">%s<span>%s</span></li>' % (picto(p, "sm"), esc(n)) for p, n in ODEME_YONTEMLERI),
     "odeme_chips": "".join('<li>%s<span>%s</span></li>' % (icon(p, 20), esc(n)) for p, n in ODEME_YONTEMLERI),
     "faqs": faq_html(FAQS),
     "rail_ctl": RAIL_CTL,
@@ -568,18 +753,20 @@ CTX = {
     "ornek_uretici": esc("|".join(FACTS["ureticiler"][slug]["ad"] for slug, _logo, _thumbs in URETICILER)),
     # Örnek sipariş paneli: seçilen ürünün canlı sitedeki koşulları
     "op_slug": esc(OP["slug"]), "op_name": esc(OP["name"]), "op_img": OP_IMG, "op_inc": para(OP["inc"]), "op_ex": para(OP["ex"]), "op_moq": str(OP["moq"]),
-    "op_unit": unit_attrs(OP["inc"]),
+    "op_unit": unit_attrs(OP["unit"]),
     "op_lead": esc(OP["lead"]), "op_carton": carton(OP["specs"]), "op_total": money(PARA_VARSAYILAN, OP["least"][PARA_VARSAYILAN]),
     "op_sup": esc(", ".join(x for x in [OP["sup"], OP["city"]] if x)),
     "op_badge": '<span class="vb">%s%s</span>' % (vc(16), OP["badge"]) if OP["verified"] else "",
     # Alt bölüm
-    "fgroups": fgroups(ALT_KISI, False),
-    "tgroups": fgroups(ALT_TUR, True),
+    "fgroups": fgroups(ALT_KISI, False, "kisi"),
+    "tgroups": fgroups(ALT_TUR, True, "tur"),
     "dil_tiles": "".join(tile(code, short, name, "", code == "tr", ' lang="%s" dir="%s"' % (code, direction)) for code, name, short, direction in DILLER),
     "para_tiles": "".join(tile(c, PARA[c][0], c, PARA[c][1], c == PARA_VARSAYILAN) for c in CURS),
     "tercih": esc("%s, %s" % (DILLER[0][1], PARA_VARSAYILAN)),
     "sifir": money(PARA_VARSAYILAN, "0.00"),
-    "soc": "".join('<a href="%s" rel="noopener" aria-label="iStoc %s hesabı">%s</a>' % (href, n, soc_icon(p)) for n, href, p in SOC),
+    # Betik yokken para birimi seçilemez. Sayfa, fiyatların hangi para biriminde yazdığını durağan bir cümleyle söyler.
+    "para_sabit": "Fiyatlar %s olarak gösterilir." % PARA[PARA_VARSAYILAN][1],
+    "soc": "".join('<a href="%s" rel="noopener" aria-label="iStoc %s hesabı">%s</a>' % (href, n, soc_icon(p)) for n, href, p in SOSYAL),
 }
 
 out = render(read("sablon", "bas.html") + read("sablon", "ust.html") + read("sablon", "ana.html") + read("sablon", "alt.html"), CTX)
@@ -602,48 +789,97 @@ DATA_COPY = VERI_METNI + ["Sayılar %s günü istoc.com verisinden alındı." % 
 # Dizin ve alt bölüm öğelerinin etiketleri, örnek aramalar ve adım işaretleri secim.py listelerinden gelir.
 DESIGN = TASARIM_METNI + ([] if YAYIN else ONIZLEME_TASARIM)
 LABELS = sorted(set(ETIKETLER + AUTO_LABELS + ORNEK_URUN + TL_LABELS + ([] if YAYIN else ONIZLEME_ETIKET)))
-SOURCED = [m[0] for m in IDDIALAR]
-clash = sorted(set(LABELS) & (set(SOURCED) | set(DESIGN)))
+clash = sorted((set(LABELS) & (set(SOURCED) | set(DESIGN) | set(PLAN))) | (set(PLAN) & (set(SOURCED) | set(DESIGN))))
 assert not clash, "Aynı metin iki sınıfta: %s" % clash
-ROWS = classify(out, SOURCED, DATA_COPY, DESIGN, LABELS)
+ROWS = classify(out, SOURCED, DATA_COPY, DESIGN, LABELS, PLAN)
 unknown = [s for s, c in ROWS if c == "yok"]
-assert not unknown, "Sınıfı bilinmeyen metin. secim.py içinde IDDIALAR, VERI_METNI, TASARIM_METNI ya da ETIKETLER listesine ekleyin:\n  " + "\n  ".join(unknown)
+assert not unknown, "Sınıfı bilinmeyen metin. secim.py içinde IDDIALAR, VERI_METNI, TASARIM_METNI, PLAN_METNI ya da ETIKETLER listesine ekleyin:\n  " + "\n  ".join(unknown)
 # Listelerde olup sayfada geçmeyen metin de hatadır. Böylece listeler eskimez.
 # Tek kelimelik etiket sayfadan metin olarak çıkarılmaz. O etiketin sayfada geçtiği düz metinde aranır.
 present = {s for s, _c in ROWS}
 folded = {norm(s) for s in present}
-stale = [x for x in DESIGN + LABELS if (squeeze(x) not in present if len(x.split()) > 1 else x not in plain)] + [x for x in VERI_METNI if norm(x) not in folded]
+stale = [x for x in DESIGN + LABELS + PLAN if (squeeze(x) not in present if len(x.split()) > 1 else x not in plain)] + [x for x in VERI_METNI if norm(x) not in folded]
 assert not stale, "Listede olup sayfada geçmeyen metin. secim.py içinden çıkarın:\n  " + "\n  ".join(stale)
+
+# 2a. Planlanan hizmet ve içerik canlı olgu değildir. Plan metni yalnız data-plan bölgesinde durur.
+#     Her bölge görünür etiketini taşır. Yayın derlemesinde planlanan bölge yoktur.
+WALK, REGIONS = walk_texts(out)
+outside = sorted({t for t, inside in WALK if t in set(PLAN) and not inside})
+assert not outside, "Planlanan metin işaretli bölgenin dışında:\n  " + "\n  ".join(outside)
+untagged = [r["id"] for r in REGIONS if not r["tagged"]]
+assert not untagged, "Planlanan bölgenin görünür etiketi yok: %s" % untagged
+assert not (YAYIN and REGIONS), "Yayın derlemesinde planlanan bölge var."
+
+# 2b. Görünmeyen metinler: sayfa başlığı, öznitelik metinleri ve yalnız ekran okuyucuya okunan metinler.
+#     En az iki kelimeli her biri kayıtlı olmalıdır (secim.py, OZNITELIK_METNI). Görünen bir etiketin yinelemesi etiket sayılır.
+HIDDEN = OZNITELIK_METNI + ([] if YAYIN else ONIZLEME_OZNITELIK) + ["iStoc %s hesabı" % n for n, _u, _p in SOSYAL]
+HID_PREFIX = sorted({norm_hidden(x) for x in HIDDEN if x.endswith(":")})
+HID_EXACT = sorted({norm_hidden(x) for x in HIDDEN if not x.endswith(":")} | {norm_hidden(x) for x in LABELS + PLAN})
+HID_ROWS = hidden_texts(out)
+unknown_hidden = [t for t in HID_ROWS if not hidden_known(t, set(HID_EXACT), HID_PREFIX)]
+assert not unknown_hidden, "Kayıtsız görünmeyen metin. secim.py içindeki OZNITELIK_METNI listesine ekleyin:\n  " + "\n  ".join(unknown_hidden)
+hid_found = {norm_hidden(t) for t in HID_ROWS}
+stale_hidden = [x for x in HIDDEN if not (any(f.startswith(norm_hidden(x)) for f in hid_found) if x.endswith(":") else norm_hidden(x) in hid_found)]
+assert not stale_hidden, "OZNITELIK_METNI listesinde olup sayfada geçmeyen metin:\n  " + "\n  ".join(stale_hidden)
+
+# 2c. Tek kelimelik adlar sınıflandırmaya girmez. Olgu bildiren adlar bu yüzden ayrıca denetlenir:
+#     her ödeme yöntemi, para birimi ve dil adı kanıt defterinde bulunmalıdır.
+unsourced = [n for _p, n in ODEME_YONTEMLERI if n not in SOURCED] + [n for _s, n in PARA.values() if n not in SOURCED] + [n for _c, n, _k, _d in DILLER if n not in SOURCED]
+assert not unsourced, "Kanıt defterinde olmayan ad. secim.py içindeki IDDIALAR listesine kaynağıyla ekleyin: %s" % unsourced
+# 2d. Yapısal verideki soru ve yanıtlar sayfada görünen metnin aynısıdır.
+assert all(q in plain and a in plain for q, a in FAQS), "Yapısal verideki soru ya da yanıt sayfada geçmiyor."
 
 # 3. Veri cümlelerinin dayanağı: gösterilen her üretici doğrulanmış ve üretici türünde olmalıdır.
 shown = [FACTS["ureticiler"][slug] for slug, _logo, _thumbs in URETICILER]
 assert all(f["dogrulanmis"] and f["tur"] == "Manufacturer" for f in shown), "Üreticiler modülünde doğrulanmamış ya da üretici olmayan mağaza var."
 
-# 4. Bağlantılar: sayfadaki her istoc.com adresi ya açıldığı denetlenmiş bir sayfadır ya da veride var olan bir kayıttır.
-# Böylece ölü bağlantı sayfaya giremez.
+# 4. Bağlantılar. Sayfadaki her adres denetlenir: bağlantı, form hedefi, paylaşım görseli ve yapısal verideki adresler.
+#    Sunucu adı birebir karşılaştırılır. "istoc.com.baska.site" gibi bir adres istoc.com sayılmaz.
+#    istoc.com adresi şunlardan biri olmalıdır:
+#      açıldığı denetlenmiş sabit bir sayfa (veri.py, SAYFALAR),
+#      canlı sitenin verisinde duran bir kategori,
+#      canlı sitenin site haritasında duran bir ürün, mağaza ya da marka sayfası,
+#      açıldığı denetlenmiş bir görsel.
+#    istoc.com dışındaki adres yalnız canlı sitede geçen bir sosyal hesap, yazı tipi ya da yapısal veri sözlüğü olabilir.
+#    Bu denetim adresin var olduğunu gösterir. Giriş isteyen sayfanın girişten sonra ne gösterdiğini göstermez.
 PAGES = {p.rstrip("/") for p, v in DZ["sayfalar"].items() if v["durum"] == 200}
 CAT_SLUGS = {c["slug"] for c in CATS} | {k["slug"] for c in CATS for k in c["children"]} | {g["slug"] for c in CATS for k in c["children"] for g in k["children"]} | {g["adres"] for g in DZ["urun_gruplari"]}
-STORES = {m["adres"] for m in DZ["magazalar"]}
-BRANDS = {b["adres"] for b in DZ["markalar"]}
+MAP = DZ["site_haritasi"]
+VERIFIED = {m["adres"] for m in DZ["magazalar"]}  # yalnız işletmesi doğrulanmış mağazalar
+IMAGES = set(DZ["gorseller"].values())
+OUTSIDE = set(DZ["sosyal"])
+LIBRARIES = ("https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://schema.org")
 PARAMS = {"/urunler": {"q", "sort", "min_order"}}
-dead = []
-for href in sorted(set(re.findall(r'(?:href|action|data-urun|data-uretici)="(https://istoc\.com[^"]*)"', out))):
-    u = urlsplit(html.unescape(href))
-    path = unquote(u.path).rstrip("/")
-    parts = path.split("/")
-    if path.startswith("/kategori/"):
-        ok = parts[2] in CAT_SLUGS
-    elif path.startswith("/urun/"):
-        ok = parts[2] in FACTS["urunler"]
-    elif path.startswith("/magaza/"):
-        ok = parts[2] in STORES
-    elif path.startswith("/marka/"):
-        ok = parts[2] in BRANDS
-    else:
-        ok = path in PAGES and set(parse_qs(u.query)) <= PARAMS.get(path, set())
-    if not ok:
-        dead.append(href)
-assert not dead, "Açıldığı denetlenmemiş bağlantı. secim.py içindeki SAYFALAR listesine ekleyip python3 veri.py çalıştırın:\n  " + "\n  ".join(dead)
+FRAGMENTS = {"/satici-ol": {"paketler"}}
+
+
+def link_ok(address):
+    u = urlsplit(address)
+    if u.scheme != "https":
+        return False
+    if u.netloc != "istoc.com":
+        return address in OUTSIDE or any(address == lib or address.startswith(lib + "/") for lib in LIBRARIES)
+    path = unquote(u.path)
+    bare = path.rstrip("/")
+    parts = bare.split("/")
+    if u.fragment and u.fragment not in FRAGMENTS.get(bare, set()):
+        return False
+    if bare.startswith("/kategori/"):
+        return len(parts) == 3 and parts[2] in CAT_SLUGS and not u.query
+    if bare.startswith("/urun/"):
+        return bare in MAP["urun"] and not u.query
+    if bare.startswith("/magaza/"):
+        return bare in MAP["magaza"] and parts[2] in VERIFIED and not u.query
+    if bare.startswith("/marka/"):
+        return bare in MAP["marka"] and not u.query
+    if path in IMAGES:
+        return not u.query
+    return bare in PAGES and set(parse_qs(u.query)) <= PARAMS.get(bare, set())
+
+
+ADDRESSES = sorted({html.unescape(m.group(0)) for m in re.finditer(r"https?://[^\s\"'<>\\)]+", out)})
+dead = [a for a in ADDRESSES if not link_ok(a)]
+assert not dead, "Denetlenmemiş adres. Sabit sayfa ise secim.py içindeki SAYFALAR listesine ekleyip python3 veri.py çalıştırın:\n  " + "\n  ".join(dead)
 anchors = set(re.findall(r'href="#([^"]+)"', out))
 missing_ids = sorted(a for a in anchors if not re.search(r'\bid="%s"' % re.escape(a), out))
 assert not missing_ids, "Sayfa içi bağlantının hedefi yok: %s" % missing_ids
@@ -655,7 +891,11 @@ json.dump(
         "veri": sorted({norm(x) for x in DATA_COPY}),
         "tasarim": sorted({squeeze(x) for x in DESIGN}),
         "etiket": sorted({squeeze(x) for x in LABELS}),
+        "plan": sorted({squeeze(x) for x in PLAN}),
         "betik": sorted({squeeze(x) for x in BETIK_METNI}),
+        # Görünmeyen metinler: kayıtlı metinler ile görünen etiketler, ve iki nokta ile biten ön ekler.
+        "gizli": HID_EXACT,
+        "gizli_on_ek": HID_PREFIX,
     },
     open(os.path.join(HERE, "data", "metin.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1,
 )
@@ -665,5 +905,6 @@ print("index.html yazıldı (%s): %s bayt, %d menü kategorisi, %d ürün, %d ü
 # Canlı sitede her ürün bir kategoriye bağlı değildir. Bu yüzden iki toplam farklıdır.
 print("veri günü %s: ürün toplamı %s, kategoriye bağlı ürün %s" % (FACTS["alindi"], tr_num(FACTS["urun_toplami"]), tr_num(sum(COUNTS.values()))))
 print("kaynaklı cümle: %d, hepsi kaynağında bulundu (%s)" % (len(LEDGER["iddialar"]), LEDGER["alindi"]))
-print("bağlantı: %d canlı adres denetlendi, %d sayfa içi hedef var" % (len(set(re.findall(r'href="(https://istoc\.com[^"]*)"', out))), len(anchors)))
-print("sayfadaki metin: %d (kaynak %d, veri %d, tasarım %d, etiket %d)" % (len(ROWS), sum(c == "kaynak" for _s, c in ROWS), sum(c == "veri" for _s, c in ROWS), sum(c == "tasarim" for _s, c in ROWS), sum(c == "etiket" for _s, c in ROWS)))
+print("adres: %d ayrı adres denetlendi (%d istoc.com), %d sayfa içi hedef var" % (len(ADDRESSES), sum(1 for a in ADDRESSES if urlsplit(a).netloc == "istoc.com"), len(anchors)))
+print("görünmeyen metin: %d, hepsi kayıtlı" % len(HID_ROWS))
+print("sayfadaki metin: %d (kaynak %d, veri %d, tasarım %d, etiket %d, plan %d)" % (len(ROWS), *(sum(c == k for _s, c in ROWS) for k in ("kaynak", "veri", "tasarim", "etiket", "plan"))))

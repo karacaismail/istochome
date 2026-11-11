@@ -5,10 +5,12 @@
 #   sayilar.json      kategori başına ürün sayısı
 #   kur.json          döviz kuru
 #   ana-sayfa.json    toplamlar, seçilen ürünlerin ve üreticilerin olguları, alındığı gün
-#   dizin.json        dizin öğeleri: ürün grupları, arama sonuç sayıları, mağazalar, markalar ve açıldığı denetlenen sayfalar
+#   dizin.json        dizin öğeleri, arama sonuç sayıları, mağazalar, markalar ve bağlantı denetiminin sonuçları
 #   kaynaklar.json    kaynaklı cümleler: kaynağın adresi, aranan kanıt ifadesi, bulunduğu yer ve gün
+#   kosu.json         koşunun kimliği ve altı dosyanın özeti. build.py dosyaların aynı koşudan geldiğini buradan anlar.
 # Kural: bir istek başarısız olursa ya da bir kanıt bulunamazsa betik durur ve hiçbir dosyayı yazmaz.
 # Böylece ağ hatası "sıfır ürün" gibi yanlış bir olguya dönüşmez.
+import hashlib
 import html
 import json
 import os
@@ -19,19 +21,24 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from secim import DIZIN, IDDIALAR, KAYNAKLAR, MAGAZA_NOTU, ORNEK_URUN, SAYFALAR, URETICILER, URUNLER
+from secim import ADRES_KANITI, DIZIN, GORSELLER, IDDIALAR, KAYNAKLAR, MAGAZA_NOTU, ORNEK_URUN, SAYFALAR, SOSYAL, URETICILER, URUNLER
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 SITE = "https://istoc.com"
 API = SITE + "/api/method/tradehub_core.api."
 TODAY = time.strftime("%Y-%m-%d")
+RUN = time.strftime("%Y-%m-%dT%H:%M:%S")
 AGENT = {"User-Agent": "Mozilla/5.0 (tasarim-onerisi veri toplayici)"}
 _cache = {}
 
 
+def stop(message):
+    raise SystemExit("HATA: %s Hiçbir dosya yazılmadı." % message)
+
+
 def fetch(url):
-    """Adresin ham metni ve son adresi. Geçici hata için üç kez dener. Yine olmazsa hata verir."""
+    """Adresin ham metni, son adresi ve durumu. Geçici hata için üç kez dener. Yine olmazsa hata verir."""
     if url in _cache:
         return _cache[url]
     last = None
@@ -48,13 +55,13 @@ def fetch(url):
         except Exception as e:  # ağ hatası
             last = e
         time.sleep(1 + attempt)
-    raise SystemExit("HATA: %s alınamadı: %s. Hiçbir dosya yazılmadı." % (url, last))
+    stop("%s alınamadı: %s." % (url, last))
 
 
 def raw(url):
     text, _final, status = fetch(url)
     if status != 200:
-        raise SystemExit("HATA: %s açılmadı (durum %s). Hiçbir dosya yazılmadı." % (url, status))
+        stop("%s açılmadı (durum %s)." % (url, status))
     return text
 
 
@@ -66,7 +73,7 @@ def total_of(path, what, **params):
     """Bir listenin toplamı. Yanıtta toplam yoksa sıfır yazılmaz, betik durur."""
     total = get(path, **params).get("total")
     if not isinstance(total, int):
-        raise SystemExit("HATA: %s okunamadı. Hiçbir dosya yazılmadı." % what)
+        stop("%s okunamadı." % what)
     return total
 
 
@@ -79,14 +86,24 @@ def flat(text):
     return re.sub(r"\s+", " ", text).replace("’", "'")
 
 
-def page_text(url):
-    """Sunucunun gönderdiği sayfanın görünen metni. Yorumlar, betikler ve stiller sayılmaz."""
-    page = re.sub(r"<!--[\s\S]*?-->", " ", raw(url))
+def visible_text(page):
+    """Sayfanın görünen metni. Yorumlar, betikler ve stiller sayılmaz."""
+    page = re.sub(r"<!--[\s\S]*?-->", " ", page)
     return flat(html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[\s\S]*?</\1>", " ", page))))
 
 
+def page_text(url):
+    """Sunucunun gönderdiği sayfanın görünen metni."""
+    return visible_text(raw(url))
+
+
+def locs(name):
+    """Canlı sitenin site haritasındaki adresler."""
+    return set(re.findall(r"<loc>([^<]+)</loc>", raw(SITE + "/" + name)))
+
+
 # --- Tarayıcıda kurulan sayfalar -------------------------------------------------
-# Böyle bir sayfanın metni iki yerde durur: sayfanın kendi kodunda ve dil paketinde.
+# Böyle bir sayfanın metni üç yerde durabilir: dil paketinde, sayfanın görünen metninde ve sayfanın kodunda.
 # Dil paketi bütün sitenin metnini taşır. İçinde hiçbir sayfanın göstermediği metin de bulunur.
 # Bu yüzden dil paketindeki bir metin, ancak sayfanın kodu o metnin anahtarını adıyla çağırıyorsa kanıt sayılır.
 LOCALE_FILE = re.compile(r"/assets/(tr|en|ar|ru)-[A-Za-z0-9_-]{8}\.js$")
@@ -100,7 +117,7 @@ def parse_locale(src):
     try:
         i = src.index("={", src.index("const ")) + 1
     except ValueError:
-        raise SystemExit("HATA: dil paketinin başı bulunamadı. Hiçbir dosya yazılmadı.")
+        stop("dil paketinin başı bulunamadı.")
 
     def ws(i):
         while src[i] in " \n\r\t":
@@ -158,12 +175,17 @@ def parse_locale(src):
     try:
         value(i, [])
     except (IndexError, AttributeError) as e:
-        raise SystemExit("HATA: dil paketi çözümlenemedi (%s). Hiçbir dosya yazılmadı." % e)
+        stop("dil paketi çözümlenemedi (%s)." % e)
     return out
 
 
+_apps = {}
+
+
 def app_parts(url):
-    """Sayfanın kendi kodu (HTML ve dil paketi olmayan betikler) ve Türkçe dil paketinin sözlüğü."""
+    """Sayfanın kendi kodu, görünen metni ve Türkçe dil paketinin sözlüğü."""
+    if url in _apps:
+        return _apps[url]
     page = raw(url)
     code = [page]
     names = set()
@@ -174,19 +196,20 @@ def app_parts(url):
         code.append(t)
         names.update(re.findall(r"\btr-[A-Za-z0-9_-]{8}\.js", t))
     if not names:
-        raise SystemExit("HATA: %s için Türkçe dil paketi bulunamadı. Hiçbir dosya yazılmadı." % url)
+        stop("%s için Türkçe dil paketi bulunamadı." % url)
     keys = {}
     for name in sorted(names):
         for k, v in parse_locale(raw(SITE + "/assets/" + name)).items():
             keys.setdefault(k, []).extend(v)
     # Koddaki metin kaçış işaretleriyle yazılıdır (\", \' ve \n). Arama için sadeleştirilir.
-    return flat(" ".join(code).replace('\\"', '"').replace("\\'", "'").replace("\\n", " ")), keys
+    _apps[url] = (flat(" ".join(code).replace('\\"', '"').replace("\\'", "'").replace("\\n", " ")), visible_text(page), keys)
+    return _apps[url]
 
 
-def where_in_app(proof, code, keys):
-    """Kanıtın bulunduğu yer: "kod" ya da "dil: anahtar". Bulunamazsa ya da sayfa anahtarı çağırmıyorsa None."""
-    if proof in code:
-        return "kod"
+def where_in_app(proof, code, visible, keys):
+    """Kanıtın bulunduğu yer. Sıra önemlidir: önce sayfanın çağırdığı dil anahtarı, sonra görünen metin, en son kod.
+    Kodda bulunan kısa bir kelime kanıt sayılmaz, çünkü o kelime bir denetim dalında da geçebilir.
+    Koddaki kanıt ya yapısal veridir (anahtar:"değer") ya da en az üç kelimelik bir ifadedir."""
     for path, values in keys.items():
         if "[]" in path or not any(proof in v for v in values):
             continue
@@ -194,6 +217,10 @@ def where_in_app(proof, code, keys):
         ref = ".".join(path.split(".")[-2:])
         if re.search(r"[\"'`.]" + re.escape(ref) + r"(?![A-Za-z0-9_$])", code):
             return "dil: " + ref
+    if proof in visible:
+        return "sayfa"
+    if proof in code and (':"' in proof or len(proof.split()) >= 3):
+        return "kod"
     return None
 
 
@@ -229,23 +256,34 @@ cur = get("currency.get_currency_settings", lang="tr")
 rates = cur.get("rates", {}).get("TRY", {})
 codes_cur = [c["code"] for c in cur.get("currencies", [])]
 if not rates.get("USD") or any(not rates.get(c) for c in codes_cur):
-    raise SystemExit("HATA: döviz kuru okunamadı. Hiçbir dosya yazılmadı.")
+    stop("döviz kuru okunamadı.")
 print("kur TRY->USD:", rates.get("USD"), "para birimleri:", codes_cur)
 
 # 4. Ana sayfanın olguları
 listing_total = total_of("listing.get_listings", "ürün toplamı", page_size=1, lang="tr")
 sellers = get("seller.get_sellers", page_size=100, lang="tr")
 if not sellers.get("sellers"):
-    raise SystemExit("HATA: mağaza listesi boş geldi. Hiçbir dosya yazılmadı.")
+    stop("mağaza listesi boş geldi.")
+# Liste tek sayfada istenir. Mağaza sayısı sayfaya sığmazsa doğrulanmış mağaza sayısı eksik çıkar.
+if sellers.get("total") != len(sellers["sellers"]):
+    stop("mağaza listesi tek sayfaya sığmadı (%s mağazadan %d tanesi geldi)." % (sellers.get("total"), len(sellers["sellers"])))
 by_slug = {s["slug"]: s for s in sellers["sellers"]}
 
 urunler = {}
 for slug, _img, _grup in URUNLER:
     d = get("listing.get_listing_detail", listing_id=slug, lang="tr")["data"]
     sup = d.get("supplier") or {}
+    # Fiyat varsayımı denetlenir: fiyat TRY cinsindendir ve KDV hariçtir.
+    # Aynı ürünün liste kaydındaki KDV dahil fiyat, KDV hariç fiyat ile KDV oranının çarpımına eşit olmalıdır.
+    rows = get("listing.get_listings", query=d["title"].strip(), page_size=20, lang="tr").get("data") or []
+    row = next((r for r in rows if r.get("slug") == slug), None)
+    if d.get("currency") != "TRY" or not row or row.get("baseCurrency") != "TRY":
+        stop("%s ürününün fiyatı TRY cinsinden doğrulanamadı." % slug)
+    if abs(float(row["priceWithTax"]) - d["sellingPrice"] * (1 + d["vatRate"] / 100)) > 0.005:
+        stop("%s ürününde KDV dahil fiyat, KDV hariç fiyat ve KDV oranıyla tutmuyor." % slug)
     urunler[slug] = {
         "ad": d["title"].strip(),
-        "fiyat_try": d["sellingPrice"],  # KDV hariç birim fiyat
+        "fiyat_try": d["sellingPrice"],  # KDV hariç birim fiyat, TRY
         "kdv": d["vatRate"],
         "en_az_adet": d["moq"],
         "birim": d.get("unit") or "Adet",
@@ -282,7 +320,7 @@ store = {m["adres"]: m for m in magazalar}
 ureticiler = {}
 for slug, _logo, _thumbs in URETICILER:
     if slug not in store:
-        raise SystemExit("HATA: %s mağazası doğrulanmış mağazalar arasında yok. Hiçbir dosya yazılmadı." % slug)
+        stop("%s mağazası doğrulanmış mağazalar arasında yok." % slug)
     s, m = by_slug[slug], store[slug]
     ureticiler[slug] = {"ad": m["ad"], "sehir": m["sehir"], "tur": m["tur"], "kurulus": m["kurulus"], "fabrika_m2": m["fabrika_m2"], "dogrulanmis": True, "urun_sayisi": m["urun_sayisi"]}
     # Mağaza notu: kuruluş yılı alanı boşsa, mağazanın kendi açıklamasındaki bilgi kullanılır.
@@ -291,7 +329,7 @@ for slug, _logo, _thumbs in URETICILER:
         label, value, proof = MAGAZA_NOTU[slug]
         about = flat((s.get("short_description") or "") + " " + (s.get("description") or ""))
         if proof not in about:
-            raise SystemExit("HATA: %s mağazasının açıklamasında \"%s\" bulunamadı. Hiçbir dosya yazılmadı." % (slug, proof))
+            stop("%s mağazasının açıklamasında \"%s\" bulunamadı." % (slug, proof))
         ureticiler[slug]["not"] = {"etiket": label, "deger": value, "kanit": proof}
 
 # 5. Dizin: ürün grupları, markalar, arama sonuç sayıları ve sipariş adedi süzgeçleri
@@ -300,7 +338,7 @@ facets = facets.get("data", facets)
 urun_gruplari = [{"ad": c["name"].strip(), "adres": c["slug"], "sayi": c["count"], "yol": [p["name"].strip() for p in (c.get("path") or [])]} for c in facets.get("categories") or []]
 markalar = [{"ad": b["label"].strip(), "adres": b["slug"], "sayi": b["count"]} for b in facets.get("brands") or [] if b.get("slug")]
 if not urun_gruplari:
-    raise SystemExit("HATA: ürün grupları okunamadı. Hiçbir dosya yazılmadı.")
+    stop("ürün grupları okunamadı.")
 aramalar, adetler = {}, {}
 words = list(ORNEK_URUN)
 for group in DIZIN:
@@ -315,10 +353,16 @@ for word in words:
         time.sleep(0.15)
 empty = [w for w in ORNEK_URUN if not aramalar[w]]
 if empty:
-    raise SystemExit("HATA: örnek arama sonuç vermiyor: %s. Hiçbir dosya yazılmadı." % ", ".join(empty))
+    stop("örnek arama sonuç vermiyor: %s." % ", ".join(empty))
 print("ürün grubu:", len(urun_gruplari), "marka:", len(markalar), "arama:", len(aramalar), "doğrulanmış mağaza:", len(magazalar))
 
-# 6. Bağlantı verilen sayfalar açılıyor mu? Sayfa açılmalı ve başka bir sayfaya yönlenmemelidir.
+# 6. Bağlantı denetimi. Dört ayrı denetim yapılır.
+# 6a. Karşı denetim: var olmayan bir adres açılmamalıdır. Açılıyorsa "sayfa açıldı" denetimi hiçbir şey kanıtlamaz.
+_t, _f, ghost = fetch(SITE + "/olmayan-sayfa-denetimi-" + TODAY)
+if ghost == 200:
+    stop("var olmayan bir adres de açılıyor. Sayfa denetimi güvenilir değil.")
+# 6b. Bağlantı verilen sabit sayfalar açılmalı ve başka bir sayfaya yönlenmemelidir.
+#     Bu denetim sayfanın var olduğunu gösterir. Giriş isteyen sayfanın, girişten sonra ne gösterdiğini göstermez.
 sayfalar = {}
 broken = []
 for path in SAYFALAR:
@@ -329,8 +373,28 @@ for path in SAYFALAR:
         broken.append("%s (durum %s, son adres %s)" % (path, status, landed))
     time.sleep(0.1)
 if broken:
-    raise SystemExit("HATA: açılmayan ya da başka sayfaya yönlenen bağlantı var. Hiçbir dosya yazılmadı.\n  " + "\n  ".join(broken))
-print("açıldığı denetlenen sayfa:", len(sayfalar))
+    stop("açılmayan ya da başka sayfaya yönlenen bağlantı var.\n  " + "\n  ".join(broken))
+# 6c. Kayıt sayfaları: ürün, mağaza ve marka adresleri canlı sitenin site haritasında bulunmalıdır.
+harita = {"urun": locs("sitemap-products.xml"), "magaza": locs("sitemap-sellers.xml"), "marka": locs("sitemap-brands.xml")}
+lost = ["/urun/" + slug for slug, _i, _g in URUNLER if SITE + "/urun/" + slug not in harita["urun"]]
+lost += ["/magaza/%s/dukkan" % slug for slug, _l, _t2 in URETICILER if SITE + "/magaza/%s/dukkan" % slug not in harita["magaza"]]
+if lost:
+    stop("site haritasında olmayan kayıt adresi var: %s." % ", ".join(lost))
+# 6d. Adres kalıpları: bağlantılardaki değişken adlarını ve adres kalıplarını canlı sayfanın kodu tanımalıdır.
+for path, needles in ADRES_KANITI:
+    code = app_parts(SITE + path)[0]
+    gone = [n for n in needles if n not in code]
+    if gone:
+        stop("%s sayfasının kodunda adres izi bulunamadı: %s." % (path, ", ".join(gone)))
+# 6e. Sosyal hesap adresleri canlı sitenin kodunda geçmelidir. Paylaşım görseli ve logo açılmalıdır.
+home_code = app_parts(SITE + "/")[0]
+away = [url for _n, url, _p in SOSYAL if url not in home_code]
+if away:
+    stop("canlı sitede geçmeyen sosyal hesap adresi var: %s." % ", ".join(away))
+for key, path in GORSELLER.items():
+    if fetch(SITE + path)[2] != 200:
+        stop("%s görseli açılmadı: %s." % (key, path))
+print("açıldığı denetlenen sayfa:", len(sayfalar), "site haritası: ürün", len(harita["urun"]), "mağaza", len(harita["magaza"]), "marka", len(harita["marka"]))
 
 
 def around(text, proof, span=70):
@@ -340,27 +404,30 @@ def around(text, proof, span=70):
 
 
 # 7. Kaynaklı cümleler: her cümlenin kanıt ifadesi kaynağında aranır.
-texts, apps = {}, {}
+texts = {}
 for key, src in KAYNAKLAR.items():
     if src["tur"] == "sayfa":
         texts[key] = page_text(src["adres"])
-    elif src["tur"] == "uygulama":
-        apps[key] = app_parts(src["adres"])
-    else:
+    elif src["tur"] == "veri":
         texts[key] = flat(json.dumps(json.loads(raw(src["adres"])), ensure_ascii=False))
 ledger = []
 missing = []
 for sentence, key, proofs in IDDIALAR:
     found, context, lost = [], [], []
     for p in proofs:
-        if key in apps:
-            code, keys = apps[key]
-            place = where_in_app(p, code, keys)
-            if place:
-                found.append(place)
-                context.append(around(code, p) if place == "kod" else next(v for k, vs in keys.items() if k.endswith(place[5:]) for v in vs if p in v)[:220])
-            else:
+        if KAYNAKLAR[key]["tur"] == "uygulama":
+            code, visible, keys = app_parts(KAYNAKLAR[key]["adres"])
+            place = where_in_app(p, code, visible, keys)
+            if not place:
                 lost.append(p)
+                continue
+            found.append(place)
+            if place == "kod":
+                context.append(around(code, p))
+            elif place == "sayfa":
+                context.append(around(visible, p))
+            else:
+                context.append(next(v for k, vs in keys.items() if k.endswith(place[5:]) for v in vs if p in v)[:220])
         elif p in texts[key]:
             found.append("sayfa" if KAYNAKLAR[key]["tur"] == "sayfa" else "veri")
             context.append(around(texts[key], p))
@@ -372,6 +439,9 @@ for sentence, key, proofs in IDDIALAR:
 # Paket verisi yapısal olarak da denetlenir: hiçbir pakette komisyon yok, her pakette doğrulama rozeti var.
 plans = json.loads(raw(KAYNAKLAR["paketler"]["adres"]))["message"]
 codes = [p["plan_code"] for p in plans["plans"]]
+# Komisyon alanı pakette bulunmalıdır. Alanın adı değişirse denetim sessizce geçmemelidir.
+if not codes or any("commission_active" not in p and "commission_rate" not in p for p in plans["plans"]):
+    stop("paket verisinde komisyon alanı bulunamadı.")
 with_commission = [p["plan_code"] for p in plans["plans"] if p.get("commission_active") or p.get("commission_rate")]
 badge = [f for cat in plans["features_matrix"]["categories"] for f in cat["features"] if f["feature_key"] == "feature.storefront.manufacturer_badge_tier"]
 verified_plans = [c for c in codes if badge and (badge[0]["values_by_plan"].get(c) or {}).get("text_value") not in (None, "", "Yok")]
@@ -380,43 +450,60 @@ if with_commission:
 if sorted(verified_plans) != sorted(codes):
     missing.append("Doğrulama rozeti her pakette yok: %s" % ", ".join(sorted(set(codes) - set(verified_plans))))
 if missing:
-    raise SystemExit("HATA: kaynakta bulunamayan kanıt var. Hiçbir dosya yazılmadı.\n  " + "\n  ".join(missing))
+    stop("kaynakta bulunamayan kanıt var.\n  " + "\n  ".join(missing))
 print("kaynaklı cümle:", len(ledger), "paket:", len(codes), "komisyonlu paket:", len(with_commission), "doğrulama rozetli paket:", len(verified_plans))
 
-
-# 8. Bütün istekler başarılıysa dosyalar yazılır.
-def save(name, value):
-    json.dump(value, open(os.path.join(DATA, name), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-
-
+# 8. Bütün denetimler geçtiyse dosyalar yazılır.
+# Dosyalar önce geçici adla yazılır, sonra yerine konur. En son koşunun özeti yazılır (kosu.json).
+# Yazma yarıda kalırsa özet eski dosyalarla tutmaz ve build.py sayfayı üretmez.
+FILES = {
+    "kategoriler.json": cats,
+    "sayilar.json": counts,
+    "kur.json": {"TRY": rates, "alindi": TODAY},
+    "ana-sayfa.json": {
+        "alindi": TODAY,
+        "urun_toplami": listing_total,
+        "magaza_toplami": sellers["total"],
+        "dogrulanmis_magaza": len(magazalar),
+        "para_birimleri": codes_cur,
+        "urunler": urunler,
+        "ureticiler": ureticiler,
+    },
+    "dizin.json": {
+        "alindi": TODAY,
+        "urun_gruplari": urun_gruplari,
+        "markalar": markalar,
+        "aramalar": aramalar,
+        "adetler": adetler,
+        "magazalar": magazalar,
+        "sayfalar": sayfalar,
+        # Site haritasındaki mağaza ve marka adresleri. Ürün adreslerinden yalnız seçilenler yazılır.
+        "site_haritasi": {
+            "magaza": sorted(u[len(SITE):] for u in harita["magaza"]),
+            "marka": sorted(u[len(SITE):] for u in harita["marka"]),
+            "urun": sorted("/urun/" + slug for slug, _i, _g in URUNLER),
+        },
+        "sosyal": [url for _n, url, _p in SOSYAL],
+        "gorseller": dict(GORSELLER),
+    },
+    "kaynaklar.json": {
+        "alindi": TODAY,
+        "paketler": {"sayi": len(codes), "komisyonlu": len(with_commission), "dogrulama_rozetli": len(verified_plans)},
+        "iddialar": ledger,
+    },
+}
 os.makedirs(DATA, exist_ok=True)
-save("kategoriler.json", cats)
-save("sayilar.json", counts)
-save("kur.json", {"TRY": rates, "alindi": TODAY})
-save("ana-sayfa.json", {
-    "alindi": TODAY,
-    "urun_toplami": listing_total,
-    "magaza_toplami": sellers.get("total") or len(sellers["sellers"]),
-    "dogrulanmis_magaza": len(magazalar),
-    "para_birimleri": codes_cur,
-    "urunler": urunler,
-    "ureticiler": ureticiler,
-})
-save("dizin.json", {
-    "alindi": TODAY,
-    "urun_gruplari": urun_gruplari,
-    "markalar": markalar,
-    "aramalar": aramalar,
-    "adetler": adetler,
-    "magazalar": magazalar,
-    "sayfalar": sayfalar,
-})
-save("kaynaklar.json", {
-    "alindi": TODAY,
-    "paketler": {"sayi": len(codes), "komisyonlu": len(with_commission), "dogrulama_rozetli": len(verified_plans)},
-    "iddialar": ledger,
-})
+digest = {}
+for name, value in FILES.items():
+    body = json.dumps(value, ensure_ascii=False, indent=1).encode("utf-8")
+    digest[name] = hashlib.sha256(body).hexdigest()
+    with open(os.path.join(DATA, name + ".yeni"), "wb") as f:
+        f.write(body)
+with open(os.path.join(DATA, "kosu.json.yeni"), "w", encoding="utf-8") as f:
+    json.dump({"kosu": RUN, "alindi": TODAY, "dosyalar": digest}, f, ensure_ascii=False, indent=1)
+for name in list(FILES) + ["kosu.json"]:
+    os.replace(os.path.join(DATA, name + ".yeni"), os.path.join(DATA, name))
 print("ürün toplamı:", listing_total, "mağaza:", sellers.get("total"), "doğrulanmış:", len(magazalar))
 print("seçilen ürün:", len(urunler), "seçilen üretici:", len(ureticiler))
-print("veri yazıldı:", TODAY)
+print("veri yazıldı:", RUN)
 sys.exit(0)

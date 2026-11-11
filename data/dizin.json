@@ -1,5 +1,5 @@
 {
- "alindi": "2026-11-10",
+ "alindi": "2026-11-11",
  "urun_gruplari": [
   {
    "ad": "Saklama Kabı",
@@ -757,5 +757,68 @@
    "durum": 200,
    "son": "/pages/auth/register.html"
   }
+ },
+ "site_haritasi": {
+  "magaza": [
+   "/magaza/acero-home",
+   "/magaza/acero-home/dukkan",
+   "/magaza/alkan-plastik",
+   "/magaza/alkan-plastik/dukkan",
+   "/magaza/asel-elektrik",
+   "/magaza/asel-elektrik/dukkan",
+   "/magaza/avcilar-plastik",
+   "/magaza/avcilar-plastik/dukkan",
+   "/magaza/bursev-plastik",
+   "/magaza/bursev-plastik/dukkan",
+   "/magaza/cankaya-plastik",
+   "/magaza/cankaya-plastik/dukkan",
+   "/magaza/cetin-plastik",
+   "/magaza/cetin-plastik/dukkan",
+   "/magaza/egemen-plastik",
+   "/magaza/egemen-plastik/dukkan",
+   "/magaza/harman-hirdavat",
+   "/magaza/kastamonu-plastik",
+   "/magaza/kastamonu-plastik/dukkan",
+   "/magaza/lalezar-mutfak-esyalari",
+   "/magaza/moi-plastik",
+   "/magaza/moi-plastik/dukkan",
+   "/magaza/mugiss",
+   "/magaza/mugiss/dukkan",
+   "/magaza/mustafa-akhan",
+   "/magaza/ozgen-plastik",
+   "/magaza/ozgen-plastik/dukkan",
+   "/magaza/solingen-bicak",
+   "/magaza/solingen-bicak/dukkan",
+   "/magaza/thoptan",
+   "/magaza/thoptan/dukkan",
+   "/magaza/timex-plastik",
+   "/magaza/timex-plastik/dukkan",
+   "/magaza/urve-plastik",
+   "/magaza/urve-plastik/dukkan"
+  ],
+  "marka": [
+   "/marka/ozgen-plastik"
+  ],
+  "urun": [
+   "/urun/ayarlanabilir-paslanmaz-kek-kalibi",
+   "/urun/fresh-box-kilitli-organizer-5-lt",
+   "/urun/kristal-slim-aski-10-lu",
+   "/urun/miknatisli-baharatlik",
+   "/urun/mikrofiber-kurulama-bezi-5-li-paket",
+   "/urun/renkli-sapli-meyve-bicagi",
+   "/urun/softline-lavabo-ve-kuvet-fircasi",
+   "/urun/suzgecli-ve-bolmeli-organizer-5-lt"
+  ]
+ },
+ "sosyal": [
+  "https://www.instagram.com/istoc_com",
+  "https://www.facebook.com/istoccom",
+  "https://x.com/istoc_com",
+  "https://www.linkedin.com/company/istoc-com",
+  "https://youtube.com/@istoccom"
+ ],
+ "gorseller": {
+  "paylasim": "/images/og-default.jpg",
+  "logo": "/images/istoc-logo.png"
  }
 }

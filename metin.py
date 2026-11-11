@@ -5,7 +5,13 @@
 #   veri    sayısı ya da dayanağı data/ klasöründen gelen metin (secim.py, VERI_METNI). Sayılar # ile yazılır.
 #   tasarim bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu (secim.py, TASARIM_METNI).
 #   etiket  düğme, bağlantı ve alan etiketi (secim.py, ETIKETLER). Canlı sitedeki bir sayfanın adı da etikettir.
+#   plan    planlanan hizmet ya da içerik (secim.py, PLAN_METNI ve plan yapıları). Canlı olgu değildir.
+#           Yalnız "Planlanan hizmet" ya da "Planlanan içerik" etiketli bölgede (data-plan) durabilir.
 # Veri kaynağından gelen adlar (ürün, kategori, mağaza) sayfada data-veri ile işaretlenir ve sınıflandırılmaz.
+# Görünmeyen metinler de kayıtlıdır: sayfa başlığı, öznitelik metinleri ve yalnız ekran okuyucuya okunan metinler
+# (secim.py, OZNITELIK_METNI). Görünen bir etiketin yinelemesi etiket listesinden tanınır.
+# Kapsam dışı kalan: tek kelimelik metin. Tek kelimelik bir olgu adı (ödeme yöntemi, para birimi, dil)
+# build.py içinde ayrıca denetlenir: her biri kanıt defterinde bulunmalıdır.
 # build.py bu modülü kullanır ve sınıfsız metin bulursa durur. kapi.mjs aynı çıkarımı üretilen sayfada yineler.
 import html
 import re
@@ -27,14 +33,17 @@ def split(text):
     return [p for p in re.split(r"(?<=[.?!])\s+", text) if len(p.split()) >= 2]
 
 
-def page_texts(doc):
-    """Sayfada görünen, en az iki kelimeli bütün metinler.
-    Arama motoru açıklaması da sayılır. data-veri ile işaretli adlar ve yalnız ekran okuyucuya
-    okunan yinelemeler (sr-only) sayılmaz."""
-    out = []
+PLAN_TAGS = ("Planlanan hizmet", "Planlanan içerik")
+
+
+def walk_texts(doc):
+    """Sayfa metinleri ve planlanan bölgeler.
+    texts: (metin, planlanan bölgede mi) çiftleri. regions: data-plan taşıyan bölgeler, kimliği ve görünür etiketi.
+    Planlanan bölgenin görünür etiketi plan-tag sınıflı öğededir ve PLAN_TAGS içindeki metni yazar."""
+    texts, regions = [], []
     desc = re.search(r'<meta name="description" content="([^"]*)"', doc)
     if desc:
-        out += split(html.unescape(desc.group(1)))
+        texts += [(x, False) for x in split(html.unescape(desc.group(1)))]
     body = doc[doc.index("<body"):]
     body = re.sub(r"<!--[\s\S]*?-->", " ", body)
     body = re.sub(r"<(script|style|svg)\b[\s\S]*?</\1>", " ", body)
@@ -43,25 +52,72 @@ def page_texts(doc):
         closing, tag, attrs, text = m.group(1), (m.group(2) or "").lower(), m.group(3) or "", m.group(4)
         if text is not None:
             t = squeeze(html.unescape(text))
-            if t and not any(stack):
-                out += split(t)
+            region = next((s["region"] for s in reversed(stack) if s["region"]), None)
+            if t and region is not None and any(s["tag"] for s in stack) and t in PLAN_TAGS:
+                region["tagged"] = True
+            if t and not any(s["skip"] for s in stack):
+                texts += [(x, region is not None) for x in split(t)]
         elif closing:
             if tag not in VOID and stack:
                 stack.pop()
         elif tag not in VOID:
-            stack.append("data-veri" in attrs or "sr-only" in attrs)
+            item = {"skip": "data-veri" in attrs or "sr-only" in attrs, "tag": bool(re.search(r'\bclass="[^"]*\bplan-tag\b', attrs)), "region": None}
+            if re.search(r"\sdata-plan(\s|=|$)", attrs):
+                ident = re.search(r'\bid="([^"]+)"', attrs)
+                item["region"] = {"id": ident.group(1) if ident else "", "tagged": False}
+                regions.append(item["region"])
+            stack.append(item)
+    return texts, regions
+
+
+def page_texts(doc):
+    """Sayfada görünen, en az iki kelimeli bütün metinler.
+    Arama motoru açıklaması da sayılır. data-veri ile işaretli adlar ve yalnız ekran okuyucuya
+    okunan yinelemeler (sr-only) sayılmaz."""
     seen, uniq = set(), []
-    for s in out:
+    for s, _plan in walk_texts(doc)[0]:
         if s not in seen:
             seen.add(s)
             uniq.append(s)
     return uniq
 
 
-def classify(doc, sourced, data_copy, design_copy, labels):
+def norm_hidden(text):
+    """Görünmeyen metnin karşılaştırma biçimi: tutar ve sayı # olur. Örnek: "Toplam $619,01", "Toplam #" olur."""
+    return re.sub(r"[£$€₺]?\d[\d.,]*", "#", squeeze(text))
+
+
+def hidden_texts(doc):
+    """Ekranda yazmayan ama okunan, en az iki kelimeli metinler: sayfa başlığı, öznitelik metinleri
+    (aria-label, placeholder, alt, title) ve yalnız ekran okuyucuya okunan metinler (sr-only)."""
+    out = []
+    title = re.search(r"<title>([^<]*)</title>", doc)
+    if title:
+        out.append(title.group(1))
+    body = doc[doc.index("<body"):]
+    body = re.sub(r"<!--[\s\S]*?-->", " ", body)
+    body = re.sub(r"<(script|style)\b[\s\S]*?</\1>", " ", body)
+    out += [m.group(2) for m in re.finditer(r'\b(aria-label|placeholder|alt|title)="([^"]*)"', body)]
+    out += [m.group(2) for m in re.finditer(r'<([a-z0-9]+)\b[^>]*\bclass="[^"]*\bsr-only\b[^"]*"[^>]*>([^<]*)</\1>', body)]
+    seen, uniq = set(), []
+    for s in (squeeze(html.unescape(x)) for x in out):
+        if len(s.split()) >= 2 and s not in seen:
+            seen.add(s)
+            uniq.append(s)
+    return uniq
+
+
+def hidden_known(text, exact, prefixes):
+    """Görünmeyen metin kayıtlı mı? exact: kayıtlı metinler ve görünen etiketler. prefixes: iki nokta ile biten ön ekler.
+    Bölüm adının yinelemesi iki nokta ile biter ("Alıcılar için:"). Karşılaştırmada o iki nokta atılır."""
+    t = norm_hidden(text)
+    return t in exact or t.rstrip(":").strip() in exact or any(t.startswith(p) for p in prefixes)
+
+
+def classify(doc, sourced, data_copy, design_copy, labels, planned=()):
     """Her metni sınıfıyla döndürür. Sınıfı olmayan metin "yok" sınıfını alır."""
     exact = {}
-    for name, items in (("etiket", labels), ("tasarim", design_copy), ("kaynak", sourced)):
+    for name, items in (("etiket", labels), ("plan", planned), ("tasarim", design_copy), ("kaynak", sourced)):
         for item in items:
             exact[squeeze(item)] = name
     folded = {norm(item) for item in data_copy}

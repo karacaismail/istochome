@@ -5,6 +5,7 @@
 // Bu bir kaynak denetimidir. Tarayıcıdaki davranışı kanıtlamaz. Onu tarayici-testi.mjs sınar.
 // Kapının göremediği durumlar: sözde öğeyle ya da geçişli zeminle çizilen vurgu çubuğu,
 // betiğin çalışırken yazdığı stil ve yalnız ekranda ölçülebilen değerler (boyut, karşıtlık, hedef).
+// Metin denetiminin dışında kalan: tek kelimelik metin. Tek kelimelik olgu adlarını build.py ayrıca denetler.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -176,7 +177,17 @@ function checkCss(source) {
       if (prop === "--font" && !/^"Ubuntu"/.test(value)) fail("metin", r.selector, "font ailesi Ubuntu ile başlamalı");
       if (/^--w-/.test(prop) && !WEIGHTS.includes(value)) fail("metin", r.selector, `kalınlık tokenı Ubuntu ailesinde yok: ${prop}: ${value}`);
       if (prop === "font-size" || /^--t-/.test(prop)) {
-        const first = value.startsWith("clamp(") ? value.slice(6).split(",")[0].trim() : value;
+        // min(A, Nvw): boyut ekran genişliğiyle de sınırlanır. A tek başına denetlenir.
+        // vw parçası 320 CSS px tabanında 14 px altına inemez. Bu yüzden N en az 4,375 olmalıdır.
+        let size = value;
+        if (value.startsWith("min(") && value.endsWith(")")) {
+          const inner = splitTop(value.slice(4, -1));
+          const vw = inner.length === 2 ? inner[1].match(/^(\d*\.?\d+)vw$/) : null;
+          if (!vw) fail("metin", r.selector, `${prop}: ${value} çözümlenemiyor`);
+          else if (parseFloat(vw[1]) * 3.2 < 14) fail("metin", r.selector, `${prop}: ${value} 320 px genişlikte 14 px altında`);
+          size = inner[0];
+        }
+        const first = size.startsWith("clamp(") ? size.slice(6).split(",")[0].trim() : size;
         if (!/^(inherit|var\(--t-[a-z0-9]+\))$/.test(first)) {
           const m = first.match(/^(\d*\.?\d+)(rem|px)$/);
           if (!m) fail("metin", r.selector, `${prop}: ${value} çözümlenemiyor`);
@@ -247,13 +258,29 @@ function checkCss(source) {
 // data-veri ile işaretli adlar ve yalnız ekran okuyucuya okunan yinelemeler (sr-only) sayılmaz.
 const squeeze = (t) => t.replace(/\s+/g, " ").trim();
 const normText = (t) => squeeze(t).replace(/\d[\d.,]*/g, "#");
-function pageTexts(doc) {
+const plainText = (t) => t.replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+// Görünmeyen metinler: sayfa başlığı, öznitelik metinleri ve yalnız ekran okuyucuya okunan metinler (sr-only).
+// metin.py içindeki çıkarımın aynısıdır. Karşılaştırmada tutar ve sayı # olur.
+const normHidden = (t) => squeeze(t).replace(/[£$€₺]?\d[\d.,]*/g, "#");
+function hiddenTexts(doc) {
   const out = [];
-  const plainText = (t) => t.replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+  const title = doc.match(/<title>([^<]*)<\/title>/);
+  if (title) out.push(title[1]);
+  const body = doc.slice(doc.indexOf("<body")).replace(/<!--[\s\S]*?-->/g, " ").replace(/<(script|style)\b[\s\S]*?<\/\1>/g, " ");
+  for (const m of body.matchAll(/\b(aria-label|placeholder|alt|title)="([^"]*)"/g)) out.push(m[2]);
+  for (const m of body.matchAll(/<([a-z0-9]+)\b[^>]*\bclass="[^"]*\bsr-only\b[^"]*"[^>]*>([^<]*)<\/\1>/g)) out.push(m[2]);
+  return [...new Set(out.map((t) => squeeze(plainText(t))).filter((t) => t.split(/\s+/).length >= 2))];
+}
+// Sayfa metinleri ve planlanan bölgeler. Planlanan bölge data-plan özniteliği taşır.
+// Her metin, planlanan bir bölgenin içinde olup olmadığını bilir. Her bölge görünür etiketini (plan-tag) taşımalıdır.
+const PLAN_TAGS = ["Planlanan hizmet", "Planlanan içerik"];
+function walkTexts(doc) {
+  const texts = [];
+  const regions = [];
   const VOID = new Set(["img", "input", "br", "meta", "link", "hr"]);
   const split = (t) => t.split(/(?<=[.?!])\s+/).filter((x) => x.split(/\s+/).length >= 2);
   const desc = doc.match(/<meta name="description" content="([^"]*)"/);
-  if (desc) out.push(...split(plainText(desc[1])));
+  if (desc) for (const t of split(plainText(desc[1]))) texts.push({ t, plan: false });
   const body = doc.slice(doc.indexOf("<body")).replace(/<!--[\s\S]*?-->/g, " ").replace(/<(script|style|svg)\b[\s\S]*?<\/\1>/g, " ");
   const stack = [];
   for (const m of body.matchAll(/<(\/?)([a-zA-Z0-9]+)([^>]*)>|([^<]+)/g)) {
@@ -262,12 +289,24 @@ function pageTexts(doc) {
     const attrs = m[3] || "";
     if (m[4] !== undefined) {
       const t = squeeze(plainText(m[4]));
-      if (t && !stack.some(Boolean)) out.push(...split(t));
+      const region = [...stack].reverse().find((s) => s.region);
+      if (t && region && stack.some((s) => s.tag) && PLAN_TAGS.includes(t)) region.region.tagged = true;
+      if (t && !stack.some((s) => s.skip)) for (const x of split(t)) texts.push({ t: x, plan: !!region });
     } else if (closing) {
       if (!VOID.has(tag) && stack.length) stack.pop();
-    } else if (!VOID.has(tag)) stack.push(attrs.includes("data-veri") || attrs.includes("sr-only"));
+    } else if (!VOID.has(tag)) {
+      const item = { skip: attrs.includes("data-veri") || attrs.includes("sr-only"), tag: /\bclass="[^"]*\bplan-tag\b/.test(attrs), region: null };
+      if (/\sdata-plan(\s|=|$)/.test(attrs)) {
+        item.region = { id: (attrs.match(/\bid="([^"]+)"/) || [])[1] || "", tagged: false };
+        regions.push(item.region);
+      }
+      stack.push(item);
+    }
   }
-  return [...new Set(out)];
+  return { texts, regions };
+}
+function pageTexts(doc) {
+  return [...new Set(walkTexts(doc).texts.map((x) => x.t))];
 }
 
 // Betikteki kullanıcıya görünen metinler: Türkçe harf taşıyan ya da boşluklu, teknik olmayan dizgiler.
@@ -291,7 +330,7 @@ function checkJs(js, scriptCopy) {
   const fail = (rule, detail) => fails.push({ rule, where: "app.js", detail });
   if (/['"](linear|ease|ease-in|ease-out|ease-in-out)['"]|cubic-bezier\(|steps\(/.test(js)) fail("hareket", "token dışı eğri");
   if (/\.animate\(/.test(js)) fail("hareket", "betikte animate() kullanımı");
-  if (/\.style\.(transition|animation)/.test(js)) fail("hareket", "betikte geçiş ya da canlandırma stili");
+  if (/\.style\.(transition|animation)/.test(js) || /setProperty\(\s*["'](transition|animation)/.test(js)) fail("hareket", "betikte geçiş ya da canlandırma stili");
   // Süre tokenı olduğu gibi kullanılır. Çarpılan ya da bölünen süre artık token değildir.
   if (/dur\([^)]*\)\s*[*\/]/.test(js)) fail("hareket", "süre tokenı üzerinde hesap");
   if (/behavior:\s*['"]smooth['"]/.test(js)) fail("hareket", "tarayıcı eğrisiyle yumuşak kaydırma");
@@ -359,19 +398,28 @@ function checkHtml(html, yayin, ledger, classes, site) {
   if (count(/<a (class="[^"]*" )?href="https:\/\/istoc\.com\/kategori\//g) < 60) fail("menü", f, "kategori bağlantısı az");
   // Dizin: programatik arama motoru stratejileri. Her grup bir başlık ve en az üç bağlantı taşır.
   // Sayısı olan bağlantıda sayı yazıyla da durur. Çubuk tek başına bilgi taşımaz.
-  const groups = [...html.matchAll(/<details class="dgroup"[\s\S]*?<\/details>/g)].map((m) => m[0]);
+  const groups = [...html.matchAll(/<div class="dgroup"[\s\S]*?<\/ul><\/div><\/div><\/div>/g)].map((m) => m[0]);
   if (groups.length < 6) fail("dizin", f, `dizin grubu sayısı ${groups.length}`);
   for (const g of groups) {
-    const links = (g.match(/class="dlink"/g) || []).length;
-    const title = (g.match(/<h3>([^<]*)<\/h3>/) || [])[1] || "adsız";
-    if (!/<h3>[^<]+<\/h3>/.test(g)) fail("dizin", f, "dizin grubunun başlığı yok");
+    const links = (g.match(/class="dlink(?: dlink--n)?"/g) || []).length;
+    const title = (g.match(/<span class="fold__name">([^<]+)<\/span>/) || [])[1] || "adsız";
+    if (!/<h3 class="fold__h">/.test(g) || title === "adsız") fail("dizin", f, "dizin grubunun başlığı yok");
     if (links < 3) fail("dizin", f, `dizin grubunda bağlantı az: ${title} (${links})`);
     if ((g.match(/dlink__bar/g) || []).length !== (g.match(/dlink__n/g) || []).length) fail("dizin", f, `sayısı yazmayan çubuk: ${title}`);
   }
-  if (count(/class="dlink"/g) < 30) fail("dizin", f, `dizin bağlantısı az: ${count(/class="dlink"/g)}`);
+  if (count(/class="dlink(?: dlink--n)?"/g) < 30) fail("dizin", f, `dizin bağlantısı az: ${count(/class="dlink(?: dlink--n)?"/g)}`);
+  // Katlanan grup (dizin grupları ve alt bölüm sütunları): düğmenin durumu grubun durumuyla aynıdır
+  // ve düğmenin yönettiği bölüm sayfada vardır. Grup düğmeyle açılır, details öğesi kullanılmaz.
+  const folds = [...html.matchAll(/<div class="(?:dgroup|fgroup)" data-fold data-open="(true|false)"[^>]*>[\s\S]*?<button class="fold__btn" type="button" aria-expanded="(true|false)" aria-controls="([a-z0-9-]+)">/g)];
+  if (folds.length < 15) fail("katlanan grup", f, `grup sayısı ${folds.length}`);
+  for (const m of folds) {
+    if (m[1] !== m[2]) fail("katlanan grup", f, `düğmenin durumu grubun durumundan farklı: ${m[3]}`);
+    if (!html.includes(`<div class="fold__panel" id="${m[3]}">`)) fail("katlanan grup", f, `düğmenin yönettiği bölüm yok: ${m[3]}`);
+  }
+  if (/<details\b|<summary\b/.test(html)) fail("katlanan grup", f, "details öğesi kullanılmaz");
   // Alt bölüm: bağlantı sütunları, ödeme yöntemleri ve tercih grupları. Her tercih grubunda tek seçenek seçilidir.
-  if (count(/<details class="fgroup"/g) < 8) fail("alt bölüm", f, `bağlantı sütunu az: ${count(/<details class="fgroup"/g)}`);
-  if (count(/<li class="ptile"[^>]*><span class="picto/g) < 4) fail("alt bölüm", f, "ödeme yöntemi piktogramsız ya da az");
+  if (count(/<div class="fgroup"/g) < 8) fail("alt bölüm", f, `bağlantı sütunu az: ${count(/<div class="fgroup"/g)}`);
+  if (count(/<li class="ptile"><span class="picto/g) < 4) fail("alt bölüm", f, "ödeme yöntemi piktogramsız ya da az");
   const prefs = [...html.matchAll(/role="radiogroup"[^>]*>([\s\S]*?)<\/div>/g)].map((m) => m[1]);
   if (prefs.length !== 2) fail("tercih", f, `tercih grubu sayısı ${prefs.length}`);
   for (const p of prefs) {
@@ -379,20 +427,36 @@ function checkHtml(html, yayin, ledger, classes, site) {
     const zero = (p.match(/tabindex="0"/g) || []).length;
     if (on !== 1 || zero !== 1) fail("tercih", f, `grupta seçili seçenek sayısı ${on}, klavye durağı ${zero}`);
   }
-  // Bağlantılar: sayfadaki her istoc.com adresi ya açıldığı denetlenmiş bir sayfadır ya da veride var olan bir kayıttır.
+  // Bağlantılar. Sayfadaki her adres denetlenir: bağlantı, form hedefi, paylaşım görseli ve yapısal verideki adresler.
+  // Kural build.py ile aynıdır. Sunucu adı birebir karşılaştırılır.
+  // istoc.com adresi ya açıldığı denetlenmiş bir sayfa ya da görseldir, ya da veride ve site haritasında duran bir kayıttır.
+  // istoc.com dışındaki adres yalnız canlı sitede geçen bir sosyal hesap, yazı tipi ya da yapısal veri sözlüğü olabilir.
   if (site) {
     const pages = new Set(Object.entries(site.sayfalar).filter(([, v]) => v.durum === 200).map(([p]) => p.replace(/\/$/, "")));
-    for (const m of html.matchAll(/(?:href|action|data-urun|data-uretici)="(https:\/\/istoc\.com[^"]*)"/g)) {
-      const u = new URL(m[1].replace(/&amp;/g, "&"));
-      const path = decodeURIComponent(u.pathname).replace(/\/$/, "");
-      const part = path.split("/")[2];
-      const ok = path.startsWith("/kategori/") ? site.kategori.has(part)
-        : path.startsWith("/urun/") ? site.urun.has(part)
-        : path.startsWith("/magaza/") ? site.magaza.has(part)
-        : path.startsWith("/marka/") ? site.marka.has(part)
-        : pages.has(path) && [...u.searchParams.keys()].every((k) => path === "/urunler" && ["q", "sort", "min_order"].includes(k));
-      if (!ok) fail("bağlantı", f, `açıldığı denetlenmemiş adres: ${m[1].slice(0, 70)}`);
-    }
+    const libraries = ["https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://schema.org"];
+    const params = { "/urunler": ["q", "sort", "min_order"] };
+    const fragments = { "/satici-ol": ["paketler"] };
+    const linkOk = (address) => {
+      let u;
+      try { u = new URL(address); } catch { return false; }
+      if (u.protocol !== "https:") return false;
+      if (u.host !== "istoc.com") return site.sosyal.has(address) || libraries.some((l) => address === l || address.startsWith(l + "/"));
+      const path = decodeURIComponent(u.pathname);
+      const bare = path.replace(/\/+$/, "");
+      const parts = bare.split("/");
+      const query = [...u.searchParams.keys()];
+      const frag = u.hash.slice(1);
+      if (frag && !(fragments[bare] || []).includes(frag)) return false;
+      if (bare.startsWith("/kategori/")) return parts.length === 3 && site.kategori.has(parts[2]) && !query.length;
+      if (bare.startsWith("/urun/")) return site.harita.urun.has(bare) && !query.length;
+      if (bare.startsWith("/magaza/")) return site.harita.magaza.has(bare) && site.magaza.has(parts[2]) && !query.length;
+      if (bare.startsWith("/marka/")) return site.harita.marka.has(bare) && !query.length;
+      if (site.gorsel.has(path)) return !query.length;
+      return pages.has(bare) && query.every((k) => (params[bare] || []).includes(k));
+    };
+    const addresses = new Set([...html.matchAll(/https?:\/\/[^\s"'<>\\)]+/g)].map((m) => m[0].replace(/&amp;/g, "&")));
+    if (addresses.size < 100) fail("bağlantı", f, `adres çıkarımı beklenenden az: ${addresses.size}`);
+    for (const a of addresses) if (!linkOk(a)) fail("bağlantı", f, `denetlenmemiş adres: ${a.slice(0, 70)}`);
   }
   // Arama motoru için ana sayfa yapısı
   const title = pick(/<title>([^<]*)<\/title>/);
@@ -445,11 +509,44 @@ function checkHtml(html, yayin, ledger, classes, site) {
   // Kaynak sınıfındaki her metin kanıt defterinde de bulunmalıdır. Böylece kaynaksız bir cümle "kaynak" diye geçemez.
   const proven = new Set((ledger.iddialar || []).map((c) => squeeze(c.metin)));
   for (const k of classes.kaynak || []) if (!proven.has(k)) fail("olgu", "data/metin.json", `kaynak sınıfında ama kanıt defterinde yok: ${k}`);
-  const exact = new Set([...(classes.kaynak || []), ...(classes.tasarim || []), ...(classes.etiket || [])]);
+  const exact = new Set([...(classes.kaynak || []), ...(classes.tasarim || []), ...(classes.etiket || []), ...(classes.plan || [])]);
   const folded = new Set(classes.veri || []);
   const texts = pageTexts(html);
   if (texts.length < 120) fail("olgu", f, `metin çıkarımı beklenenden az: ${texts.length}`);
   for (const t of texts) if (!exact.has(t) && !folded.has(normText(t))) fail("olgu", f, `sınıfı bilinmeyen metin: ${t}`);
+  // Görünmeyen metinler de kayıtlıdır: sayfa başlığı, öznitelik metinleri ve yalnız ekran okuyucuya okunan metinler.
+  // Kayıt ya birebir tutar ya da iki nokta ile biten bir ön ektir. Bölüm adının yinelemesi sondaki iki nokta atılarak aranır.
+  const hidExact = new Set(classes.gizli || []);
+  const hidPrefix = classes.gizli_on_ek || [];
+  const hidden = hiddenTexts(html);
+  if (hidden.length < 20) fail("olgu", f, `görünmeyen metin çıkarımı beklenenden az: ${hidden.length}`);
+  for (const t of hidden) {
+    const n = normHidden(t);
+    if (!hidExact.has(n) && !hidExact.has(n.replace(/:+$/, "").trim()) && !hidPrefix.some((p) => n.startsWith(p))) fail("olgu", f, `kayıtsız görünmeyen metin: ${t}`);
+  }
+  // Planlanan hizmet ve içerik (kullanıcı kararı 11 Kasım 2026). Planlanan öneri canlı olgu gibi yazılmaz.
+  // Plan sınıfındaki metin yalnız data-plan bölgesinde durur. Her bölge "Planlanan hizmet" ya da "Planlanan içerik" etiketini gösterir.
+  // Plan sınıfındaki bir cümle kanıt defterinde olamaz. Yayın derlemesinde planlanan bölge bulunmaz.
+  const planSet = new Set(classes.plan || []);
+  for (const k of planSet) if (proven.has(k)) fail("plan", "data/metin.json", `planlanan metin kaynak sınıfında da var: ${k}`);
+  const walked = walkTexts(html);
+  for (const x of walked.texts) if (planSet.has(x.t) && !x.plan) fail("plan", f, `planlanan metin işaretli bölgenin dışında: ${x.t}`);
+  for (const r of walked.regions) if (!r.tagged) fail("plan", f, `planlanan bölgenin görünür etiketi yok: ${r.id || "adsız"}`);
+  if (yayin && walked.regions.length) fail("plan", f, `yayın derlemesinde planlanan bölge var: ${walked.regions.map((r) => r.id).join(", ")}`);
+  if (!yayin) {
+    const ids = new Set(walked.regions.map((r) => r.id));
+    for (const id of ["guvenli-odeme", "yeni-musteri", "yeniden-siparis", "araclar", "kutuphane"]) if (!ids.has(id)) fail("plan", f, `planlanan bölüm yok: ${id}`);
+    // Gezinmeden ve sayfanın başka bir yerinden bu iki bölüme bağlantı vardır.
+    for (const id of ["araclar", "kutuphane"]) if (count(new RegExp(`href="#${id}"`, "g")) < 2) fail("plan", f, `en az iki bağlantı yok: #${id}`);
+  }
+  // Kullanıcı metninde teknik jargon yoktur: RFQ ve escrow. Görünen metin ve öznitelik metni denetlenir.
+  const said = strip(html) + " " + [...html.matchAll(/\b(aria-label|placeholder|alt|title|content)="([^"]*)"/g)].map((m) => m[2]).join(" ");
+  for (const w of ["RFQ", "escrow"]) if (new RegExp(`\\b${w}\\b`, "i").test(said)) fail("jargon", f, `kullanıcı metninde ${w}`);
+  // Kaldırılan metinler geri gelmez (kullanıcı kararı 11 Kasım 2026).
+  for (const t of ["Çarşıya gitmeyin", "Rakibiniz yoldayken"]) if (said.includes(t)) fail("kaldırılan metin", f, t);
+  if (/class="reason__why"/.test(html)) fail("kaldırılan metin", f, "gerekçe kartında Çünkü satırı");
+  // Ödeme garantisi vaat edilmez. Canlı iStoc ödemeyi tutmaz.
+  if (/garanti/i.test(said)) fail("vaat", f, "sayfada garanti sözü");
   return fails;
 }
 
@@ -469,6 +566,10 @@ const siteSource = {
   urun: new Set(Object.keys(readData("ana-sayfa.json").urunler)),
   magaza: new Set(dizinData.magazalar.map((m) => m.adres)),
   marka: new Set(dizinData.markalar.map((b) => b.adres)),
+  // Canlı sitenin site haritasındaki kayıt adresleri, canlı sitede geçen sosyal hesaplar ve açıldığı denetlenen görseller.
+  harita: { urun: new Set(dizinData.site_haritasi.urun), magaza: new Set(dizinData.site_haritasi.magaza), marka: new Set(dizinData.site_haritasi.marka) },
+  sosyal: new Set(dizinData.sosyal),
+  gorsel: new Set(Object.values(dizinData.gorseller)),
 };
 
 if (flags.has("--sinama")) {
@@ -527,6 +628,8 @@ if (flags.has("--sinama")) {
     ["ek stil dosyası çağrısı", '@import url("ek.css");', "yapı"],
     ["token olmayan süre değişkeni", ":root { --hizli: 90ms; }", "hareket"],
     ["kenarlık rengi vurgu rengine çevrilmiş", ".reason { border-color: var(--a-500); }", "kenar"],
+    // Beşinci incelemenin bulduğu boşluk
+    ["ekran genişliğiyle 14 px altına inen yazı", ".e1 { font-size: min(var(--t-sm), 4vw); }", "metin"],
   ];
   const jsCases = [
     ["betikte animate()", "el.animate([{ opacity: 0 }], { duration: 200 });", "hareket"],
@@ -535,6 +638,7 @@ if (flags.has("--sinama")) {
     ["süre tokenı üzerinde hesap", 'tween(el, to, dur("--dur-4") * 2, paint);', "hareket"],
     ["betikte turuncu", 'el.style.color = "#ff8a00";', "renk"],
     ["kayıtsız betik metni", 'announce("Siparişiniz başarıyla oluşturuldu.");', "olgu"],
+    ["betikte setProperty ile geçiş", 'el.style.setProperty("transition", "none");', "hareket"],
   ];
   const htmlCases = [
     ["sınıfı sonda yazılmış alt çizgisiz bağlantı", '<a href="/x" class="lnk">Metin</a>', "gösterge"],
@@ -549,7 +653,7 @@ if (flags.has("--sinama")) {
     ["metinde kısa çizgi", "<p>Ürün – sepet</p>", "yazım"],
     // Beşinci sürümün yeni kuralları
     ["izinsiz satır içi oran", '<a href="./" style="--p:2">Ana sayfa</a>', "satır içi stil"],
-    ["bağlantısız dizin grubu", '<details class="dgroup"><summary><h3>Dizin</h3></summary><ul></ul></details>', "dizin"],
+    ["bağlantısız dizin grubu", '<div class="dgroup" data-fold data-open="true"><h3 class="fold__h"><span class="fold__label"><span class="fold__name">Dizin</span></span></h3><div class="fold__panel"><div><ul></ul></div></div></div>', "dizin"],
     ["açıldığı denetlenmemiş adres", '<a href="https://istoc.com/olmayan-sayfa">Ana sayfa</a>', "bağlantı"],
     ["veride olmayan mağaza adresi", '<a href="https://istoc.com/magaza/olmayan-magaza">Ana sayfa</a>', "bağlantı"],
     ["izinsiz adres değişkeni", '<a href="https://istoc.com/urunler?max_price=1">Ana sayfa</a>', "bağlantı"],
@@ -558,6 +662,23 @@ if (flags.has("--sinama")) {
     ["sınıfı bilinmeyen başlık", "<h3>En düşük fiyat garantisi</h3>", "olgu"],
     ["sınıfı bilinmeyen etiket", '<a href="/x">Ücretsiz kargo</a>', "olgu"],
     ["sayısı değişmiş kaynaklı cümle", "<p>Başvuru 9 dakika sürer</p>", "olgu"],
+    // Beşinci incelemenin bulduğu boşluklar: sunucu adı, dış adres, görünmeyen metin ve eski katlanan grup
+    ["sunucu adı taklit edilmiş adres", '<a href="https://istoc.com.baska.site/urunler">Ana sayfa</a>', "bağlantı"],
+    ["kayıtsız dış adres", '<a href="https://example.com/">Ana sayfa</a>', "bağlantı"],
+    ["güvensiz adres", '<a href="http://istoc.com/urunler">Ana sayfa</a>', "bağlantı"],
+    ["site haritasında olmayan ürün adresi", '<a href="https://istoc.com/urun/olmayan-urun">Ana sayfa</a>', "bağlantı"],
+    ["kayıtsız öznitelik metni", '<button type="button" aria-label="En ucuz ürünleri gösterin">x</button>', "olgu"],
+    ["kayıtsız ekran okuyucu metni", '<span class="sr-only">Garantili en düşük fiyat</span>', "olgu"],
+    ["details ile katlanan grup", "<details><summary>Dizin</summary></details>", "katlanan grup"],
+    ["düğmesi grubundan farklı durumda", '<div class="fgroup" data-fold data-open="true"><div class="fold__h"><button class="fold__btn" type="button" aria-expanded="false" aria-controls="yok-1">Dizin</button></div></div>', "katlanan grup"],
+    // Altıncı sürüm: planlanan hizmet, jargon, kaldırılan metin ve ödeme vaadi
+    ["planlanan metin işaretsiz bölgede", `<p>${(classSource.plan || ["Planlanan metin yok."])[0]}</p>`, "plan"],
+    ["etiketsiz planlanan bölge", '<div id="yeni-plan" data-plan><p>Bu sayfa bir tasarım önerisidir.</p></div>', "plan"],
+    ["kullanıcı metninde RFQ", '<a href="/x">RFQ formu</a>', "jargon"],
+    ["öznitelikte escrow", '<button type="button" aria-label="Escrow ile ödeyin">x</button>', "jargon"],
+    ["kaldırılan slogan geri geldi", "<p>Çarşıya gitmeyin.</p>", "kaldırılan metin"],
+    ["Çünkü satırı geri geldi", '<p class="reason__why">Çünkü</p>', "kaldırılan metin"],
+    ["ödeme garantisi vaadi", "<p>Paranız garanti altında.</p>", "vaat"],
   ];
   const lines = [];
   const base = [...checkCss(cssSource).fails, ...checkJs(jsSource, classSource.betik), ...checkHtml(htmlSource, yayin, ledgerSource, classSource, siteSource)];

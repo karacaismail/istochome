@@ -22,8 +22,9 @@
     <a class="logo" href="./" aria-label="iStoc ana sayfa"><img src="img/logo.png" alt="iStoc" width="87" height="32"></a>
     <div class="header__search" inert><div>
         <form class="search" role="search" action="{{u}}/urunler" method="get" data-search>
-          <label class="sr-only" for="q-ust">Ürün veya üretici arayın</label>
-          <div class="search__box"><input id="q-ust" type="search" name="q" placeholder="Ürün veya üretici arayın" autocomplete="off" enterkeyhint="search"></div>
+          <!-- Üst arama yalnız ürün arar. Etiketi de bunu söyler. Üretici araması karşılamadaki sekmededir. -->
+          <label class="sr-only" for="q-ust">Ürün arayın</label>
+          <div class="search__box"><input id="q-ust" type="search" name="q" placeholder="Ürün arayın" autocomplete="off" enterkeyhint="search"></div>
           <button type="submit" aria-label="Arayın">{{i_ara}}<span>Arayın</span></button>
         </form>
     </div></div>
@@ -70,6 +71,7 @@
         <a href="{{u}}/urunler?sort=newest">Yeni ürünler</a>
         <a href="#teklif">Teklif isteği</a>
         <a href="{{u}}/ticaret-guvencesi">Ticaret güvencesi</a>
+        {{nav_plan}}
       </nav>
       <button class="rail__btn rail__btn--next" type="button" data-rail-btn="1" aria-label="Bölümleri ileri kaydırın" hidden>{{i_sag}}</button>
     </div>

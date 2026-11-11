@@ -1,4 +1,4 @@
-# iStoc ana sayfa: tasarım planı (5. sürüm)
+# iStoc ana sayfa: tasarım planı (6. sürüm)
 
 Bu belge ana sayfanın neden bu sırayla, bu renklerle ve bu bileşenlerle kurulduğunu anlatır. Renk, güven ve piktogram kararlarının kaynakları `ARASTIRMA.md` dosyasındadır.
 
@@ -33,7 +33,7 @@ Sayfanın iki okuyucusu var. Her biri "bu platformu kullanırım, çünkü" cüm
 | Başvuru 4 dakika sürer. | Canlı sitedeki satıcı sayfası. Onay ortalama 2 iş günüdür, başvuru ücretsizdir. |
 | Mağazam doğrulanmış görünür. | Paket verisi. İşletme doğrulaması rozeti bütün paketlerde vardır. |
 
-Sayfanın değer önerisi şudur: "Çarşıya gitmeyin. Çarşı ekranınızda."
+Sayfanın değer önerisi şudur: "Toptan alın. Yeni müşterilere satın." Altında alıcının ve satıcının yolu ayrı durur. Çarşıda yüz yüze anlaşılan sipariş de buradan verilir ve kayıt altında kalır. Ayrıntı 18. bölümdedir.
 
 Dil iddialıdır, ama her iddianın dayanağı vardır. Slogan ve başlık sayfanın kendi sözüdür. Canlı site hakkındaki her cümle kanıt defterindedir. Ayrıntı 15. bölümdedir.
 
@@ -61,7 +61,7 @@ Bir bileşen tek bir soruyu yanıtlar ve tek bir ana eylem taşır. İçinde dö
 |---|---|---|---|---|
 | Arama kutusu | Değer önerisi | Dört canlı sayı ve günü | "Arayın" | "Sık arananlar" kısa yolları |
 | Teklif kutusu | "Bir istek, birden fazla teklif" | Üç adım | "Teklif isteği oluşturun" | Formun veri göndermediği notu |
-| Gerekçe kartı | "Çünkü" ile başlayan başlık | Kaynaklı cümle ve sayı | Bölüm sonu düğmesi | Doğrulama işareti |
+| Gerekçe kartı | Değeri söyleyen başlık | Kaynaklı cümle ve sayı | Bölüm sonu düğmesi | Doğrulama işareti |
 | Ürün kartı | Ürün adı ve fiyat | En az adet, en az tutar, hazırlık süresi, rozet | "12 adet ekleyin" | Sepetin örnek olduğu notu |
 | Üretici kartı | Mağaza adı | Doğrulama, kuruluş yılı, ürün sayısı | "Mağazaya gidin" | "Mesaj yazın" bağlantısı |
 | Örnek sipariş | Koşulları önceden görme | Birim fiyat, koli, toplam | "Sepete ekleyin" | Ödemenin ne zaman yapıldığı |
@@ -200,11 +200,11 @@ Kullanıcının kararıyla bu projenin yazı tipi Ubuntu'dur.
 
 ### 8.1 Ana sayfadaki güven öğeleri
 
-- **Gerekçeler.** Altı gerekçe, her biri piktogram, "çünkü" etiketi, başlık ve kaynaklı cümle.
+- **Gerekçeler.** Altı gerekçe, her biri piktogram, başlık ve kaynaklı cümle.
 - **Çift taraflı doğrulama.** Alıcı kimliğini doğrular (KYC). Satıcının işletmesi doğrulanır (KYB). İkisi de sayfada adıyla yazar.
 - **Doğrulama rozeti.** Yeşil onay simgesi ve metin birlikte durur. Ürün kartında, üretici kartında ve örnek siparişte bulunur.
 - **Açık koşul.** Her ürün kartında beş koşul yazar. Bunlar fiyat, KDV hariç fiyat, en az adet, en az tutar ve hazırlık süresidir.
-- **Ödeme güvenliği.** Sayfa şunu açıkça yazar: "Yalnız sipariş sayfanızda gösterilen hesaba ödeme yaparsınız."
+- **Ödeme güvenliği.** Sayfa ödeme hesabını açıkça anlatır. "Yalnız sipariş sayfanızda gösterilen hesaba ödeme yaparsınız."
 - **Gerçek ve tarihli sayılar.** Ürün, kategori ve mağaza sayıları canlı veriden gelir. Sayıların altında verinin alındığı gün yazar.
 - **Ölü bağlantı yok.** Sayfadaki her canlı adresin açıldığı denetlenir. Ayrıntı 15. bölümdedir.
 - **Kaynaklı cümle.** Canlı site hakkındaki her cümle kanıt defterinde durur.
@@ -229,8 +229,8 @@ Sipariş süreci bölümü beş adımı anlatır. Her adımın yanında o adım�
 
 Kullanıcıyı bir adıma bağlayan düğme, altındaki güvence satırıyla tek bir gruptur (`.secure`). Satır, düğmeye basınca ne olacağını ve ne olmayacağını söyler.
 
-- Düğme metni fiille biter ve sonucu söyler: "Devam" yerine "Teklif isteği oluşturun".
-- Kilit piktogramı yalnız gerçek ödeme ve belge adımında kullanılır. Ana sayfada kilit yoktur. Kilit her yere konursa anlamını yitirir.
+- Düğme metni fiille biter ve sonucu söyler. Örneğin düğmede "Teklif isteği oluşturun" yazar.
+- Kilit piktogramı ödeme veya belge durumunu anlatır. Önizlemedeki planlanan ödeme akışında kilit, bekleyen tutarı anlatır. Planlanan hizmet etiketi bu akışın henüz sunulmadığını belirtir.
 - Sahte başarı gösterilmez. Teklif formu bu öneride veri göndermez. Form bunu gönderimden sonra açıkça yazar.
 - Sepet bu öneride canlı siteye bağlı değildir. Sipariş özeti çubuğu ve sesli duyuru bunu açıkça söyler.
 - Dil seçimi bu öneride sayfayı çevirmez. Seçeneklerin altında bu yazar.
@@ -361,7 +361,7 @@ Alt bölümün üçüncü katmanı içeriği türüne göre düzenler. Her öğe
 | Kural ve sözleşme | Tarafların uyacağı koşulu yazar. | Ürün listeleme kuralları, iade koşulları |
 | Araç | Okurun bir işini gördürür. | Teklif isteği formu, kimlik doğrulaması |
 
-**Planlanan içerik türleri.** Altı türün canlı sitede karşılığı yoktur, bunlar öneridir. Türler şunlardır: sözlük, hesaplayıcılar, şablonlar, karşılaştırmalar, sektör verileri ve kontrol listeleri. Bunlar yalnız önizleme derlemesinde görünür. Bağlantı değildir, çünkü hedefleri yoktur.
+**İçerik kütüphanesi.** Altı türün canlı sitede karşılığı yoktur, bunlar öneridir. Türler şunlardır: sözlük, hesaplayıcılar, şablonlar, karşılaştırmalar, sektör verileri ve kontrol listeleri. Her tür 3 ya da 4 öğe taşır. Öğe bağlantı değildir. Düğmeye basınca açıklaması sayfa içinde açılır. Kütüphane yalnız önizleme derlemesinde görünür. Ayrıntı 18. bölümdedir.
 
 ### 11.4 Sayfa üretimi için yol haritası
 
@@ -488,10 +488,11 @@ Sunucunun gönderdiği sayfalarda yorum satırları artık kanıt sayılmaz. Yal
 
 | Sınıf | Ne demek? | Sayfadaki sayısı |
 |---|---|---|
-| Kaynak | Canlı sitedeki bir sayfaya dayanan cümle. Kanıt defterinde durur. Eşleşme birebirdir. | 68 |
+| Kaynak | Canlı sitedeki bir sayfaya dayanan cümle. Kanıt defterinde durur. Eşleşme birebirdir. | 71 |
 | Veri | Sayısı ya da dayanağı `data` klasöründen gelen metin. | 34 |
-| Tasarım | Bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu. | 68 |
-| Etiket | Düğme, bağlantı, alan ve bölüm adı. Canlı sitedeki bir sayfanın adı da etikettir. | 137 |
+| Tasarım | Bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu. | 73 |
+| Etiket | Düğme, bağlantı, alan ve bölüm adı. Canlı sitedeki bir sayfanın adı da etikettir. | 138 |
+| Plan | Planlanan hizmet ya da içerik. Canlı olgu değildir. Yalnız etiketli planlanan bölgede durur. | 155 |
 
 - Şablona yeni bir metin eklenirse ve sınıfı yazılmazsa `build.py` sayfayı üretmez.
 - Canlı site hakkında olgu bildiren cümle tasarım sınıfına yazılmaz.
@@ -534,9 +535,9 @@ Sayfadaki her istoc.com adresi iki yoldan biriyle denetlenir.
 | `goruntu.mjs` | Bölüm bölüm ekran görüntüsü alır |
 | `serve.mjs` | Önizleme sunucusu |
 
-### Doğrulama durumu (11 Kasım 2026, ara durum)
+### Beşinci sürümün doğrulama kaydı
 
-Bu tablo bir ara durumdur. Bağımsız inceleme sürüyor.
+Bu tablo önceki sürüme aittir. Altıncı sürümün sonuçları 18.6 bölümündedir.
 
 | Denetim | Durum | Not |
 |---|---|---|
@@ -572,4 +573,101 @@ Davranış denetimleri ve klavye turu 320, 390 ve 1440 piksel genişlikte çalı
 9. **Bağlantı.** Teklif formu, sepet ve dil seçimi canlı siteye bağlı değildir.
 10. **Uygulama bağlantıları.** Canlı sitedeki App Store ve Google Play bağlantıları boştur. Bu yüzden alt bölüme konmadı.
 11. **Kategorisiz ürünler.** 1.765 ürün canlı sitede bir kategoriye bağlı değildir.
-12. **Planlanan içerik türleri.** Altı içerik türü öneridir. Canlı sitede karşılıkları yoktur.
+12. **Planlanan bölümler.** Güvenli ödeme, yeni müşteri, yeniden sipariş, hesaplama araçları ve içerik kütüphanesi öneridir. Canlı sitede karşılıkları yoktur. Ürün ekibi onaylamalıdır.
+
+## 18. Altıncı sürüm: planlanan bölümler ve hareketli yüzeyler
+
+### 18.1 Ne değişti?
+
+- Karşılamanın ana cümlesi "Toptan alın. Yeni müşterilere satın." oldu.
+- Karşılamada iki yol var. Alıcının yolu "Toptan alıyorum", satıcının yolu "Toptan satıyorum" adını taşır.
+- "Çarşıya gitmeyin", "Rakibiniz yoldayken" ve "Çünkü" metinleri kaldırıldı. Kural kapısı bu metinleri reddeder.
+- Teklif kutusu formun ne işe yaradığını yazar. Ürün ve adet yazılınca özet anında görünür. Altında dört adım vardır.
+- Kullanıcı metninde "RFQ" ve "escrow" kelimeleri geçmez. Kural kapısı bunları da reddeder.
+
+### 18.2 Bölüm sırası
+
+Planlanan bölümler yalnız önizleme derlemesinde vardır. Bölüm numaraları derlemede sırayla verilir.
+
+1. Alıcılar için
+2. Kategoriler
+3. Ürünler
+4. Üreticiler
+5. Sipariş süreci
+6. Güvenli ödeme (planlanan)
+7. Sık sorulanlar
+8. Satıcılar için
+9. Yeni müşteri (planlanan)
+10. Yeniden sipariş (planlanan)
+11. Hesaplama araçları (planlanan)
+12. Dizin
+
+Yayın derlemesinde planlanan bölümler yoktur. O derlemede sekiz bölüm kalır.
+
+### 18.3 Planlanan bölge kuralı
+
+- Planlanan her bölge `data-plan` özniteliği taşır.
+- Her bölge "Planlanan hizmet" ya da "Planlanan içerik" etiketini gösterir.
+- Planlanan metinler "plan" sınıfındadır. Bu metin bölgenin dışına çıkarsa `build.py` ve `kapi.mjs` durur.
+- Güvenli ödeme bölgesi bugünkü durumu da yazar: "Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez." Sayfa ödeme garantisi vermez.
+
+### 18.4 Hesaplama araçları
+
+Araçlar üç gruptur ve 12 araçtır. Liste ve sınırlar `ARASTIRMA.md` dosyasının 10. bölümündedir. Her araç kısa faydasını yazar. "Neyi hesaplar?" düğmesi girişi, çıktıyı ve sınırı açar. Araç bu öneride hesaplama yapmaz. Gezinme, alıcı bölümü, satıcı bölümü ve kütüphane `#araclar` bölümüne gider.
+
+### 18.5 Hareketli yüzeyler
+
+Her bölümün arkası aynı geçişli zemin değildir. Üç yüzey vardır:
+
+- **Ticaret ağı.** Düğümler ve onları bağlayan çizgiler.
+- **Nokta alanı.** Düzenli noktalar.
+- **Sipariş rotası.** Bölümü boydan boya geçen bir yol ve duraklar.
+
+Yüzey ekrana girince bir kez çizilir. İşaretçi yüzeyin üstündeyken yakın çizgiler belirginleşir. Sonsuz hareket yoktur, bu yüzden durdurma düğmesi gerekmez. Ekran dışındaki yüzey için iş yapılmaz. Sekme gizliyken çizim başlamaz. Hareket azaltma tercihinde yüzey çizilmiş haliyle durur. Yüzey içeriğin arkasındadır ve metnin yerini değiştirmez.
+
+
+### 18.6 Altıncı sürümün doğrulama kaydı
+
+Kontroller 11 Kasım 2026 günü macOS üzerinde çalıştı.
+Tarayıcı otomasyonu Playwright 1.64.1 kullandı.
+Chromium ve WebKit sonuçları gerçek cihaz testi değildir.
+
+| Denetim | Sonuç |
+|---|---|
+| Önizleme derlemesi | pass. 472 metin sınıflandırıldı. |
+| Kural kapısı | pass. 748 stil kuralı ve bir sayfa denetlendi. |
+| Kapının kendini sınaması | pass. 98 ihlal örneğinin tamamı reddedildi. |
+| İkinci tam tarayıcı koşusu | fail. Chromium üç, WebKit bir hata buldu. |
+| Bu hataların düzeltme koşusu | pass. Chromium 93, WebKit 74 denetimi geçti. |
+| Bağımsız incelemenin düzeltme öncesi koşusu | fail. İki motor da altışar hata buldu. |
+| Bağımsız incelemenin düzeltme sonrası koşusu | pass. Her motor 170 denetimi geçti. |
+| Yeni davranışların bozulma sınaması | pass. Altı bozulmanın tamamı yakalandı. |
+| Ekran dönüşü ve zorlanmış renk sınaması | pass. Üç bozulmanın tamamı yakalandı. |
+
+Tam test takımı son düzeltmelerden sonra yeniden çalıştırılmadı.
+Değişen davranışlar hedefli koşularla doğrulandı.
+Bu koşular ana test dosyasının aynı denetimlerini kullandı.
+
+Son koşu 320, 390 ve 1440 CSS px genişlikleri kapsadı.
+Adet doğrulaması, kart hizası, form ve açılır araç ayrıntıları sınandı.
+Önceki tam koşu dokuz ekran boyutunu kapsadı.
+Büyük yazı ve zorlanmış renk kontrolleri yalnız Chromium üzerinde çalıştı.
+
+Tasarım, uygulayıcıdan bağımsız bir inceleyici tarafından değerlendirildi.
+İnceleyici komut çalıştırmadı ve dosya değiştirmedi.
+Bulduğu başlık çakışması, hizalama ve teklif özeti sorunları düzeltildi.
+
+Firefox çalıştırılmadı.
+Gerçek Safari, iOS, Android ve ekran okuyucu kontrolleri yapılmadı.
+Gerçek okurla denenmedi.
+
+
+Son tamamlayıcı kontrolde adet hatası açıklaması alanla ilişkilendirildi.
+Bu ilişki Chromium ve WebKit üzerinde doğrulandı.
+Bağımsız incelemenin uygulama bulguları kapandı.
+Veri kaydı dosyası yayın commitine dahil edilir.
+
+Türkçe denetimi sayfa metninde ve belgelerde çalıştı.
+Sayfa metnindeki üç uzun cümle, süreçleri anlatan açıklamalardır.
+Bu cümleler emir değildir ve 15 kelimelik açıklama hedefini aşmaz.
+Başlık ve menü etiketleri ayrı değerlendirilmiştir.

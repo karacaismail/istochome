@@ -4,6 +4,7 @@
    Kural kapısı: kapi.mjs. Tarayıcı denetimi: tarayici-testi.mjs.
 
    1 Tokenlar            5 İlkel bileşenler      9 Ortak modüller
+   (11b Altıncı sürümün bölümleri: yüzeyler, yollar, planlanan bölümler, kütüphane)
    2 Temel               6 Üst bölüm            10 Dizin ve alt bölüm
    3 Odak                7 Sayfa iskeleti       11 Sabit çubuklar
    4 Hareket             8 Ana sayfa bölümleri  12 Hareket azaltma
@@ -52,6 +53,13 @@
   --err: #a8231b;
   --line: #d6dfe9;
   --line-ink: rgba(255, 255, 255, 0.14);
+  /* Koyu zemindeki yüzeyler: tıklanan öğenin durağan dolgusu, üzerine gelinen dolgusu ve soluk bilgi kutusu.
+     Koyu zeminde dolgulu kutu yalnız tıklanan öğede bulunur. Tıklanmayan bilgi düz satırdır. */
+  --ink-fill: rgba(255, 255, 255, 0.1);
+  --ink-fill-hover: rgba(255, 255, 255, 0.2);
+  --ink-fill-soft: rgba(255, 255, 255, 0.06);
+  /* Koyu bantta opak kart yüzeyi. Arkadaki süs (nokta alanı) metnin arkasından geçmez, yalnız kart aralarında görünür. */
+  --ink-raised: #1b3a5f;
   --field-line: #7b8798;
 
   /* Tipografi: Ubuntu. Ailede dört kalınlık vardır: 300, 400, 500 ve 700.
@@ -65,8 +73,11 @@
   --t-body: 1rem;
   --t-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
   --t-h3: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);
-  --t-h2: clamp(1.75rem, 1.2rem + 2.6vw, 3.25rem);
-  --t-display: clamp(2.375rem, 1.2rem + 5.4vw, 5rem);
+  /* Büyük başlıklar ekran genişliğiyle de sınırlanır (vw). Kullanıcı kök yazı boyutunu büyütünce
+     başlık dar ekranda taşmaz, uzun kelime satıra sığmaya devam eder. Gövde metni büyümeye devam eder.
+     Sınır 320 CSS px genişlikte varsayılan boyutun altına inmez. */
+  --t-h2: min(clamp(1.75rem, 1.2rem + 2.6vw, 3.25rem), 9vw);
+  --t-display: min(clamp(2.375rem, 1.2rem + 5.4vw, 5rem), 12vw);
   --t-num: clamp(1.75rem, 1.3rem + 1.8vw, 2.625rem);
 
   /* Boşluk ölçeği: 4 px tabanı */
@@ -89,6 +100,8 @@
   --bleed: var(--gutter);
   --max: 1320px;
   --hit: 44px;
+  /* Kartın sağ üst köşesindeki sıra numarası için başlıkta bırakılan pay */
+  --num-space: var(--sp-8);
   /* Sıkı yoğunluk hedefleri. Dar ekranda ve dokunmatik ekranda 44 px kalır (aşağıdaki sorgular). */
   --hit-dense: var(--hit);
   --hit-list: var(--hit);
@@ -125,6 +138,12 @@
   --dur-4: 800ms;
   --dur-5: 1200ms;
   --stagger: 70ms;
+  /* Hareketli yüzeylerin çizgi renkleri: açık zeminde ve koyu zeminde. Durağan çizgi soluktur.
+     İşaretçinin yanında beliren çizgi daha belirgindir. Saydamlık düşük kalır, metnin karşıtlığı korunur. */
+  --surface-line: rgba(40, 112, 195, 0.16);
+  --surface-hi: rgba(40, 112, 195, 0.42);
+  --surface-line-ink: rgba(157, 191, 231, 0.16);
+  --surface-hi-ink: rgba(198, 218, 241, 0.46);
   /* Dönen örnek aramanın bir kelimede bekleme süresi */
   --dwell: 2800ms;
 }
@@ -137,6 +156,10 @@
 /* Kısa ekranda (yatay telefon) üst bölüm sabit değildir. Bağlantıyla gidilen öğenin üstünde büyük pay gerekmez. */
 @media (max-height: 480px) {
   :root { --scroll-top: var(--sp-4); --band-y: 40px; }
+}
+/* Yatay telefonda alt gezinme incelir: simge ile etiket yan yana durur. */
+@media (max-height: 480px) and (max-width: 1023px) {
+  :root { --bottom-nav: 48px; }
 }
 /* Sıkı yoğunluk yalnız fareyle kullanılan geniş ekranda geçerlidir.
    Dokunmatik ekranı olan her cihazda hedef 44 px kalır. Genişlik tek başına ölçüt değildir. */
@@ -185,6 +208,9 @@ svg .f { fill: currentColor; fill-opacity: 0.16; stroke: none; }
   padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
 }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* Betiğe bağlı içerik: betik yoksa ya da yüklenemezse gizlenir. Yerine durağan karşılığı görünür.
+   Böylece çalışmayan bir denetim ya da doğru olmayan bir cümle ekranda kalmaz. */
+html:not(.js) .js-only, html.js .nojs-only { display: none; }
 
 /* 3. Odak ----------------------------------------------------------------
    Çevreleyen halka yok. Klavye modu yalnız Tab ile açılır (app.js).
@@ -196,8 +222,8 @@ svg .f { fill: currentColor; fill-opacity: 0.16; stroke: none; }
    üzerine gelme rengi odak dolgusunu ezemez.
    JavaScript yoksa ya da app.js yüklenemezse klavye modu izlenemez (html.js sınıfı kalkar).
    O durumda gösterge tarayıcının kendi :focus-visible kararıyla açılır. Odak hiçbir durumda göstergesiz kalmaz. */
-html[data-kb="on"]:root :is(a, button, summary, [role="option"], [role="tab"]):focus-visible,
-html:not(.js):root :is(a, button, summary, [role="option"], [role="tab"]):focus-visible {
+html[data-kb="on"]:root :is(a, button, [role="option"], [role="tab"]):focus-visible,
+html:not(.js):root :is(a, button, [role="option"], [role="tab"]):focus-visible {
   background-color: var(--focus-bg);
   color: var(--focus-fg);
   text-decoration: underline;
@@ -219,15 +245,17 @@ html:not(.js):root :is(a, button, summary, [role="option"], [role="tab"]):focus-
 /* Logo koyu renklidir. Odak dolgusu logonun okunmasını bozmayan ara tondur. */
 .logo { --focus-bg: var(--a-400); }
 /* Odaklanan denetimin içindeki soluk metin, simge ve piktogram odak rengini alır.
-   Seçici yalnız denetimleri kapsar. Odak ana bölüme geçince (içeriğe atlama) sayfadaki piktogramlar renk değiştirmez. */
-html[data-kb="on"] :is(a, button, summary, [role="option"], [role="tab"]):focus-visible :is(small, b, svg, i, h3, .dlink__t, .dlink__n),
-html:not(.js) :is(a, button, summary, [role="option"], [role="tab"]):focus-visible :is(small, b, svg, i, h3, .dlink__t, .dlink__n) {
-  color: inherit;
-  /* İç öğe de geçişsiz döner. Yoksa odak dolgusunun üstünde kısa bir süre okunmayan bir ara renk görünür. */
-  transition: none;
-}
-html[data-kb="on"] :is(a, button, summary, [role="option"], [role="tab"]):focus-visible :is(.picto, .pref__mark),
-html:not(.js) :is(a, button, summary, [role="option"], [role="tab"]):focus-visible :is(.picto, .pref__mark) { background-color: var(--ink-3); color: var(--on-ink); transition: none; }
+   Seçici yalnız denetimleri kapsar. Odak ana bölüme geçince (içeriğe atlama) sayfadaki piktogramlar renk değiştirmez.
+   Kendi dolgusu olan simge kutusu kendi renklerini korur (sık sorulanlardaki artı, alt gezinmedeki teklif simgesi).
+   Kutu odak rengini alsaydı simge, kendi kutusunun üstünde okunmaz olurdu. */
+html[data-kb="on"] :is(a, button, [role="option"], [role="tab"]):focus-visible :is(small, b, svg, h3, .dlink__t, .dlink__n),
+html:not(.js) :is(a, button, [role="option"], [role="tab"]):focus-visible :is(small, b, svg, h3, .dlink__t, .dlink__n) { color: inherit; }
+/* İç metin de geçişsiz döner. Yoksa odak dolgusunun üstünde kısa bir süre okunmayan bir ara renk görünür.
+   Simge bu kuralın dışındadır: okun ve artı simgesinin dönüşü klavyeyle de yumuşak kalır. */
+html[data-kb="on"] :is(a, button, [role="option"], [role="tab"]):focus-visible :is(small, b, h3, .dlink__t, .dlink__n),
+html:not(.js) :is(a, button, [role="option"], [role="tab"]):focus-visible :is(small, b, h3, .dlink__t, .dlink__n) { transition: none; }
+html[data-kb="on"] :is(a, button, [role="option"], [role="tab"]):focus-visible :is(.picto, .pref__mark),
+html:not(.js) :is(a, button, [role="option"], [role="tab"]):focus-visible :is(.picto, .pref__mark) { background-color: var(--ink-3); color: var(--on-ink); transition: none; }
 /* Metin alanı: çerçeve değişmez. Yazının altında düz bir çizgi belirir.
    Çizgi alanın kendi zeminine çizilir, köşelere değmez ve alanı çevrelemez. */
 html[data-kb="on"] .search input:focus-visible,
@@ -248,14 +276,17 @@ html:not(.js) .field input:focus-visible {
 /* Bağlantının görünmesi odak durumudur ve geciktirilmez. Konumu geçişsiz değişir, yalnız rengi yumuşak geçer.
    Bağlantı yavaşça çekilseydi bir sonraki durağın üstünü kısa süre örterdi. */
 .skip { transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+/* Zorlanmış renklerde (örneğin Windows yüksek karşıtlık) yazarın dolguları silinir.
+   Odak, klavye modunda çerçeveyle gösterilir. Seçili durumların sistem rengi dosyanın sonundadır (14. bölüm). */
 @media (forced-colors: active) {
   html[data-kb="on"] :focus-visible, html:not(.js) :focus-visible { outline: 2px solid CanvasText; }
+  html[data-kb="on"] .fold__panel a:focus-visible, html:not(.js) .fold__panel a:focus-visible { outline-offset: -2px; }
 }
 
 /* 4. Hareket -------------------------------------------------------------
    Geçişler temel kuralda durur, böylece giriş ve çıkış aynı eğriyi kullanır.
    Hareketin üç kaynağı vardır: sayfanın açılışı, kaydırma ve işaretçi. Kendi kendine dönen hareket yoktur. */
-a, button, summary, [role="option"], .search, .field {
+a, button, [role="option"], .search, .field {
   transition:
     background-color var(--dur-1) var(--ease),
     color var(--dur-1) var(--ease),
@@ -290,9 +321,7 @@ html.js [data-reveal].is-in .picto .f { opacity: 1; }
 html.js [data-reveal] .mh__bar,
 html.js [data-reveal] .dlink__bar {
   transform: scaleX(0);
-  transition:
-    transform var(--dur-5) var(--ease),
-    background-color var(--dur-1) var(--ease);
+  transition: transform var(--dur-5) var(--ease);
   transition-delay: calc(var(--i, 0) * var(--stagger) + var(--dur-2));
 }
 html.js [data-reveal].is-in .mh__bar { transform: scaleX(1); }
@@ -333,17 +362,32 @@ html.js [data-reveal].is-in .dlink__bar { transform: scaleX(var(--p, 1)); }
 ::view-transition-old(*), ::view-transition-new(*) { animation-duration: var(--dur-2); animation-timing-function: var(--ease); }
 
 /* İşaretçi ışığı. Koyu bantta ince bir ışık işaretçiyi izler ve altındaki ızgarayı aydınlatır.
-   Işığın yerini app.js yazar (--mx, --my). Dokunmatik ekranda ışık sabit durur. */
+   app.js ışığın yerini bu katmanın kendisine yazar (--mx, --my, --dx, --dy). Değişken bandın bütününe yazılmaz.
+   Böylece her karede yalnız bu katman yeniden boyanır, bandın içeriği yeniden hesaplanmaz.
+   Işık yerini dönüşümle değiştirir (transform), yerleşimi etkilemez. Dokunmatik ekranda ışık sabit durur.
+   Işığın saydamlığı en çok 0,24 olur. Bu değerde bandın üstündeki en soluk metin de 4,5:1 karşıtlığı korur.
+   Tarayıcı testi karşıtlığı ışığın tam ortasına göre ölçer. */
 .spot { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .spot i {
-  position: absolute; left: var(--mx, 78%); top: var(--my, 12%); width: 720px; height: 720px; margin: -360px 0 0 -360px; border-radius: var(--r-pill);
-  background: radial-gradient(closest-side, rgba(79, 136, 207, 0.36), rgba(79, 136, 207, 0));
-  transition:
-    left var(--dur-3) var(--ease),
-    top var(--dur-3) var(--ease);
+  position: absolute; left: 78%; top: 12%; width: 720px; height: 720px; margin: -360px 0 0 -360px; border-radius: var(--r-pill);
+  background: radial-gradient(closest-side, rgba(79, 136, 207, 0.24), rgba(79, 136, 207, 0));
+  transform: translate(var(--dx, 0px), var(--dy, 0px));
+  transition: transform var(--dur-3) var(--ease);
+}
+/* Koyu bandın ızgarası. Çizgiler arka plan görselidir, kenarlık değildir. Işığın olduğu yerde belirir.
+   Yatay çizgiler sayfa kaydıkça içerikten yavaş kayar (app.js --sy yazar). Bu, zemine derinlik verir. */
+.spot::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 var(--sy, 0px) / 100% 64px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 64px 100%;
+  -webkit-mask-image: radial-gradient(560px circle at var(--mx, 78%) var(--my, 12%), #000, transparent);
+  mask-image: radial-gradient(560px circle at var(--mx, 78%) var(--my, 12%), #000, transparent);
 }
 [data-spot] > .wrap { position: relative; z-index: 1; }
-/* Kart ışığı. İşaretçi kartın üstündeyken altında yumuşak bir ışık belirir. Kart yerinden oynamaz. */
+/* Kart ışığı. İşaretçi kartın üstündeyken altında yumuşak bir ışık belirir. Kart yerinden oynamaz.
+   Işık yalnız içinde tıklanan bir şey olan kartta bulunur (ürün, üretici, kategori ve dizin kartı).
+   Tıklanmayan kart (gerekçe, ödeme yöntemi) üzerine gelince değişmez. */
 [data-glow] { position: relative; }
 [data-glow]::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
@@ -360,14 +404,15 @@ html.js [data-reveal].is-in .dlink__bar { transform: scaleX(var(--p, 1)); }
    brand  = ilerleten ana eylem. Turuncudur. Bir bileşende en çok bir tane bulunur.
    ink    = güçlü eylem ve bağlayıcı adım (sepete ekle, siparişi onayla, öde). Güven rengidir.
    light  = koyu zemindeki ikincil eylem. Açık zeminde ikincil eylem metin bağlantısıdır. */
+/* Etiket tek satıra sığar. Yazı büyütülünce ya da kutu daralınca alt satıra geçer, kutudan taşmaz. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
-  min-height: 52px; padding: 0 var(--sp-6);
-  border-radius: var(--r-2); font-weight: var(--w-medium); white-space: nowrap;
+  max-width: 100%; min-height: 52px; padding: var(--sp-2) var(--sp-6);
+  border-radius: var(--r-2); font-weight: var(--w-medium); line-height: 1.25; text-align: center;
 }
 .btn svg { transition: transform var(--dur-2) var(--ease); }
 .btn:hover .btn__go { transform: translateX(4px); }
-.btn--sm { min-height: var(--hit); padding: 0 var(--sp-4); }
+.btn--sm { min-height: var(--hit); padding: var(--sp-1) var(--sp-4); }
 .btn--brand { background: var(--brand); color: var(--on-brand); font-weight: var(--w-bold); }
 .btn--brand:hover { background: var(--brand-hover); }
 .btn--brand:active { background: var(--brand-press); }
@@ -375,8 +420,8 @@ html.js [data-reveal].is-in .dlink__bar { transform: scaleX(var(--p, 1)); }
 .btn--ink:hover { background: var(--ink-3); }
 .btn--light { background: var(--surface); color: var(--text); }
 .btn--light:hover { background: var(--a-100); }
-/* Tam genişlikteki düğme dar kutuda taşmaz: kenar payı küçüktür ve etiket gerekirse alt satıra geçer. */
-.btn--block { width: 100%; padding-inline: var(--sp-3); white-space: normal; text-align: center; line-height: 1.25; }
+/* Tam genişlikteki düğme dar kutuda taşmaz: kenar payı küçüktür. */
+.btn--block { width: 100%; padding-inline: var(--sp-3); }
 /* Güvenli eylem: bağlayıcı adım düğmesi ile altındaki güvence satırı tek bir gruptur.
    Satır, düğmeye basınca ne olacağını söyler. */
 .secure { display: grid; gap: var(--sp-3); }
@@ -404,7 +449,7 @@ html.js [data-reveal].is-in .dlink__bar { transform: scaleX(var(--p, 1)); }
 .picto { display: inline-grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: var(--r-2); background: var(--a-100); color: var(--a-700); }
 .picto--sm { width: 36px; height: 36px; border-radius: 10px; }
 .picto--ok { background: var(--ok-bg); color: var(--ok); }
-.picto--ink, .on-ink .picto { background: rgba(255, 255, 255, 0.1); color: var(--on-ink); }
+.picto--ink, .on-ink .picto { background: var(--ink-fill); color: var(--on-ink); }
 .on-ink .on-paper .picto { background: var(--a-100); color: var(--a-700); }
 .on-ink .on-paper .picto--ok { background: var(--ok-bg); color: var(--ok); }
 
@@ -469,7 +514,7 @@ html.js [data-reveal].is-in .dlink__bar { transform: scaleX(var(--p, 1)); }
 }
 
 /* Bölmeli seçici: beyaz gösterge seçilen seçeneğin altına kayar. */
-.seg { position: relative; display: inline-flex; max-width: 100%; padding: 4px; border-radius: var(--r-2); background: rgba(255, 255, 255, 0.1); }
+.seg { position: relative; display: inline-flex; max-width: 100%; padding: 4px; border-radius: var(--r-2); background: var(--ink-fill); }
 .seg button {
   position: relative; z-index: 1; min-height: var(--hit); padding: 0 var(--sp-4);
   border-radius: var(--r-1); font-weight: var(--w-medium); color: var(--on-ink-2); white-space: nowrap;
@@ -666,8 +711,10 @@ html:not(.js) .seg button[aria-selected="true"] { background: var(--surface); }
 .nav .rail__btn--next { right: var(--sp-2); }
 .nav__ask { display: none; }
 /* Satıcı bağlantısı üst satırın sağında durur. 375 pikselin altında kategori düğmesine çok yaklaşır.
-   Orada bağlantı gösterilmez, satıcılar bölümündeki ve alt bölümdeki bağlantı kalır. */
-@media (min-width: 375px) {
+   Orada bağlantı gösterilmez, satıcılar bölümündeki ve alt bölümdeki bağlantı kalır.
+   Sınır yazı boyutuna bağlıdır (23,4375em, varsayılan yazıda 375 px). Kullanıcı yazıyı büyütünce
+   iki öğe daha geniş bir ekran ister ve sınır onunla birlikte büyür. */
+@media (min-width: 23.4375em) {
   .nav__aside { display: flex; flex: none; margin-left: auto; margin-right: calc(var(--sp-3) * -1); }
 }
 /* 600 pikselden sonra tek satır: kategori düğmesi, ayırıcı, kayan bölüm bağlantıları. */
@@ -801,16 +848,7 @@ html:not(.js) .nav__all--nojs { display: inline-flex; }
 .band--tint { background-color: var(--sunken); }
 /* Koyu bant. Düz renk, geçişli zeminin en açık tonudur. Karşıtlık ölçümü bu tona göre yapılır. */
 .band--ink { background-color: var(--a-800); background-image: linear-gradient(165deg, var(--a-800), var(--a-950) 78%); color: var(--on-ink); isolation: isolate; }
-/* Koyu bandın ızgarası. Çizgiler arka plan görselidir, kenarlık değildir. Işığın olduğu yerde belirir.
-   Yatay çizgiler sayfa kaydıkça içerikten yavaş kayar (app.js --sy yazar). Bu, zemine derinlik verir. */
-.band--ink::before {
-  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 var(--sy, 0px) / 100% 64px,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 64px 100%;
-  -webkit-mask-image: radial-gradient(560px circle at var(--mx, 78%) var(--my, 12%), #000, transparent);
-  mask-image: radial-gradient(560px circle at var(--mx, 78%) var(--my, 12%), #000, transparent);
-}
+/* Koyu bandın ızgarası ve ışığı bandın içindeki .spot katmanında durur (4. bölüm). */
 /* Bölüm başlığı: sıra numarası, bölüm adı, ayırıcı çizgi, başlık, açıklama ve eylem. */
 .mh { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); margin-bottom: var(--head-gap); }
 .mh__top { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2); }
@@ -847,20 +885,25 @@ html:not(.js) .nav__all--nojs { display: inline-flex; }
 /* Başlık vurgusu: turuncunun sayfadaki en büyük kullanımı budur. */
 .hl { font-style: normal; color: var(--brand); }
 .line { display: block; overflow: hidden; padding-bottom: 0.1em; }
+/* Satır yalnız dikeyde kırpılır: aşağıdan yükselen yazı satırın altında görünmez.
+   Yatayda kırpılmaz. Böylece büyütülen yazıda uzun bir kelime kesilmez. */
+@supports (overflow: clip) {
+  .line { overflow-x: visible; overflow-y: clip; }
+}
 .line > span { display: block; animation: line-up var(--dur-4) var(--ease) both; animation-delay: calc(var(--i, 0) * var(--stagger)); }
 .hero__lead { margin-top: var(--sp-5); max-width: 36em; font-size: var(--t-lead); font-weight: var(--w-light); color: var(--on-ink-2); }
 .console { margin-top: var(--sp-7); max-width: 680px; }
 .console .search { margin-top: var(--sp-2); color: var(--text); }
-/* Sık arananlar: yazmadan tek dokunuşla sonuç sayfası. Kutucuklar alt alta sarar, yana kaymaz. */
+/* Örnek aramalar: yazmadan tek dokunuşla sonuç sayfası. Kutucuklar alt alta sarar, yana kaymaz. */
 .quick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); margin-top: var(--sp-4); max-width: 680px; }
 .quick__label { font-size: var(--t-sm); color: var(--on-ink-2); }
 .quick__list { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .chip {
   display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit); padding: 0 var(--sp-3) 0 10px;
-  border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.1); color: var(--on-ink); white-space: nowrap;
+  border-radius: var(--r-pill); background: var(--ink-fill); color: var(--on-ink); white-space: nowrap;
 }
 .chip svg { color: var(--a-300); }
-.chip:hover { background: rgba(255, 255, 255, 0.2); }
+.chip:hover { background: var(--ink-fill-hover); }
 .hero__alt { margin-top: var(--sp-4); color: var(--on-ink-2); }
 .hero__alt .lnk { margin-left: var(--sp-2); }
 /* Hızlı teklif isteği: koyu bandın üstünde duran açık kart. */
@@ -898,19 +941,24 @@ html:not(.js) .nav__all--nojs { display: inline-flex; }
   .row--hero { grid-template-columns: minmax(0, 1fr) 420px; column-gap: var(--sp-10); align-items: center; }
 }
 
-/* Gerekçeler: alıcı ve satıcı "çünkü" sorusuna burada yanıt bulur. Her gerekçe kendi kartında durur. */
+/* Gerekçeler: alıcı ve satıcı değeri ve kanıtını burada bulur. Her gerekçe kendi kartında durur. */
 .reasons, .sell__list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); counter-reset: neden; }
-.reason { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-4); align-items: start; padding: var(--sp-5); border-radius: var(--r-3); background: var(--sunken); counter-increment: neden; }
+/* Kart tıklanmaz. Bu yüzden üzerine gelince değişmez. */
+.reason { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); align-items: start; align-content: start; padding: var(--sp-5); border-radius: var(--r-3); background: var(--sunken); counter-increment: neden; }
 .band--tint .reason { background: var(--surface); }
 /* Sıra numarası kartın sağ üst köşesinde durur. Süs değildir, kaç gerekçe olduğunu gösterir. */
 .reason::before { content: counter(neden, decimal-leading-zero); position: absolute; top: var(--sp-5); right: var(--sp-5); font-weight: var(--w-medium); color: var(--a-600); font-variant-numeric: tabular-nums; }
-.reason__why { font-size: var(--t-sm); font-weight: var(--w-medium); letter-spacing: 0.1em; text-transform: uppercase; color: var(--a-600); }
-.reason h3 { margin-top: 2px; padding-right: var(--sp-7); font-size: var(--t-h3); font-weight: var(--w-bold); line-height: 1.2; letter-spacing: -0.02em; }
+/* Başlık, sağ üstteki sıra numarasına değmesin diye sağda pay bırakır. */
+.reason h3 { margin-top: 2px; padding-right: var(--num-space); font-size: var(--t-h3); font-weight: var(--w-bold); line-height: 1.2; letter-spacing: -0.02em; }
 .reason p { margin-top: var(--sp-2); color: var(--text-2); }
-.reason p.reason__why { margin-top: 0; color: var(--a-600); }
+/* Dar ekranda piktogram solda, metin sağda durur. Sınır yazı boyutuna bağlıdır (em):
+   kullanıcı yazıyı büyütünce piktogram üste geçer ve uzun kelimeye satırın tamamı kalır. */
+@media (min-width: 18em) and (max-width: 639px) {
+  .reason { grid-template-columns: auto minmax(0, 1fr); }
+}
 @media (min-width: 640px) {
   .reasons, .sell__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
-  .reason { grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); padding: var(--sp-6); }
+  .reason { gap: var(--sp-5); padding: var(--sp-6); }
   .reason::before { top: var(--sp-6); right: var(--sp-6); }
 }
 @media (min-width: 1024px) {
@@ -923,6 +971,11 @@ html:not(.js) .nav__all--nojs { display: inline-flex; }
 /* Kutunun başlığı tek bir bağlantıdır: piktogram, ad ve sayı birlikte tıklanır. */
 .dir__head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-4); align-items: center; border-radius: var(--r-2); }
 .dir__head h3 { font-size: 1.0625rem; font-weight: var(--w-bold); line-height: 1.25; }
+/* Kullanıcı yazıyı büyütünce dar ekranda piktogram başlığın üstüne geçer. Uzun kelime ("Malzemeleri") satıra sığar. */
+@media (max-width: 19.99em) {
+  .dir__head { grid-template-columns: minmax(0, 1fr) auto; }
+  .dir__head > .picto { grid-column: 1 / -1; }
+}
 .dir__head small { font-size: var(--t-sm); color: var(--text-3); }
 .dir__head > svg { color: var(--text-3); transition: transform var(--dur-2) var(--ease); }
 .dir__head:hover > svg { transform: translateX(4px); }
@@ -1025,14 +1078,19 @@ html:not(.js) .nav__all--nojs { display: inline-flex; }
 .tl h3 { padding-top: var(--sp-1); font-size: var(--t-h3); font-weight: var(--w-bold); line-height: 1.2; letter-spacing: -0.02em; }
 .tl h3 b { margin-right: var(--sp-2); color: var(--a-300); font-variant-numeric: tabular-nums; }
 .tl p { margin-top: var(--sp-2); max-width: 46ch; color: var(--on-ink-2); }
-.tl > li > div { opacity: 0.8; transition: opacity var(--dur-2) var(--ease); }
-.tl > li.is-on > div, html:not(.js) .tl > li > div { opacity: 1; }
+/* Geçilen adımın piktogramı açık renge döner. Adımın metni her zaman tam görünür.
+   Metin soluk başlasaydı ışığın altında okunmazdı. */
 .tl > li.is-on > .picto { background: var(--surface); color: var(--a-800); }
-/* Ödeme yöntemleri: her yöntem piktogramı ve adıyla ayrı bir kutuda durur. Tıklanmaz, bu yüzden düğme gibi görünmez. */
+/* Ödeme yöntemleri: her yöntem piktogramı ve adıyla durur. Yöntem tıklanmaz. Bu yüzden kutusu ve dolgusu yoktur. */
 .pay { display: grid; gap: var(--sp-4); margin-top: var(--sp-8); padding-top: var(--sp-6); border-top: 1px solid var(--line-ink); }
-.ptiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
-/* Dar ekranda piktogram üstte, ad altta durur. Böylece uzun ad kutuya sığar. */
-.ptile { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); align-content: start; min-width: 0; padding: var(--sp-3); border-radius: var(--r-2); background: rgba(255, 255, 255, 0.06); font-weight: var(--w-medium); line-height: 1.25; }
+.ptiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5) var(--sp-3); }
+/* Dar ekranda piktogram üstte, ad altta durur. Böylece uzun ad sütuna sığar. */
+.ptile { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); align-content: start; min-width: 0; font-weight: var(--w-medium); line-height: 1.25; }
+/* Kullanıcı yazıyı büyütünce dar ekranda ödeme yöntemleri tek sütun olur. Uzun ad ("Thoptan.com") kutuya sığar.
+   Sınır yazı boyutuna bağlıdır (em). Varsayılan yazıda 320 CSS px genişlikte iki sütun kalır. */
+@media (max-width: 19.99em) {
+  .ptiles { grid-template-columns: minmax(0, 1fr); }
+}
 .flow__more { margin-top: var(--sp-5); }
 /* Örnek sipariş paneli: alıcının sipariş vermeden önce gördüğü koşullar. */
 .op { padding: var(--sp-5); border-radius: var(--r-4); background: var(--surface); color: var(--text); box-shadow: var(--shadow-3); }
@@ -1050,13 +1108,16 @@ html:not(.js) .nav__all--nojs { display: inline-flex; }
 }
 @media (min-width: 600px) {
   .op { padding: var(--sp-7); }
-  .ptiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); }
-  .ptile { grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-3); align-items: center; align-content: center; min-height: 64px; }
+  .ptiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-5) var(--sp-4); }
+  .ptile { grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-3); align-items: center; }
 }
 @media (min-width: 1000px) {
   .flow__grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: var(--sp-10); align-items: start; }
-  .flow__demo { position: sticky; top: calc(var(--header-h) + var(--sp-7)); }
   .tl { gap: var(--sp-8); }
+}
+/* Örnek sipariş paneli yalnız ekrana tümüyle sığıyorsa yapışır. Kısa ekranda panelin altı ekranın dışında kalırdı. */
+@media (min-width: 1000px) and (min-height: 860px) {
+  .flow__demo { position: sticky; top: calc(var(--header-h) + var(--sp-7)); }
 }
 
 /* Sık sorulanlar: yanıt yüksekliği yumuşak açılır. */
@@ -1108,33 +1169,57 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
 }
 
 /* 10. Dizin ve alt bölüm -------------------------------------------------- */
-/* Dizin: her grup ürünleri başka bir yoldan bulur. Öğenin yanında canlı sonuç sayısı yazar.
+/* Katlanan grup: dizin grupları ve alt bölüm sütunları aynı yapıyı kullanır.
+   Dar ekranda başlık bir düğmedir. Grup onunla açılır ve kapanır, yüksekliği yumuşak değişir.
+   Geniş ekranda, kâğıtta ve betik yokken başlık düz yazıdır ve grup hep açıktır.
+   Başlığın iki hali de sayfada durur (fold__label ve fold__btn). Genişliğe göre yalnız biri görünür.
+   Açık olma durumunu data-open taşır. Kapalı grubun içeriği klavyeden ve ekran okuyucudan gizlidir (visibility). */
+.fold__h { font-size: inherit; font-weight: inherit; line-height: inherit; }
+.fold__btn { display: none; width: 100%; text-align: left; }
+.fold__btn .chev { transition: transform var(--dur-2) var(--ease); }
+.fold__btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.fold__panel {
+  display: grid; grid-template-rows: 1fr;
+  transition:
+    grid-template-rows var(--dur-3) var(--ease),
+    visibility var(--dur-3) var(--ease);
+}
+.fold__panel > div { min-height: 0; }
+/* Dizin: her grup ürünleri başka bir yoldan bulur. Bağlantının yanındaki sayı canlı sitedeki sonuç sayısıdır.
    Çubuk, sayının gruptaki en büyük sayıya oranını gösterir. Sayı çubuktan değil, yazıdan okunur. */
 .dgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
 .dgroup { padding: 0 var(--sp-4); border-radius: var(--r-3); background: var(--sunken); }
-.dgroup summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-3); align-items: center; min-height: 72px; padding-block: var(--sp-3); cursor: pointer; list-style: none; border-radius: var(--r-2); }
-.dgroup summary::-webkit-details-marker { display: none; }
-.dgroup summary > svg { transition: transform var(--dur-2) var(--ease); }
-.dgroup[open] summary > svg { transform: rotate(180deg); }
+.dgroup .fold__label, .dgroup .fold__btn { grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-3); align-items: center; min-height: 72px; padding-block: var(--sp-3); border-radius: var(--r-2); }
+.dgroup .fold__label { display: grid; }
 .dgroup .picto { background: var(--surface); }
-.dgroup h3 { font-size: 1.0625rem; font-weight: var(--w-bold); line-height: 1.25; }
-.dgroup small { display: block; font-size: var(--t-sm); color: var(--text-3); }
+.fold__name { display: block; font-size: 1.0625rem; font-weight: var(--w-bold); line-height: 1.25; }
+.dgroup small { display: block; font-size: var(--t-sm); font-weight: var(--w-regular); color: var(--text-3); }
 .dgroup ul { padding-bottom: var(--sp-4); }
 .dlink { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: var(--sp-3); min-height: var(--hit-list); padding-block: 6px; border-radius: var(--r-1); line-height: 1.3; }
-.dlink__t { color: var(--text); text-decoration: underline; text-decoration-color: var(--underline); text-underline-offset: 4px; }
+/* Çubuk bağlantının alt kenarına değen düz bir çizgidir. Çizginin değdiği iki köşe yuvarlak değildir. */
+.dlink--n { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.dlink__t {
+  color: var(--text); text-decoration: underline; text-decoration-color: var(--underline); text-underline-offset: 4px;
+  transition:
+    color var(--dur-1) var(--ease),
+    text-decoration-color var(--dur-1) var(--ease);
+}
 .dlink:hover .dlink__t { color: var(--a-700); text-decoration-color: currentColor; }
 .dlink__k { grid-column: 1; font-size: var(--t-sm); color: var(--text-3); }
 .dlink__n { grid-column: 2; grid-row: 1; font-weight: var(--w-medium); color: var(--text-2); font-variant-numeric: tabular-nums; }
 .dlink > svg { color: var(--text-3); transition: transform var(--dur-2) var(--ease); }
 .dlink:hover > svg { transform: translateX(3px); }
-.dlink__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: var(--r-pill); background: var(--a-400); transform: scaleX(var(--p, 1)); transform-origin: left center; }
-.dlink:hover .dlink__bar { background: var(--a-700); }
+.dlink__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--a-400); transform: scaleX(var(--p, 1)); transform-origin: left center; }
+/* Dar ekranda grup düğmeyle açılır. Kural yalnız ekranda ve betik varken geçerlidir. */
+@media screen and (max-width: 699px) {
+  html.js .dgroup .fold__label { display: none; }
+  html.js .dgroup .fold__btn { display: grid; }
+  html.js .dgroup .fold__panel > div { overflow: hidden; }
+  html.js .dgroup[data-open="false"] .fold__panel { grid-template-rows: 0fr; visibility: hidden; }
+}
 @media (min-width: 700px) {
   .dgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
   .dgroup { padding: var(--sp-2) var(--sp-5) var(--sp-3); }
-  /* Geniş ekranda gruplar hep açıktır. Başlık bir düğme değildir. */
-  .dgroup summary { cursor: default; pointer-events: none; }
-  .dgroup summary > svg { display: none; }
 }
 @media (min-width: 1100px) {
   .dgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1143,40 +1228,42 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
 /* Alt bölüm. Beş katman: marka ile dil ve para birimi, kişiye göre bağlantılar,
    içerik türüne göre bağlantılar, ödeme yöntemleri, yasal satır. Katmanları nötr çizgi ayırır. */
 .footer { position: relative; background: var(--a-950); color: var(--on-ink); isolation: isolate; }
-.footer .spot i { left: var(--mx, 12%); top: var(--my, 0%); background: radial-gradient(closest-side, rgba(79, 136, 207, 0.22), rgba(79, 136, 207, 0)); }
+/* Alt bölümde ızgara yoktur. Işık solda ve üstte başlar. */
+.footer .spot::before { content: none; }
+.footer .spot i { left: 12%; top: 0%; background: radial-gradient(closest-side, rgba(79, 136, 207, 0.22), rgba(79, 136, 207, 0)); }
 .footer__lead { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-8); padding-block: var(--sp-10) var(--sp-8); }
 .footer__brand p { margin-top: var(--sp-4); max-width: 18em; font-size: var(--t-h3); font-weight: var(--w-medium); line-height: 1.2; letter-spacing: -0.02em; }
 .footer__brand small { display: block; margin-top: var(--sp-3); max-width: 28em; font-size: var(--t-body); color: var(--on-ink-2); }
 .footer__brand img { height: 32px; width: auto; filter: invert(1) hue-rotate(180deg); }
 .socials { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-5); }
-.socials a { display: grid; place-items: center; width: var(--hit); height: var(--hit); border-radius: var(--r-2); background: rgba(255, 255, 255, 0.1); }
-.socials a:hover { background: rgba(255, 255, 255, 0.22); }
+.socials a { display: grid; place-items: center; width: var(--hit); height: var(--hit); border-radius: var(--r-2); background: var(--ink-fill); }
+.socials a:hover { background: var(--ink-fill-hover); }
 .footer__label { font-size: var(--t-sm); font-weight: var(--w-medium); letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-ink-2); }
 /* Dil ve para birimi: her seçenek bir kutudur. Seçili kutu dolgulu ve işaretlidir. */
 .prefs { display: grid; gap: var(--sp-3); align-content: start; }
 .prefs__group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
-.pref { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-3); align-items: center; min-height: 56px; padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2); border-radius: var(--r-2); background: rgba(255, 255, 255, 0.08); text-align: left; }
-.pref:hover { background: rgba(255, 255, 255, 0.16); }
-.pref__mark { display: grid; place-items: center; min-width: 40px; height: 40px; padding: 0 6px; border-radius: var(--r-1); background: rgba(255, 255, 255, 0.12); font-style: normal; font-weight: var(--w-bold); font-variant-numeric: tabular-nums; transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
-.pref__t { min-width: 0; line-height: 1.25; }
+/* Kutu iki satırdır: üstte simge ile seçim işareti, altta ad. Ad kutunun bütün genişliğini kullanır.
+   Böylece en dar ekranda da ad, seçim işaretinin altına girmez. */
+.pref { display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--sp-2); align-items: center; min-height: 56px; padding: var(--sp-3); border-radius: var(--r-2); background: var(--ink-fill); text-align: left; }
+.pref:hover { background: var(--ink-fill-hover); }
+.pref__mark { grid-column: 1; grid-row: 1; justify-self: start; display: grid; place-items: center; min-width: 44px; height: 40px; padding: 0 6px; border-radius: var(--r-1); background: var(--ink-fill); font-style: normal; font-weight: var(--w-bold); font-variant-numeric: tabular-nums; transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+.pref__t { grid-column: 1 / -1; grid-row: 2; min-width: 0; line-height: 1.25; }
 .pref__t b { display: block; font-weight: var(--w-medium); }
 .pref__t small { display: block; font-size: var(--t-sm); color: var(--on-ink-2); transition: color var(--dur-1) var(--ease); }
-.pref__on { opacity: 0; transition: opacity var(--dur-1) var(--ease); }
+.pref__on { grid-column: 2; grid-row: 1; opacity: 0; transition: opacity var(--dur-1) var(--ease); }
 .pref[aria-checked="true"] { background: var(--surface); color: var(--ink); }
 .pref[aria-checked="true"] .pref__mark { background: var(--ink); color: var(--on-ink); }
 .pref[aria-checked="true"] .pref__t small { color: var(--text-2); }
 .pref[aria-checked="true"] .pref__on { opacity: 1; }
-.prefs__note, .footer__note, .plan__note { font-size: var(--t-sm); color: var(--on-ink-2); }
+.prefs__note, .footer__note { font-size: var(--t-sm); color: var(--on-ink-2); }
 /* Bağlantı katmanları */
 .footer__nav { padding-block: var(--sp-7) var(--sp-5); border-top: 1px solid var(--line-ink); }
 .footer__cols { margin-top: var(--sp-2); }
 .fgroup { border-bottom: 1px solid var(--line-ink); }
-.fgroup summary { display: flex; align-items: center; gap: var(--sp-3); min-height: 56px; font-weight: var(--w-bold); cursor: pointer; list-style: none; border-radius: var(--r-1); }
-.fgroup summary::-webkit-details-marker { display: none; }
-.fgroup summary span { flex: 1; }
+.fgroup .fold__label, .fgroup .fold__btn { align-items: center; gap: var(--sp-3); min-height: 56px; font-weight: var(--w-bold); border-radius: var(--r-1); }
+.fgroup .fold__label { display: flex; }
+.fgroup .fold__label span, .fgroup .fold__btn span { flex: 1; }
 .fgroup__i { color: var(--a-300); }
-.fgroup summary .chev { transition: transform var(--dur-2) var(--ease); }
-.fgroup[open] summary .chev { transform: rotate(180deg); }
 .fgroup ul { padding-bottom: var(--sp-3); }
 .fgroup a {
   display: flex; align-items: center; min-height: var(--hit-list); color: var(--on-ink-2); border-radius: var(--r-1);
@@ -1184,35 +1271,33 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
 }
 .fgroup a:hover { color: var(--on-ink); text-decoration-color: currentColor; }
 /* Planlanan içerik türleri: canlı sitede karşılığı olmayan öneriler. Bağlantı değildir, bu yüzden alt çizgisi yoktur. */
-.plan { display: grid; gap: var(--sp-2); margin-top: var(--sp-5); padding: var(--sp-4); border-radius: var(--r-2); background: rgba(255, 255, 255, 0.05); }
-.plan__t { font-weight: var(--w-bold); }
-.plan ul { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-5); color: var(--on-ink-2); }
-/* Ödeme yöntemleri: piktogram ve ad birlikte. */
+/* Ödeme yöntemleri: piktogram ve ad birlikte. Yöntem tıklanmaz, bu yüzden dolgulu kutu değil düz satırdır. */
 .footer__pay { display: grid; gap: var(--sp-3); padding-block: var(--sp-6); border-top: 1px solid var(--line-ink); }
-.paylist { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.paylist li { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: 40px; padding: 0 var(--sp-3) 0 10px; border-radius: var(--r-2); background: rgba(255, 255, 255, 0.07); }
+.paylist { display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-6); }
+.paylist li { display: inline-flex; align-items: center; gap: var(--sp-2); }
 .paylist svg { color: var(--a-300); }
 .footer__legal { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-6); padding-block: var(--sp-5) var(--sp-9); border-top: 1px solid var(--line-ink); font-size: var(--t-sm); color: var(--on-ink-2); }
 .footer__legal ul { display: flex; flex-wrap: wrap; gap: 0 var(--sp-5); }
 .footer__legal li a { display: inline-flex; align-items: center; min-height: var(--hit); border-radius: var(--r-1); text-decoration: underline; text-decoration-color: var(--underline-ink); text-underline-offset: 4px; }
 .footer__legal li a:hover { color: var(--on-ink); text-decoration-color: currentColor; }
+/* Dar ekranda sütun düğmeyle açılır. Kural yalnız ekranda ve betik varken geçerlidir. */
+@media screen and (max-width: 1023px) {
+  html.js .fgroup .fold__label { display: none; }
+  html.js .fgroup .fold__btn { display: flex; }
+  html.js .fgroup .fold__panel > div { overflow: hidden; }
+  html.js .fgroup[data-open="false"] .fold__panel { grid-template-rows: 0fr; visibility: hidden; }
+}
 @media (min-width: 480px) {
   .prefs__group { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .pref { grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--sp-2); padding: var(--sp-3); }
-  .pref__mark { grid-column: 1; grid-row: 1; justify-self: start; min-width: 44px; }
-  .pref__on { grid-column: 2; grid-row: 1; }
-  .pref__t { grid-column: 1 / -1; grid-row: 2; }
 }
 @media (min-width: 1024px) {
   .footer__lead { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--sp-10); padding-block: var(--sp-11) var(--sp-9); }
   .footer__nav { padding-block: var(--sp-8) var(--sp-7); }
   .footer__cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--sp-7); margin-top: var(--sp-4); }
   .footer__cols--types { grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: var(--sp-6); }
-  /* Geniş ekranda sütunlar hep açıktır. Başlık bir düğme değildir. */
+  /* Geniş ekranda sütunlar hep açıktır. Başlık düz yazıdır. */
   .fgroup { border: 0; }
-  .fgroup summary { min-height: 0; margin-bottom: var(--sp-3); cursor: default; pointer-events: none; }
-  .fgroup summary .chev { display: none; }
-  .plan { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2) var(--sp-6); }
+  .fgroup .fold__label { min-height: 0; margin-bottom: var(--sp-3); }
 }
 
 /* 11. Sabit çubuklar ----------------------------------------------------- */
@@ -1222,7 +1307,9 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
   padding: 0 var(--sp-2) env(safe-area-inset-bottom, 0px);
   background: var(--surface); box-shadow: 0 -1px 0 var(--line);
 }
-.bottomnav a { position: relative; flex: 1 1 auto; min-width: var(--hit); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 68px; font-size: var(--t-sm); color: var(--text-2); white-space: nowrap; }
+/* Beş etiket tek satırda durur. Etiketin boyutu ekran genişliğiyle de sınırlanır (vw):
+   kullanıcı kök yazı boyutunu büyütünce etiketler ekrandan taşmaz. Etiket 14 CSS px altına inmez. */
+.bottomnav a { position: relative; flex: 1 1 auto; min-width: var(--hit); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 68px; font-size: min(var(--t-sm), 4.4vw); color: var(--text-2); white-space: nowrap; }
 .bottomnav a[aria-current="page"] { color: var(--a-700); font-weight: var(--w-bold); }
 .bottomnav .count { left: calc(50% + 2px); top: 8px; }
 .bottomnav__main i { display: grid; place-items: center; width: 48px; height: 32px; border-radius: var(--r-2); background: var(--brand); color: var(--on-brand); }
@@ -1244,9 +1331,171 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
    Böylece dar ekranda dar bir sütuna sıkışıp çubuğu yükseltmez. */
 .cartbar__note { flex: 1 0 100%; }
 .cartbar b { font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+/* Kısa ekranda (yatay telefon) sabit çubuklar incelir. Alt gezinmede simge ile etiket yan yana durur,
+   sepet çubuğu tek satıra iner. Böylece iki çubuk birlikte ekranın büyük bölümünü örtmez. */
+@media (max-height: 480px) and (max-width: 1023px) {
+  .bottomnav a { flex-direction: row; gap: var(--sp-2); height: 48px; }
+  .bottomnav .count { position: static; }
+  .cartbar { flex-wrap: nowrap; padding-block: var(--sp-2); }
+  .cartbar__note { order: 1; flex: 1 1 0; }
+  .cartbar .btn { order: 2; flex: none; }
+}
 @media (min-width: 1024px) {
   .bottomnav { display: none; }
   .cartbar { left: auto; right: var(--sp-6); bottom: var(--sp-6); min-width: 400px; }
+}
+
+/* 11b. Altıncı sürümün bölümleri ----------------------------------------- */
+/* Hareketli yüzeyler: ticaret ağı, nokta alanı ve sipariş rotası. Süstür, okuyucudan gizlidir ve tıklanmaz.
+   Yüzey ekrana girince bir kez çizilir (app.js is-on yazar). İşaretçi yanındayken çizgiler belirginleşir (is-near).
+   Sonsuz hareket yoktur. İçeriğin yeri değişmez, çünkü yüzey içeriğin arkasında mutlak konumdadır. */
+.surface { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; color: var(--surface-line); }
+.on-ink .surface { color: var(--surface-line-ink); }
+.surface ~ .wrap { position: relative; z-index: 1; }
+.surface svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.surface path { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--dur-5) var(--ease) calc(var(--i, 0) * var(--stagger)); }
+.surface circle { fill: currentColor; opacity: 0; transition: opacity var(--dur-3) var(--ease) calc(var(--i, 0) * var(--stagger)); }
+.surface.is-on path { stroke-dashoffset: 0; }
+.surface.is-on circle { opacity: 1; }
+.surface--rota path { stroke-width: 3; }
+/* İşaretçinin yanındaki parlak katman. Maske işaretçinin yerini izler, katman yalnız saydamlığını değiştirir. */
+.surface__hi, .surface--nokta::after {
+  opacity: 0; transition: opacity var(--dur-3) var(--ease);
+  -webkit-mask-image: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), #000, transparent);
+  mask-image: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), #000, transparent);
+}
+.surface__hi { color: var(--surface-hi); }
+.on-ink .surface__hi { color: var(--surface-hi-ink); }
+.surface.is-near .surface__hi, .surface--nokta.is-near::after { opacity: 1; }
+/* Nokta alanı: düzenli noktalar. Ekrana girince belirir. */
+.surface--nokta::before, .surface--nokta::after { content: ""; position: absolute; inset: 0; background: radial-gradient(currentColor 1.5px, transparent 2px) 0 0 / 28px 28px; }
+.surface--nokta::before { opacity: 0; transition: opacity var(--dur-4) var(--ease); }
+.surface--nokta.is-on::before { opacity: 1; }
+.surface--nokta::after { color: var(--surface-hi); }
+.on-ink .surface--nokta::after { color: var(--surface-hi-ink); }
+/* Betik yoksa yüzey çizilmiş haliyle durur. */
+html:not(.js) .surface path { stroke-dashoffset: 0; }
+html:not(.js) .surface circle, html:not(.js) .surface--nokta::before { opacity: 1; }
+
+/* Karşılamadaki iki yol: alıcı ve satıcı amacını ayrı seçer. Kart tıklanır, bu yüzden dolguludur. */
+.paths { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); margin-top: var(--sp-6); max-width: 680px; }
+.path {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-4); align-items: center;
+  min-height: var(--hit); padding: var(--sp-4); border-radius: var(--r-3); background: var(--ink-fill); color: var(--on-ink);
+  transition: background-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+.path:hover { background: var(--ink-fill-hover); }
+.path__t { display: grid; gap: var(--sp-1); }
+.path b { font-size: 1.0625rem; font-weight: var(--w-bold); }
+.path small { font-size: var(--t-sm); color: var(--on-ink-2); }
+@media (min-width: 600px) {
+  .paths { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Teklif kutusu: formun ne işe yaradığı, anında güncellenen özet ve sonraki adımlar. */
+.rfqbox__why { margin-top: var(--sp-2); color: var(--text-2); }
+.rfqbox__sum { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-3); align-items: start; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-2); background: var(--sunken); color: var(--text); }
+.rfqbox__sum svg { margin-top: 2px; color: var(--a-600); }
+.rfqbox__next { margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: 1px solid var(--line); font-weight: var(--w-bold); }
+.rfqbox__next + .rfqbox__steps { margin-top: var(--sp-3); padding-top: 0; border-top: 0; }
+
+/* Planlanan hizmet ve içerik. Etiket her planlanan bölgenin başında durur ve gözle hemen seçilir. */
+.plan-tag { display: inline-flex; align-items: center; gap: var(--sp-2); width: fit-content; margin-bottom: var(--sp-5); padding: var(--sp-1) var(--sp-3); border-radius: var(--r-pill); background: var(--a-100); color: var(--a-900); font-size: var(--t-sm); font-weight: var(--w-bold); }
+.on-ink .plan-tag { background: var(--ink-fill); color: var(--on-ink); }
+.plan-note { margin-top: var(--sp-6); max-width: 62ch; font-size: var(--t-sm); color: var(--text-3); }
+.on-ink .plan-note { color: var(--on-ink-2); }
+
+/* Değer kartları: her kart alıcının ve satıcının faydasını ayrı satırda yazar. Kart tıklanmaz. */
+.vals { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
+.val { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); align-items: start; align-content: start; padding: var(--sp-5); border-radius: var(--r-3); background: var(--sunken); }
+.band--tint .val { background: var(--surface); }
+.val h3 { font-size: var(--t-h3); font-weight: var(--w-bold); line-height: 1.2; letter-spacing: -0.02em; }
+.val__side { display: grid; gap: var(--sp-1); margin-top: var(--sp-3); color: var(--text-2); }
+.val__side b { font-size: var(--t-sm); font-weight: var(--w-bold); letter-spacing: 0.1em; text-transform: uppercase; color: var(--a-700); }
+@media (min-width: 18em) and (max-width: 639px) {
+  .val { grid-template-columns: auto minmax(0, 1fr); }
+}
+@media (min-width: 640px) {
+  .vals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .vals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Planlanan güvenli ödeme: bugünkü durum, beş adımlık akış ve iki tarafın faydası. */
+.pp { display: grid; gap: var(--sp-6); }
+.pp__now { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-3); align-items: start; max-width: 62ch; font-weight: var(--w-medium); }
+.pp__now svg { margin-top: 3px; color: var(--a-600); }
+.pp__flow { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); counter-reset: pp; }
+.pp__flow li { display: grid; align-content: start; gap: var(--sp-3); padding: var(--sp-5); border-radius: var(--r-3); background: var(--surface); counter-increment: pp; }
+.pp__who { display: flex; align-items: center; gap: var(--sp-3); }
+.pp__who b { font-weight: var(--w-bold); }
+.pp__who b::before { content: counter(pp) ". "; color: var(--a-700); }
+.pp__flow p { color: var(--text-2); }
+.pp__gains { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
+.pp__gain { padding: var(--sp-5); border-radius: var(--r-3); background: var(--ink); color: var(--on-ink); }
+.pp__gain h3 { font-size: var(--t-h3); font-weight: var(--w-bold); }
+.pp__gain p { margin-top: var(--sp-2); color: var(--on-ink-2); }
+.pp .plan-note { margin-top: 0; }
+@media (min-width: 640px) {
+  .pp__gains { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pp__flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .pp__flow { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+/* Hesaplama araçları: üç grup, her grupta dört araç. Kart tıklanmaz, içindeki "Neyi hesaplar?" düğmesi ayrıntıyı açar.
+   Ayrıntı sayfa içinde açılır. Betik yoksa açık durur (sık sorulanlarla aynı katlanan yapı). */
+.tgroups { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-8); }
+.tgroup h3 { margin-bottom: var(--sp-4); font-size: var(--t-h3); font-weight: var(--w-bold); }
+.tools { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
+.tool { display: grid; align-content: start; gap: var(--sp-2); padding: var(--sp-5); border-radius: var(--r-3); background: var(--ink-raised); }
+.tool h4 { font-size: 1.0625rem; font-weight: var(--w-bold); line-height: 1.25; }
+.tool__who { font-size: var(--t-sm); font-weight: var(--w-medium); color: var(--a-200); }
+.tool__gain { color: var(--on-ink-2); }
+.tool__btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2); width: fit-content; min-height: var(--hit); margin-top: var(--sp-1);
+  border-radius: var(--r-1); font-weight: var(--w-medium); color: var(--on-ink);
+  text-decoration: underline; text-decoration-color: var(--underline-ink); text-underline-offset: 4px;
+  transition: text-decoration-color var(--dur-2) var(--ease);
+}
+.tool__btn:hover { text-decoration-color: var(--on-ink); }
+.tool__btn .chev { transition: transform var(--dur-2) var(--ease); }
+.tool__btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.tool__panel p { margin-top: var(--sp-2); font-size: var(--t-sm); color: var(--on-ink-2); }
+.tool__panel p:last-child { padding-bottom: var(--sp-2); font-weight: var(--w-medium); color: var(--on-ink); }
+@media (min-width: 640px) {
+  .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .tools { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* İçerik kütüphanesi (alt bölüm). Her tür üç ya da dört öğe taşır. Öğe sayfa içinde açılan bir açıklamadır. */
+.lib { margin-top: var(--sp-7); padding-top: var(--sp-7); border-top: 1px solid var(--line-ink); }
+.lib__head h2 { font-size: var(--t-h3); font-weight: var(--w-bold); }
+.lib__note, .lib__d { margin-top: var(--sp-2); max-width: 62ch; font-size: var(--t-sm); color: var(--on-ink-2); }
+.lib__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); margin-top: var(--sp-6); }
+.lib__type { display: grid; align-content: start; gap: var(--sp-2); }
+.lib__type h3 { font-weight: var(--w-bold); }
+.lib__list { margin-top: var(--sp-2); }
+.libq { border-bottom: 1px solid var(--line-ink); }
+.libq h4 { font-size: inherit; font-weight: inherit; }
+.libq button {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+  width: 100%; min-height: var(--hit); padding-block: var(--sp-2); border-radius: var(--r-1); text-align: left;
+  transition: color var(--dur-2) var(--ease);
+}
+.libq button:hover { color: var(--a-200); }
+.libq .chev { flex: none; transition: transform var(--dur-2) var(--ease); }
+.libq button[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.libq__panel p { padding-bottom: var(--sp-3); font-size: var(--t-sm); color: var(--on-ink-2); }
+@media (min-width: 640px) {
+  .lib__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .lib__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 /* 12. Hareket azaltma tercihi -------------------------------------------- */
@@ -1258,11 +1507,16 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
   html.js [data-reveal] .mh__bar { transform: none; }
   html.js [data-reveal] .dlink__bar { transform: scaleX(var(--p, 1)); }
   .ledger__line::after { display: none; }
+  /* Yüzey çizilmiş haliyle durur. İşaretçi ışığı yoktur. */
+  .surface path { stroke-dashoffset: 0; }
+  .surface circle, .surface--nokta::before { opacity: 1; }
+  .surface__hi, .surface--nokta::after { display: none; }
 }
 
 /* 13. Yazdırma -----------------------------------------------------------
    Kâğıtta hareket ve sabit çubuk yoktur. Gizli başlayan her içerik görünür olur.
-   Kapalı yanıtlar açılır, kayan şeritler alt alta dizilir, koyu bantlar zeminiyle basılır. */
+   Kapalı yanıtlar açılır, kayan şeritler alt alta dizilir, koyu bantlar zeminiyle basılır.
+   Katlanan gruplar kâğıtta hep açıktır: onları kapatan kural yalnız ekran içindir. */
 @media print {
   *, *::before, *::after { transition: none !important; animation: none !important; }
   html.js [data-reveal] { opacity: 1 !important; transform: none !important; }
@@ -1271,13 +1525,22 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
   html.js [data-reveal] .mh__bar { transform: none !important; }
   html.js [data-reveal] .dlink__bar { transform: scaleX(var(--p, 1)) !important; }
   html.js .faq__panel { grid-template-rows: 1fr !important; }
-  .tl li > div { opacity: 1 !important; }
   .header { position: static; }
-  .skip, .header__search, .header__bar, .mega, .bottomnav, .cartbar, .rail__btn, .rail-ctl, .spot { display: none !important; }
+  .skip, .header__search, .header__bar, .mega, .bottomnav, .cartbar, .rail__btn, .rail-ctl, .spot, .surface { display: none !important; }
   body { padding-bottom: 0; }
   .band, .footer, .util, .picto, .vb--pill, .btn, .rfqbox, .op, .sell__panel, .pref { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .mod { break-inside: avoid; }
+  /* Sayfa sonu bir kartın ortasına gelmez. Bölümün tamamı tek sayfaya zorlanmaz, yoksa kâğıtta büyük boşluk kalır. */
+  .reason, .dir__item, .pc, .sc, .dgroup, .faq, .op, .rfqbox, .sell__panel, .tl > li { break-inside: avoid; }
   [data-scroller] { -webkit-mask-image: none !important; mask-image: none !important; }
   .rail-x { flex-wrap: wrap; overflow: visible; }
   .crail { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding: 0; }
+}
+
+/* 14. Zorlanmış renklerde seçili durum ------------------------------------
+   Yalnız dolguyla anlatılan durumlar sistemin seçim rengini alır: seçili süzgeç, seçili sekme, seçili seçenek
+   ve açık üst kategori. Yalnız dolgudan oluşan çubuklar da öyle çizilir.
+   Bu blok dosyanın sonundadır. Böylece bileşenin kendi dolgusu, aynı özgüllükteki bu kuralı ezemez. */
+@media (forced-colors: active) {
+  .filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .mega__cat[aria-expanded="true"] { background-color: Highlight; color: HighlightText; }
+  .header__bar, .rail-ctl__bar, .tl__fill, .dlink__bar { background-color: Highlight; }
 }
