@@ -411,7 +411,7 @@ OZNITELIK_METNI = [
     "iStoc ana sayfa", "Ürün arayın", "Kategori menüsü", "Bölümleri geri kaydırın", "Bölümleri ileri kaydırın",
     "Arama türü", "Örnek: saklama kabı", "Örnek: #", "Ürünleri süzün", "Süzgeçleri geri kaydırın", "Süzgeçleri ileri kaydırın",
     "Önceki kartlar", "Sonraki kartlar", "# adet azaltın", "# adet artırın", "Para birimi", "Ana gezinme",
-    "istoc.com sepetini açın. Örnek sepette # ürün var.", "Toplam #",
+    "Sepet sayfasını istoc.com'da açın. Örnek sepette # ürün var.", "Toplam #",
 ]
 # Yalnız önizleme derlemesinde bulunan görünmeyen metin
 ONIZLEME_OZNITELIK = ["Öneri notu"]
@@ -425,7 +425,7 @@ ONIZLEME_TASARIM = []
 # kapi.mjs, app.js içindeki her Türkçe metnin bu listede olduğunu denetler.
 BETIK_METNI = [
     "Ürün arayın", "Üretici arayın", "Ürün adını yazın.",
-    "istoc.com sepetini açın. Örnek sepette", "ürün var.", "ürün,", "Sepetiniz boş", "adet ekleyin",
+    "Sepet sayfasını istoc.com'da açın. Örnek sepette", "ürün var.", "ürün,", "Sepetiniz boş", "Sepetten çıkarın", "adet ekleyin",
     "adet örnek sepette. Ürün istoc.com sepetine eklenmedi.", "örnek sepetten çıkarıldı.",
     "ürün gösteriliyor.",
     "seçildi. Bu öneride dil seçimi sayfanın dilini değiştirmez.",

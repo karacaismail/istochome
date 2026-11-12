@@ -138,7 +138,10 @@ function checkCss(source) {
   for (const r of rules) {
     // Hareket azaltma tercihinde ve kâğıtta hareket yoktur. Bu iki bağlamda "none" serbesttir.
     const still = /prefers-reduced-motion:\s*reduce/.test(r.context) || /@media\s+print\b/.test(r.context);
-    const forced = /forced-colors:\s*active/.test(r.context);
+    // Zorlanmış renk bağlamı: @media koşulu zorlanmış renkleri olumlu ister. "not" ve virgüllü liste kabul edilmez.
+    // Örneğin "@media not all and (forced-colors: active)", "(forced-colors: active), (min-width: 1px)"
+    // ya da "((forced-colors: active) or (min-width: 0))" geçmez.
+    const forced = r.context.split(/(?=@)/).some((at) => /^@media\s/.test(at) && /\(forced-colors:\s*active\)/.test(at) && !/\bnot\b|\bor\b|,/.test(at));
     const keyframe = r.context.includes("@keyframes");
     const focusSel = /:focus/.test(r.selector);
     const selectors = splitTop(r.selector);
@@ -181,8 +184,16 @@ function checkCss(source) {
       // 2. Tasarım tokenları yalnız :root içinde tanımlanır.
       if (prop.startsWith("--") && r.selector !== ":root" && !LOCAL_VAR.test(prop)) fail("token", r.selector, `token yalnız :root içinde tanımlanır: ${prop}`);
 
-      // 3. Odak: çevreleyen halka yok. Tek istisna forced-colors.
-      if (prop.startsWith("outline") && !/^(none|0)$/.test(value) && !forced) fail("odak", r.selector, `outline yasak: ${value}`);
+      // 3. Odak: çevreleyen halka yok. Tek istisna 15 Ekim 2026 kararıdır: zorlanmış renklerde, klavye modunda,
+      //    :focus-visible öğede yalnız "outline: 2px solid CanvasText". Çerçevenin yeri (outline-offset) aynı koşulda ayarlanabilir.
+      //    Betiksiz sayfada klavye modu yoktur. Orada da çerçeve çizilmez.
+      if (prop.startsWith("outline") && !/^(none|0)$/.test(value)) {
+        // :not(...) içindeki :focus-visible sayılmaz. Örneğin a:not(:focus-visible) odak durumu değildir.
+        const positive = (s) => s.replace(/:not\((?:[^()]|\([^()]*\))*\)/g, "");
+        const kbOnly = forced && selectors.every((s) => s.startsWith('html[data-kb="on"]') && positive(s).includes(":focus-visible"));
+        const exact = prop === "outline" ? value === "2px solid CanvasText" : prop === "outline-offset";
+        if (!kbOnly || !exact) fail("odak", r.selector, `outline yasak: ${prop}: ${value}`);
+      }
       if (focusSel && !forced) {
         if (prop === "box-shadow") fail("odak", r.selector, "odakta box-shadow yasak");
         if (/^border(?!-radius)/.test(prop)) fail("odak", r.selector, `odakta kenarlık değişimi yasak: ${prop}`);
@@ -302,12 +313,15 @@ function walkTexts(doc) {
     if (m[4] !== undefined) {
       const t = squeeze(plainText(m[4]));
       const region = [...stack].reverse().find((s) => s.region);
-      if (t && region && stack.some((s) => s.tag) && PLAN_TAGS.includes(t)) region.region.tagged = true;
+      if (t && region && stack.some((s) => s.tag) && !stack.some((s) => s.unseen) && PLAN_TAGS.includes(t)) region.region.tagged = true;
       if (t && !stack.some((s) => s.skip)) for (const x of split(t)) texts.push({ t: x, plan: !!region });
     } else if (closing) {
       if (!VOID.has(tag) && stack.length) stack.pop();
     } else if (!VOID.has(tag)) {
-      const item = { skip: attrs.includes("data-veri") || attrs.includes("sr-only"), tag: /\bclass="[^"]*\bplan-tag\b/.test(attrs), region: null };
+      // Görünmeyen plan etiketi sayılmaz. Etiket ekranda görünmeli ve okunmalıdır.
+      // sr-only, hidden ya da aria-hidden taşıyan bir öğenin içindeki etiket planlanan bölgeyi işaretlemez.
+      const unseen = /\bclass="[^"]*\bsr-only\b/.test(attrs) || /\shidden(\s|=|$)/.test(attrs) || /aria-hidden="true"/.test(attrs);
+      const item = { skip: attrs.includes("data-veri") || attrs.includes("sr-only"), unseen, tag: /\bclass="[^"]*\bplan-tag\b/.test(attrs), region: null };
       if (/\sdata-plan(\s|=|$)/.test(attrs)) {
         item.region = { id: (attrs.match(/\bid="([^"]+)"/) || [])[1] || "", tagged: false };
         regions.push(item.region);
@@ -546,7 +560,7 @@ function checkHtml(html, yayin, ledger, classes, site) {
   // Cümle sayfada bir kez, kendi yerinin satırında geçer. Aynı satırdaki kaynak bağlantısı o olgunun kaynağına gider.
   // Bölüm, satıcıların iStoc'ta bulunduğu anlamına gelmediğini yazar.
   if (PAKET_HTML.test(html)) fail("paket", f, "sayfada yasak paket betiği");
-  // Yer verisi iki dosyadan gelir: tedarik merkezleri (data/bolgeler.json, tam 12) ve alıcı talep alanları (data/alicilar.json, tam 24).
+  // Yer verisi iki dosyadan gelir: tedarik merkezleri (data/bolgeler.json, en az 22, bugün 45) ve alıcı talep alanları (data/alicilar.json, tam 24).
   // Her dosyada kimlikler tekildir. Her kaydın türü ve etiketi uyumludur, teklif için 3 koşulu ve tek sektörü vardır.
   // Tür ilçe, semt, ticaret merkezi ya da sanayi bölgesidir. İlçenin etiketi "ilçesi" ile biter. Öteki türlerin etiketi türün adını taşır ve "ilçe" sözcüğünü kullanmaz, ilçenin adını yer olarak yazabilir.
   // Bir yerde (şehir ve normalleştirilmiş yer adı) en çok 2 farklı sektör (sektor_kodu) olur. İki dosyanın birleşimine uygulanır.
@@ -594,7 +608,11 @@ function checkHtml(html, yayin, ledger, classes, site) {
       (perPlace[yerAnahtari(y)] ||= new Set()).add(y.sektor_kodu);
       const urls = (y.fact && y.fact.source_url) || [];
       if (!iso(y.checked_at)) fail("olgu", set.file, `denetim günü yok: ${y.kimlik}`);
-      if (!urls.length || !urls.every((u) => /^https:\/\//.test(u)) || !urls.includes(y.fact.bagi)) fail("olgu", set.file, `olgunun kaynağı yok: ${y.kimlik}`);
+      // Görünen her kaynak (ana ve ek bağlantı) olgunun kaynak listesindedir ve bir bağlantı metni taşır.
+      const shownSrc = [y.fact.bagi, ...((y.fact.ek_baglar || []).map((e) => e.bagi))];
+      const srcText = [y.fact.bag_metni, ...((y.fact.ek_baglar || []).map((e) => e.bag_metni))];
+      if (!urls.length || !urls.every((u) => /^https:\/\//.test(u)) || !shownSrc.every((u) => urls.includes(u)) || new Set(shownSrc).size !== shownSrc.length) fail("olgu", set.file, `olgunun kaynağı yok: ${y.kimlik}`);
+      if (!srcText.every((t) => typeof t === "string" && /^Kaynak: /.test(t))) fail("olgu", set.file, `kaynak bağlantısının metni yok: ${y.kimlik}`);
       for (const t of sentences((y.fact && y.fact.metin) || "")) { own.set(t, y); allFacts.add(t); }
     }
     const start = html.indexOf(`id="${set.section}"`);
@@ -608,13 +626,15 @@ function checkHtml(html, yayin, ledger, classes, site) {
       const id = r.slice(0, r.indexOf('"'));
       const y = yerler.find((x) => x.kimlik === id);
       if (!y) { fail("olgu", f, `veride olmayan yer: ${id}`); continue; }
-      const href = (r.match(new RegExp(`<a\\b[^>]*href="([^"]+)"[^>]*${set.src}`)) || [])[1] || "";
-      if (!y.fact.source_url.includes(href.replace(/&amp;/g, "&"))) fail("olgu", f, `kaynak bağlantısı olgunun kaynağına gitmiyor: ${id}`);
+      // Satırdaki her kaynak bağlantısı olgunun kaynağına gider. Verideki her görünür kaynak satırda bulunur.
+      const hrefs = [...r.matchAll(new RegExp(`<a\\b[^>]*href="([^"]+)"[^>]*${set.src}`, "g"))].map((m) => m[1].replace(/&amp;/g, "&"));
+      if (!hrefs.length || hrefs.some((h) => !y.fact.source_url.includes(h))) fail("olgu", f, `kaynak bağlantısı olgunun kaynağına gitmiyor: ${id}`);
+      if (kaynakAdresleri(y).some((u) => !hrefs.includes(u))) fail("olgu", f, `görünmesi gereken kaynak satırda yok: ${id}`);
       const t = textOf(r.split(set.row)[0]);
       for (const [sent, owner] of own) if (owner === y && !t.includes(sent)) fail("olgu", f, `olgu kendi yerinin satırında yok: ${sent}`);
     }
     for (const sent of own.keys()) if (areaText.split(sent).length - 1 !== 1) fail("olgu", f, `olgu bölümde bir kez geçmeli: ${sent}`);
-    if (!set.talep && !areaText.includes("Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez.")) fail("olgu", f, "bölge bölümünde satıcı uyarısı yok");
+    if (!set.talep && !areaText.includes("Bir merkezin bu listede olması, oradaki satıcıların iStoc'ta olduğu anlamına gelmez.")) fail("olgu", f, "bölge bölümünde satıcı uyarısı yok");
     // Uzun liste tek akış olmaz: ilk 6 satır açıktır, kalanlar açılır paneldedir.
     if (!area.includes(set.more) || (area.split(set.more)[0].split(set.row).length - 1) !== 6) fail("bölge", f, `#${set.section}: ilk 6 satır açık, kalan satırlar açılır panelde olmalı`);
     if (set.talep) {
@@ -688,7 +708,10 @@ const siteSource = {
   bolge: readData("bolgeler.json"),
   alici: existsSync(join(here, "data", "alicilar.json")) ? readData("alicilar.json") : null,
 };
-siteSource.bolgeKaynak = new Set([...siteSource.bolge.yerler, ...((siteSource.alici || {}).yerler || [])].map((y) => y.fact.bagi));
+// Kaynak bağlantıları: her olgunun ana bağlantısı (bagi) ve ek bağlantıları (ek_baglar).
+// Alıcı bölümü yayın derlemesinde yoktur. Yayın denetiminde alıcı kaynakları geçerli adres sayılmaz.
+const kaynakAdresleri = (y) => [y.fact.bagi, ...((y.fact.ek_baglar || []).map((e) => e.bagi))];
+siteSource.bolgeKaynak = new Set([...siteSource.bolge.yerler, ...(yayin ? [] : ((siteSource.alici || {}).yerler || []))].flatMap(kaynakAdresleri));
 
 const motionSource = readMotion(here);
 
@@ -751,6 +774,14 @@ if (flags.has("--sinama")) {
     // Beşinci incelemenin bulduğu boşluk
     ["ekran genişliğiyle 14 px altına inen yazı", ".e1 { font-size: min(var(--t-sm), 4vw); }", "metin"],
     ["alt sınırı 14 px altında kalan max()", ".e2 { font-size: max(12px, 3vw); }", "metin"],
+    // Birleşik sürümün bağımsız incelemesinin bulguları
+    ["betiksiz sayfada zorlanmış renk çerçevesi", "@media (forced-colors: active) { html:not(.js) :focus-visible { outline: 2px solid CanvasText; } }", "odak"],
+    ["zorlanmış renklerde klavye modu dışında çerçeve", "@media (forced-colors: active) { .f1:focus-visible { outline: 2px solid CanvasText; } }", "odak"],
+    ["zorlanmış renklerde izinsiz çerçeve biçimi", '@media (forced-colors: active) { html[data-kb="on"] :focus-visible { outline: 3px dashed CanvasText; } }', "odak"],
+    ["olumsuz zorlanmış renk koşulunda çerçeve", '@media not all and (forced-colors: active) { html[data-kb="on"] :focus-visible { outline: 2px solid CanvasText; } }', "odak"],
+    ["virgüllü zorlanmış renk koşulunda çerçeve", '@media (forced-colors: active), (min-width: 1px) { html[data-kb="on"] :focus-visible { outline: 2px solid CanvasText; } }', "odak"],
+    ["odak dışı durumda çerçeve", '@media (forced-colors: active) { html[data-kb="on"] a:not(:focus-visible) { outline: 2px solid CanvasText; } }', "odak"],
+    ["veya ile zorlanmış renk koşulunda çerçeve", '@media ((forced-colors: active) or (min-width: 0)) { html[data-kb="on"] :focus-visible { outline: 2px solid CanvasText; } }', "odak"],
   ];
   cssCases.push(["yönlü yüzeyde token dışı eğri ve süre", ".surface__drift { transition: transform 300ms ease-out; }", "hareket"]);
   const jsCases = [
@@ -798,7 +829,8 @@ if (flags.has("--sinama")) {
     ["details ile katlanan grup", "<details><summary>Dizin</summary></details>", "katlanan grup"],
     ["düğmesi grubundan farklı durumda", '<div class="fgroup" data-fold data-open="true"><div class="fold__h"><button class="fold__btn" type="button" aria-expanded="false" aria-controls="yok-1">Dizin</button></div></div>', "katlanan grup"],
     // Altıncı sürüm: planlanan hizmet, jargon, kaldırılan metin ve ödeme vaadi
-    ["planlanan metin işaretsiz bölgede", `<p>${[...(classSource.plan || ["Planlanan metin yok."])].sort((x, y) => y.length - x.length)[0]}</p>`, "plan"],
+    // Yayın derlemesinde planlanan metin yoktur. Bu örnek yalnız önizlemede denenir.
+    ...((classSource.plan || []).length ? [["planlanan metin işaretsiz bölgede", `<p>${[...classSource.plan].sort((x, y) => y.length - x.length)[0]}</p>`, "plan"]] : []),
     ["etiketsiz planlanan bölge", '<div id="yeni-plan" data-plan><p>Bu sayfa bir tasarım önerisidir.</p></div>', "plan"],
     ["kullanıcı metninde RFQ", '<a href="/x">RFQ formu</a>', "jargon"],
     ["öznitelikte escrow", '<button type="button" aria-label="Escrow ile ödeyin">x</button>', "jargon"],
@@ -839,15 +871,22 @@ if (flags.has("--sinama")) {
     const ok = checkHtml(htmlSource, yayin, bad, classSource, siteSource).some((x) => x.rule === "olgu");
     if (ok) caught++; else lines.push(`FAIL kapı kaçırdı [olgu] ${name}`);
   }
+  // Planlanan bölgenin etiketi ekranda görünmelidir. Ekran okuyucuya özel etiket bölgeyi işaretlemez.
+  if (!yayin) {
+    const hiddenTag = htmlSource.replace('<p class="plan-tag">', '<p class="plan-tag sr-only">');
+    if (hiddenTag !== htmlSource && checkHtml(hiddenTag, yayin, ledgerSource, classSource, siteSource).some((x) => x.rule === "plan")) caught++;
+    else lines.push("FAIL kapı kaçırdı [plan] görünmeyen plan etiketi");
+  }
   // Tercih grubunda iki seçenek birden seçili olamaz.
   const twoOn = htmlSource.replace('aria-checked="false"', 'aria-checked="true"');
   if (twoOn !== htmlSource && checkHtml(twoOn, yayin, ledgerSource, classSource, siteSource).some((x) => x.rule === "tercih")) caught++;
   else lines.push("FAIL kapı kaçırdı [tercih] grupta iki seçili seçenek");
   // Bölgesel tedarik: kaynak uyarısının kaybı, kaynağı değişen bağlantı ve verisi olmayan dış kaynak cümlesi reddedilir.
   const bolgeCases = [
-    ["satıcı uyarısı kayboldu", htmlSource.replace("Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez.", ""), classSource],
+    ["satıcı uyarısı kayboldu", htmlSource.replace("Bir merkezin bu listede olması, oradaki satıcıların iStoc'ta olduğu anlamına gelmez.", ""), classSource],
     ["kaynak bağlantısı başka adrese gidiyor", htmlSource.replace(`href="${siteSource.bolge.yerler[0].fact.bagi.replace(/&/g, "&amp;")}"`, 'href="https://istoc.com/"'), classSource],
     ["verisi olmayan dış kaynak cümlesi", htmlSource, { ...classSource, dis: [...(classSource.dis || []), "Uydurulmuş bölge olgusu burada."] }],
+    ["ek kaynak bağlantısı satırdan silindi", htmlSource.replace(/<a class="bolge__src" href="https:\/\/www\.julie\.com\.tr\/iletisim\/" data-bolge-kaynak>[^<]*<\/a>/, ""), classSource],
   ];
   for (const [name, h, cls] of bolgeCases) {
     const ok = h !== htmlSource || cls !== classSource ? checkHtml(h, yayin, ledgerSource, cls, siteSource).some((x) => x.rule === "olgu") : false;
@@ -892,7 +931,8 @@ if (flags.has("--sinama")) {
       rmSync(tmp, { recursive: true, force: true });
     }
   }
-  const total = 1 + yerCases.length + cssCases.length + jsCases.length + htmlCases.length + ledgerCases.length + bolgeCases.length + mCases.length + 2;
+  // Tek tek yazılan örnekler: iki seçili tercih, görünmeyen plan etiketi ve sürekli girdide geçiş.
+  const total = 1 + yerCases.length + cssCases.length + jsCases.length + htmlCases.length + ledgerCases.length + bolgeCases.length + mCases.length + (yayin ? 2 : 3);
   if (lines.length) console.log(lines.join("\n"));
   console.log(`Kapı sınaması: ${total} ihlal örneğinden ${caught} tanesi reddedildi. Sonuç: ${lines.length ? "FAIL" : "PASS"}`);
   process.exit(lines.length ? 1 : 0);

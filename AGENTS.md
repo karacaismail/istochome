@@ -33,6 +33,13 @@ Hareket azaltma tercihine uyun.
 Normal temada çevreleyen odak halkası kullanmayın.
 Tab ile başlayan odak göstergesi dolgu veya alt çizgidir.
 İşletim sisteminin yerel seçim menüsünü kullanmayın.
+Erişilebilir ad, görünen etiketle ve kelime sınırında başlar.
+Durumu `aria-pressed` bildiren düğmenin adı sabit kalır.
+Yazısı eyleme göre değişen düğme `aria-pressed` taşımaz.
+Zorlanmış renklerde çerçeve yalnız klavye modunda çizilir.
+Zorlanmış renklerde, betiksiz sayfadaki bağlantı ve düğme odağı seçim rengiyle dolgulanır.
+Betiksiz sayfada metin alanının odağı düz alt çizgidir.
+Metni etkileyen kırılma noktalarını `em` ile yazın.
 
 ## Kontroller
 
@@ -40,6 +47,9 @@ Tab ile başlayan odak göstergesi dolgu veya alt çizgidir.
 2. `npm run check` komutunu çalıştırın.
 3. `node motion-testi.mjs <adres> --motor=chromium` komutunu çalıştırın.
 4. Açık önizlemede `node tarayici-testi.mjs <adres>` komutunu çalıştırın.
+5. Aynı komutu `--sinama` seçeneğiyle çalıştırın.
+6. Hareket testini de `--sinama` seçeneğiyle çalıştırın.
+7. Sürüm öncesinde `--sinama --tek` ile her bozulmayı ayrı deneyin.
 
 Tarayıcı araçları kurulu Playwright paketini kullanır.
 `PLAYWRIGHT_PACKAGE_DIR` paket kurulumunun üst klasörünü belirtir.
@@ -93,6 +103,10 @@ Arama sonuçlarını ve boş durumunu görünür biçimde açıklayın.
 Betik çalışmazsa bütün merkezler okunabilsin.
 Kaynaklı olguları editoryal alım önerilerinden ayırın.
 Her olgunun kaynak adresi ve denetim günü bulunsun.
+Çoğul olgunun her işletme kaynağı sayfada görünsün.
+Görünen kaynak tek işletmeyse olguyu tekil yazın.
+Açılmayan kaynak adresini veriden çıkarın.
+Derleme bölge kaynaklarını açmaz. Sayımda onları ayrı yazın.
 Bölgenin anılması platformda satıcı bulunduğu anlamına gelmez.
 Fiyat üstünlüğü, sertifika veya kalite garantisi uydurmayın.
 Bu görev yalnız ana sayfayı kapsar. Ayrı bölge sayfası üretmeyin.
@@ -114,6 +128,8 @@ Hareket azaltmada yüzeyler sabit kalır.
 Gizli sekmede ve ekran dışındaki yüzeylerde hareket hesaplanmaz.
 
 Bölüm denetimi için `--bolge` seçeneğini kullanın.
+Büyütülmüş yazının kısa koşusu için `--yazi` seçeneğini kullanın.
+Kısa koşu tam koşunun yerine geçmez.
 Tek motor için `--motor=chromium` veya `--motor=webkit` seçin.
 Bu seçenekler `tarayici-testi.mjs` komutuna eklenir.
 Yükleme sorunu varsa sonucu `not_run` olarak kaydedin.

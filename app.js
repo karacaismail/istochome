@@ -63,6 +63,14 @@
   function tr(n) { return Math.round(n).toLocaleString("tr-TR"); }
   var status = $("#durum");
   function announce(text) { if (status) status.textContent = text; }
+  /* aria-describedby birden çok kimlik taşıyabilir. Bu işlev bir kimliği ekler ya da çıkarır, ötekileri korur.
+     Örneğin ürün alanında hem hata cümlesi hem seçilen alım alanı aynı anda okunur. */
+  function describe(el, id, on) {
+    var ids = (el.getAttribute("aria-describedby") || "").split(/\s+/).filter(function (x) { return x && x !== id; });
+    if (on) ids.push(id);
+    if (ids.length) el.setAttribute("aria-describedby", ids.join(" "));
+    else el.removeAttribute("aria-describedby");
+  }
 
   /* Kaydırma kareleri. Kaydırmaya bağlı bütün işler tek bir karede çalışır: önce hepsi ölçer, sonra hepsi yazar.
      Ölçüm ile yazma art arda gelseydi tarayıcı aynı karede yerleşimi birkaç kez yeniden hesaplardı. */
@@ -401,13 +409,10 @@
       err.hidden = !on;
       /* Alanın çerçevesi durumu bu öznitelikten okur. */
       product.parentNode.dataset.invalid = on ? "true" : "false";
-      if (on) {
-        product.setAttribute("aria-invalid", "true");
-        product.setAttribute("aria-describedby", err.id);
-      } else {
-        product.removeAttribute("aria-invalid");
-        product.removeAttribute("aria-describedby");
-      }
+      if (on) product.setAttribute("aria-invalid", "true");
+      else product.removeAttribute("aria-invalid");
+      /* Hata cümlesi alanın açıklamasına eklenir ya da çıkarılır. Seçilen alım alanının bağı silinmez. */
+      describe(product, err.id, on);
     }
     /* Özet: ürün ve adet yazıldıkça anında güncellenir. Gecikme ve geçiş yoktur.
        Kullanıcının yazdığı ad metin olarak yazılır, HTML olarak yorumlanmaz. */
@@ -430,12 +435,12 @@
       var n = parseQty(qty.value);
       if (n < 0) {
         qty.setAttribute("aria-invalid", "true");
-        qty.setAttribute("aria-describedby", "teklif-ozeti");
+        describe(qty, "teklif-ozeti", true);
         sum.textContent = "Adedi 1 ya da daha büyük bir tam sayıyla yazın. Örneğin 500 ya da 1.000.";
         return;
       }
       qty.removeAttribute("aria-invalid");
-      qty.removeAttribute("aria-describedby");
+      describe(qty, "teklif-ozeti", false);
       if (p && n) sum.textContent = "İstek özeti: " + tr(n) + " adet " + p + ".";
       else if (p) sum.textContent = "İstek özeti: " + p + ". Adedi de yazın.";
       else sum.textContent = empty0;
@@ -477,8 +482,9 @@
         void b.offsetWidth;
         b.classList.add("is-bump");
       });
-      /* Sepet bağlantıları canlı sitedeki sepeti açar. Sayaç ise bu örnek sepeti sayar. Etiket ikisini de söyler. */
-      links.forEach(function (l) { l.setAttribute("aria-label", "istoc.com sepetini açın. Örnek sepette " + keys.length + " ürün var."); });
+      /* Sepet bağlantıları canlı sitedeki sepeti açar. Sayaç ise bu örnek sepeti sayar. Etiket ikisini de söyler.
+         Etiket, bağlantıda görünen "Sepet" kelimesiyle başlar. Sesle komut veren kullanıcı bu kelimeyi söyler. */
+      links.forEach(function (l) { l.setAttribute("aria-label", "Sepet sayfasını istoc.com'da açın. Örnek sepette " + keys.length + " ürün var."); });
       unitsEl.textContent = keys.length ? keys.length + " ürün, " + tr(units) + " adet" : "Sepetiniz boş";
       /* Para birimi değişince toplam geçişsiz yazılır. Yeni simgeyle görünen ara sayı gerçek bir tutar olmazdı. */
       if (instant === true) totalEl._v = total;
@@ -492,10 +498,11 @@
       $$(".pc").forEach(function (card) {
         var on = !!lines[card.dataset.slug];
         var b = $(".pc__add", card);
-        var moq = card.dataset.moq;
-        /* Erişilebilir ad sabit kalır. Durumu yalnız aria-pressed bildirir. */
-        b.setAttribute("aria-pressed", on ? "true" : "false");
-        $("span", b).textContent = on ? "Sepette" : moq + " adet ekleyin";
+        /* Düğmenin yazısı basınca ne olacağını söyler: "12 adet ekleyin" ya da "Sepetten çıkarın".
+           Yazı değiştiği için düğme aria-pressed taşımaz. Sabit yazılı basılı düğme, ürünü yeniden ekliyormuş gibi okunurdu.
+           Ürünün sepette olduğunu onay işareti ve yeşil dolgu gösterir. Durum data-sepette özniteliğindedir. */
+        b.dataset.sepette = on ? "true" : "false";
+        $("span", b).textContent = on ? "Sepetten çıkarın" : card.dataset.moq + " adet ekleyin";
       });
     }
     /* Ekran daralınca çubuğun metni alt satıra geçebilir. Alt pay yeniden ölçülür. */
@@ -685,6 +692,17 @@
       if (shown(e.target)) last = null;
       else requestAnimationFrame(keep);
     });
+    /* Odak, öğe görünür olunca verilir. Bölümün görünürlüğü genişlikle birlikte bir geçişle değişir.
+       Chromium ilk karelerde bağlantıyı hâlâ gizli sayar ve odak tutmaz. Bu yüzden odak her karede yeniden denenir.
+       Deneme en çok bir saniye sürer (until). Kullanıcı bu arada odağı başka bir öğeye taşıdıysa yeniden denenmez.
+       from: odağın beklendiği eski öğe. */
+    function focusSoon(el, from, until) {
+      var now = document.activeElement;
+      if (now === el) return;
+      if (now && now !== document.body && now !== root && now !== from) return;
+      el.focus();
+      if (document.activeElement !== el && performance.now() < until) requestAnimationFrame(function () { focusSoon(el, from, until); });
+    }
     function keep() {
       var active = document.activeElement;
       var away = !active || active === document.body || active === root;
@@ -692,12 +710,15 @@
       if (from) groups.forEach(function (g) {
         var button = g.btn.getClientRects().length > 0;
         if (from === g.btn && !button) {
+          /* Dar düzende kapalı kalan bölüm hâlâ gizlidir (inert). Gizli bölümdeki bağlantıya odak verilemez.
+             Geniş düzende bölüm hep açıktır. Bu yüzden önce gizlilik kalkar, sonra odak ilk bağlantıya geçer. */
+          sync(g);
           var first = $("a", g.panel);
-          if (first) first.focus();
+          if (first) focusSoon(first, g.btn, performance.now() + 1000);
         } else if (button && g.el.dataset.open !== "true" && g.panel.contains(from)) {
           set(g, true);
-          /* Odak düştüyse bölüm görünür olunca geri verilir. Bölüm bir sonraki karede görünür. */
-          if (away) requestAnimationFrame(function () { requestAnimationFrame(function () { from.focus(); }); });
+          /* Odak düştüyse bölüm görünür olunca geri verilir. */
+          if (away) focusSoon(from, null, performance.now() + 1000);
         }
       });
       /* Odak işlendikten sonra kapalı bölümler gizlenir. Önce gizlenseydi odaktaki bağlantı düşerdi. */
@@ -847,10 +868,12 @@
           product.value = a.dataset.urun;
           product.dispatchEvent(new Event("input", { bubbles: true }));
         }
-        /* Alıcı talep alanından gelinirse seçilen alan formun yanında yazar. Tedarik bağlantısı bu satırı kaldırır. */
+        /* Alıcı talep alanından gelinirse seçilen alan formun yanında yazar. Tedarik bağlantısı bu satırı kaldırır.
+           Satır ürün alanının açıklamasıdır. Ekran okuyucu alana gelince seçilen alanı da okur. */
         if (area) {
           area.hidden = !a.dataset.alan;
           area.textContent = a.dataset.alan ? "Seçtiğiniz alım alanı:" + " " + a.dataset.alan : "";
+          describe(product, area.id, !!a.dataset.alan);
         }
         if (location.hash !== "#teklif") history.pushState(null, "", "#teklif");
         target.scrollIntoView({ block: "start" });
@@ -925,8 +948,10 @@
       if (empty) empty.hidden = n > 0;
       var text = n + " " + "merkez listeleniyor.";
       if (out) out.textContent = text;
-      if (text !== last) announce(text);
-      last = text;
+      /* Eşleşme yoksa duyuru, ekrandaki yol gösteren cümleyi de okur. Kullanıcı ne yapacağını duyar. */
+      var said = n === 0 && empty ? text + " " + empty.textContent : text;
+      if (said !== last) announce(said);
+      last = said;
     }
     input.addEventListener("input", run);
   })();
@@ -957,7 +982,8 @@
         if (empty) empty.hidden = n > 0;
         var text = (g ? "Bu grupta" : "Tüm gruplarda") + " " + n + " " + "alan var.";
         if (out) out.textContent = text;
-        announce(text);
+        /* Grupta alan yoksa duyuru, ekrandaki boş grup cümlesini de okur. */
+        announce(n === 0 && empty ? text + " " + empty.textContent : text);
       });
     });
   })();

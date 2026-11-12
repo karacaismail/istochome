@@ -170,8 +170,9 @@
 @media (max-height: 480px) {
   :root { --scroll-top: var(--sp-4); --band-y: 40px; }
 }
-/* Yatay telefonda alt gezinme incelir: simge ile etiket yan yana durur. */
-@media (max-height: 480px) and (max-width: 1023px) {
+/* Yatay telefonda alt gezinme incelir: simge ile etiket yan yana durur.
+   Kısa dikey pencerede (örneğin 360x480) bu düzen kullanılmaz. Beş etiket yan yana sığmazdı. */
+@media (max-height: 480px) and (max-width: 1023px) and (orientation: landscape) {
   :root { --bottom-nav: 48px; }
 }
 /* Sıkı yoğunluk yalnız fareyle kullanılan geniş ekranda geçerlidir.
@@ -254,7 +255,7 @@ html:not(.js):root :is(a, button, [role="option"], [role="tab"]):focus-visible {
    Yalnız simgesi görünen düğmede de odak böylece dolgudan anlaşılır. */
 .btn--ink, .pc__add, .header .search button, .filter[aria-pressed="true"], .seg button[aria-selected="true"], .on-ink .btn--light, .pref[aria-checked="true"] { --focus-bg: var(--a-500); --focus-fg: var(--on-ink); }
 .btn--brand, .search button { --focus-bg: var(--ink); --focus-fg: var(--on-ink); }
-.pc__add[aria-pressed="true"] { --focus-bg: var(--surface); --focus-fg: var(--text); }
+.pc__add[data-sepette="true"] { --focus-bg: var(--surface); --focus-fg: var(--text); }
 /* Logo koyu renklidir. Odak dolgusu logonun okunmasını bozmayan ara tondur. */
 .logo { --focus-bg: var(--a-400); }
 /* Odaklanan denetimin içindeki soluk metin, simge ve piktogram odak rengini alır.
@@ -290,10 +291,12 @@ html:not(.js) .field input:focus-visible {
    Bağlantı yavaşça çekilseydi bir sonraki durağın üstünü kısa süre örterdi. */
 .skip { transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
 /* Zorlanmış renklerde (örneğin Windows yüksek karşıtlık) yazarın dolguları silinir.
-   Odak, klavye modunda çerçeveyle gösterilir. Seçili durumların kuralı dosyanın sonundadır (14. bölüm). */
+   Klavye modunda odak çerçeveyle gösterilir. Çerçevenin izinli olduğu tek durum budur.
+   Betik yokken klavye modu izlenemez. O durumun göstergesi dosyanın sonundadır (14. bölüm).
+   Seçili durumların kuralı da oradadır. */
 @media (forced-colors: active) {
-  html[data-kb="on"] :focus-visible, html:not(.js) :focus-visible { outline: 2px solid CanvasText; }
-  html[data-kb="on"] .fold__panel a:focus-visible, html:not(.js) .fold__panel a:focus-visible { outline-offset: -2px; }
+  html[data-kb="on"] :focus-visible { outline: 2px solid CanvasText; }
+  html[data-kb="on"] .fold__panel a:focus-visible { outline-offset: -2px; }
 }
 
 /* 4. Hareket -------------------------------------------------------------
@@ -1058,9 +1061,9 @@ html:not(.js) .nav__all--nojs { display: inline-flex; }
 .pc__add:hover { background: var(--ink-3); }
 .pc__add i { display: grid; place-items: center; }
 .pc__add svg { grid-area: 1 / 1; transition: opacity var(--dur-1) var(--ease), transform var(--dur-2) var(--ease); }
-.pc__add .i-on, .pc__add[aria-pressed="true"] .i-off { opacity: 0; transform: scale(0.4) rotate(-60deg); }
-.pc__add[aria-pressed="true"] { background: var(--ok); color: var(--on-ink); }
-.pc__add[aria-pressed="true"] .i-on { opacity: 1; transform: none; }
+.pc__add .i-on, .pc__add[data-sepette="true"] .i-off { opacity: 0; transform: scale(0.4) rotate(-60deg); }
+.pc__add[data-sepette="true"] { background: var(--ok); color: var(--on-ink); }
+.pc__add[data-sepette="true"] .i-on { opacity: 1; transform: none; }
 /* Teklif çağrısı: aradığını listede bulamayan alıcı huniden çıkmaz, teklif isteğine gider. */
 .nudge { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-4); align-items: center; margin-top: var(--sp-7); padding: var(--sp-5); border-radius: var(--r-3); background: var(--a-100); }
 .nudge .picto { background: var(--surface); }
@@ -1146,6 +1149,10 @@ html:not(.js) .nav__all--nojs { display: inline-flex; }
 }
 @media (min-width: 600px) {
   .op { padding: var(--sp-7); }
+}
+/* Ödeme yöntemleri üç sütuna ancak yeterli genişlikte geçer. Sınır yazı boyutuna bağlıdır (em): varsayılan yazıda 600 CSS px.
+   Kullanıcı yazıyı büyütürse sınır da büyür. Böylece "Thoptan.com" gibi bölünmeyen ad kutusundan taşmaz. */
+@media (min-width: 37.5em) {
   .ptiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-5) var(--sp-4); }
   .ptile { grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-3); align-items: center; }
 }
@@ -1327,7 +1334,9 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
   html.js .fgroup .fold__btn { display: flex; }
   html.js .fgroup[data-open="false"] .fold__panel { grid-template-rows: 0fr; visibility: hidden; }
 }
-@media (min-width: 480px) {
+/* Dört sütun yalnız yeterli genişlikte açılır. Sınır yazı boyutuna bağlıdır (em): varsayılan yazıda 480 CSS px.
+   Kullanıcı yazıyı büyütürse sınır da büyür. Böylece "Русский" gibi tek kelimelik ad kutusundan taşmaz. */
+@media (min-width: 30em) {
   .prefs__group { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (min-width: 1024px) {
@@ -1388,13 +1397,21 @@ html.js .faq__panel[data-open="true"] { grid-template-rows: 1fr; }
   .cartbar .btn svg { display: none; }
 }
 /* Kısa ekranda (yatay telefon) sabit çubuklar incelir. Alt gezinmede simge ile etiket yan yana durur,
-   sepet çubuğu tek satıra iner. Böylece iki çubuk birlikte ekranın büyük bölümünü örtmez. */
-@media (max-height: 480px) and (max-width: 1023px) {
+   sepet çubuğu tek satıra iner. Böylece iki çubuk birlikte ekranın büyük bölümünü örtmez.
+   Kural yalnız yatay ekranda geçerlidir. Kısa dikey pencerede çubuklar dikey ekrandaki düzeni korur. */
+@media (max-height: 480px) and (max-width: 1023px) and (orientation: landscape) {
   .bottomnav a { flex-direction: row; gap: var(--sp-2); height: 48px; }
   .bottomnav .count { position: static; }
   .cartbar { flex-wrap: nowrap; padding-block: var(--sp-2); }
   .cartbar__note { order: 1; flex: 1 1 0; }
   .cartbar .btn { order: 2; flex: none; }
+}
+/* Yatay telefonda yazı büyükse beş etiket yan yana sığmaz. Dikey ekrandaki gibi bulunulan sayfanın öğesi gizlenir
+   ve çubuğun yan payı kalkar. Sınır yazı boyutuna bağlıdır (em). Varsayılan yazıda en dar yatay telefon
+   (568 CSS px) bu sınırın üstündedir, beş etiket de görünür. */
+@media (max-height: 480px) and (max-width: 25em) and (orientation: landscape) {
+  .bottomnav { padding-left: 0; padding-right: 0; }
+  .bottomnav a[aria-current="page"] { display: none; }
 }
 @media (min-width: 1024px) {
   .bottomnav { display: none; }
@@ -1724,13 +1741,22 @@ html:not(.js) .talep__btn { display: none; }
    Levha kalsaydı yazı levhanın üstünde görünmezdi. Bu yüzden seçili öğede renkleri tarayıcı değil, bu kural belirler
    (forced-color-adjust: none). Kural yalnız sistem renklerini kullanır, böylece kullanıcının renk düzeni korunur. */
 @media (forced-colors: active) {
-  .filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .mega__cat[aria-expanded="true"],
-  html:root :is(.filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .mega__cat[aria-expanded="true"]):focus-visible { forced-color-adjust: none; background-color: Highlight; color: HighlightText; }
+  .filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .mega__cat[aria-expanded="true"], .pc__add[data-sepette="true"],
+  html:root :is(.filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .mega__cat[aria-expanded="true"], .pc__add[data-sepette="true"]):focus-visible { forced-color-adjust: none; background-color: Highlight; color: HighlightText; }
   /* İç öğelerin kendi kuralları daha özgüldür (örneğin seçili para biriminin soluk adı). Bu yüzden bu iki değer
      !important ile yazılır. !important yalnız bu blokta, yalnız zorlanmış renklerde kullanılır. */
-  :is(.filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .mega__cat[aria-expanded="true"]) * { background-color: transparent !important; color: inherit !important; }
+  :is(.filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .mega__cat[aria-expanded="true"], .pc__add[data-sepette="true"]) * { background-color: transparent !important; color: inherit !important; }
   /* Yalnız dolgudan oluşan çubuklar: konum çubuğu, şerit konumu, adım çizgisi ve dizin çubuğu. */
   .header__bar, .rail-ctl__bar, .tl__fill, .dlink__bar { background-color: Highlight; }
-  /* Zorlanmış renklerde süs sahnesi metin rengine döner ve içeriği kalabalıklaştırır. Sahne gizlenir. */
-  .scene { display: none; }
+  /* Zorlanmış renklerde süs sahnesi ve yönlü yüzeyler metin rengine döner. İçeriği kalabalıklaştırırlar ve gizlenirler. */
+  .scene, .surface { display: none; }
+  /* Betik yokken klavye modu izlenemez. Çerçeve yalnız klavye modunda çizilir.
+     Bu yüzden betiksiz sayfada odak, sistemin seçim renginde bir dolguyla görünür. Dolgu öğeyi çevrelemez. */
+  html:not(.js):root :is(a, button, [role="option"], [role="tab"]):focus-visible { forced-color-adjust: none; background-color: Highlight; color: HighlightText; }
+  html:not(.js) :is(a, button, [role="option"], [role="tab"]):focus-visible * { background-color: transparent !important; color: inherit !important; }
+  /* Betiksiz sayfada metin alanının odağı da görünür. Alanın içinde düz bir alt çizgi belirir, alan çevrelenmez.
+     Zorlanmış renkler degrade zemini siler. Bu yüzden bu kural alanın renklerini sistem renkleriyle kendisi yazar. */
+  html:not(.js) .search input:focus-visible { forced-color-adjust: none; color: CanvasText; background: Canvas linear-gradient(CanvasText, CanvasText) left 0 bottom 10px / calc(100% - var(--sp-3)) 2px no-repeat; }
+  html:not(.js) .field input:focus-visible { forced-color-adjust: none; color: CanvasText; background: Canvas linear-gradient(CanvasText, CanvasText) left var(--sp-4) bottom 10px / calc(100% - var(--sp-4) * 2) 2px no-repeat; }
+  html:not(.js) :is(.search, .field) input:focus-visible::placeholder { color: GrayText; }
 }

@@ -52,9 +52,12 @@ GitHub Pages, planlanan bölümleri içeren önizleme derlemesini sunar. Bu derl
 Tarayıcı testi Playwright ister. `PLAYWRIGHT_PACKAGE_DIR` değişkeni verilirse test Playwright'ı önce o klasörde arar. Sonra bu klasörde arar.
 
 Tarayıcı testinin bozulma örnekleri için komuta `--sinama` ekleyin.
+Her bozulmayı kendi koşusunda denemek için `--sinama --tek` yazın. Bu koşu uzun sürer, ama hiçbir bozulma ötekini örtemez.
 Hareket davranışını `node motion-testi.mjs <adres> --motor=chromium` komutuyla sınayın.
+Hareket testinin kendini sınaması için aynı komuta `--sinama` ekleyin. Bu kip, ekran dışındaki sahne denetiminin gerçekten düşebildiğini gösterir.
 
 Bölgesel tedarik için tarayıcı komutuna `--bolge` seçeneğini ekleyin.
+Yalnız büyütülmüş yazı denetimleri için `--yazi` seçeneğini ekleyin. Bu kısa koşu tam koşunun yerine geçmez.
 Tek motor için `--motor=chromium` veya `--motor=webkit` seçeneğini kullanın.
 
 Büyütülmüş yazı ve zorlanmış renk denetimleri yalnız Chromium'da çalışır. WebKit bu iki ayarı öykünmez. Test çıktısı bunu `NOT_RUN` satırıyla yazar.

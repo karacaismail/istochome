@@ -180,7 +180,13 @@
         ],
         "bagi": "https://www.aydentekstil.com/",
         "bag_metni": "Kaynak: Ayden Tekstil, ürün ve adres bilgileri",
-        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir.",
+        "ek_baglar": [
+          {
+            "bagi": "https://www.julie.com.tr/iletisim/",
+            "bag_metni": "Kaynak: Julie Home, ürün ve adres bilgileri"
+          }
+        ]
       },
       "editorial": {
         "ihtiyac": "Mağazanız için havlu veya bornoz alıyorsanız",
@@ -204,7 +210,7 @@
       "sektor_kodu": "mobilya",
       "grup": "imalat",
       "fact": {
-        "metin": "Melikgazi'deki mobilya işletmeleri arasında ofis mobilyası sunan üreticiler bulunur.",
+        "metin": "Kayseri OSB'de ofis mobilyası sunan bir üretici bulunur.",
         "source_url": [
           "https://shop.flekssit.com.tr/iletisim",
           "https://www.kayseriosb.org/index.php"
@@ -399,7 +405,13 @@
         ],
         "bagi": "https://turkmengida.com.tr/",
         "bag_metni": "Kaynak: Türkmen Gıda",
-        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir."
+        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir.",
+        "ek_baglar": [
+          {
+            "bagi": "https://www.demirellergida.com.tr/iletisim/",
+            "bag_metni": "Kaynak: Demireller Gıda, şube adresleri"
+          }
+        ]
       },
       "editorial": {
         "ihtiyac": "Marketiniz için paketli gıda alıyorsanız",
@@ -491,7 +503,13 @@
         ],
         "bagi": "https://matbaaloji.com/",
         "bag_metni": "Kaynak: Matbaaloji",
-        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir."
+        "yer_notu": "Kaynak, ürün grubunu ve merkezin konumunu destekler. Üyelik veya güncel stok kanıtı değildir.",
+        "ek_baglar": [
+          {
+            "bagi": "https://nakisdijital.com/",
+            "bag_metni": "Kaynak: Nakış Dijital, hizmet ve adres bilgileri"
+          }
+        ]
       },
       "editorial": {
         "ihtiyac": "Ürünleriniz için basılı katalog hazırlıyorsanız",
@@ -1045,8 +1063,18 @@
           "https://amiralayakkabi.com/"
         ],
         "bagi": "https://canmestleri.com.tr/iletisim.html",
-        "bag_metni": "Kaynak: Aykent üreticilerinin adresleri",
-        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı."
+        "bag_metni": "Kaynak: Can Mestleri Deri Tasarım, adres bilgileri",
+        "yer_notu": "Kaynak sektör faaliyetini veya işletme kaydını destekler. Güncel stok ve platform üyeliği doğrulanmadı.",
+        "ek_baglar": [
+          {
+            "bagi": "https://www.greenfoot.com.tr/iletisim/",
+            "bag_metni": "Kaynak: Muhammet Yeşilbel Ayakkabı, adres bilgileri"
+          },
+          {
+            "bagi": "https://amiralayakkabi.com/",
+            "bag_metni": "Kaynak: Amiral Ayakkabı, adres bilgileri"
+          }
+        ]
       },
       "editorial": {
         "ihtiyac": "Mağazanız için ayakkabı çeşitlerini artırıyorsanız",
@@ -1070,10 +1098,9 @@
       "sektor_kodu": "baski",
       "grup": "imalat",
       "fact": {
-        "metin": "Konya Matbaacılar Sitesi'nde katalog, kitap ve defter baskısı yapan işletmeler bulunur.",
+        "metin": "Konya Matbaacılar Sitesi'nde katalog, kitap ve defter basan bir işletme bulunur.",
         "source_url": [
-          "https://birikimmatbaacilik.com/",
-          "https://www.yagmurofset.com/contact.html"
+          "https://birikimmatbaacilik.com/"
         ],
         "bagi": "https://birikimmatbaacilik.com/",
         "bag_metni": "Kaynak: Birikim Matbaacılık",
@@ -1163,7 +1190,7 @@
       "sektor_kodu": "kalip",
       "grup": "imalat",
       "fact": {
-        "metin": "Gebze OSB'de kalıp tasarımı ve üretimi yapan işletmeler bulunur.",
+        "metin": "Gebze OSB'de kalıp tasarımı ve üretimi yapan bir işletme bulunur.",
         "source_url": [
           "https://www.ocakkalip.com/",
           "https://www.gosb.com.tr/"

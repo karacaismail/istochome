@@ -36,6 +36,8 @@ const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const selfFlag = process.argv.find((a) => a.startsWith("--sinama"));
 const selfTest = !!selfFlag;
 const selfOnly = selfFlag ? selfFlag.split("=")[1] || "" : "";
+// --tek: her bozulma kendi koşusunda denenir. Daha uzun sürer. Sürüm öncesi kapsam içindir.
+const selfSingle = process.argv.includes("--tek");
 const url = args[0] || "http://localhost:4391/";
 const shots = args[1] || "";
 // Sayfadaki olgular bu dosyadan gelir. Test, sayfanın veriyle aynı olduğunu da sınar.
@@ -76,6 +78,18 @@ const expected = (slug) => ({ unit: unitOf(slug), moq: facts.urunler[slug].en_az
 // Tutarlar Türkçe sayı biçimiyle yazılır: binlik ayırıcı nokta, ondalık ayırıcı virgül.
 const money = (n, cur = "USD") => SYM[cur] + n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const sizes = [[320, 568], [320, 700], [360, 740], [375, 760], [390, 844], [844, 390], [768, 1024], [1024, 768], [1440, 900]];
+// Büyütülmüş yazı: kök boyutu (px), genişlik ve yükseklik. Yatay telefon ve ara genişlikler de sınanır.
+// 360 px ekranda sepet doludur. Sepet çubuğu büyük yazıda da ekrana sığmalıdır.
+// Yazı boyutuna bağlı iki sınır (em) da sınanır: sınırın hemen altı, sınırın kendisi ve hemen üstü.
+// Yatay telefon kuralı 24 px yazıda 600 CSS px, dil ve para birimi kutuları 720 CSS px'te değişir. 20 px yazıda bu sınırlar 500 ve 600 CSS px'tir.
+// Ödeme yöntemlerinin üç sütun sınırı 24 px yazıda 900, 20 px yazıda 750 CSS px'tir.
+// Kısa dikey pencere (360x480 ve 320x480) varsayılan yazıyla (16 px) sınanır: alt gezinmenin beş etiketi sığmalıdır.
+const SCALES = [[20, 320, 568], [24, 320, 568], [20, 390, 844], [24, 390, 844], [24, 568, 320], [24, 844, 390], [20, 400, 800], [24, 480, 800], [24, 360, 740],
+  [24, 599, 320], [24, 600, 320], [24, 601, 320], [24, 640, 360], [24, 667, 375], [20, 568, 320],
+  [24, 719, 800], [24, 720, 800], [24, 721, 800], [20, 599, 800], [20, 600, 800], [20, 601, 800],
+  [24, 899, 800], [24, 900, 800], [24, 901, 800], [20, 749, 800], [20, 750, 800], [20, 751, 800],
+  [16, 360, 480], [16, 320, 480]];
+const SCALE_CART = 360;
 const results = [];
 const notRun = [];
 const check = (engine, size, name, ok, detail = "") => results.push({ engine, size, name, ok, detail });
@@ -360,13 +374,16 @@ function measure() {
 
   // Piktogram: okuyucudan gizlidir ve yanında görünür bir metin vardır.
   out.barePictos = [...document.querySelectorAll(".picto")].filter((p) => visible(p) && (p.getAttribute("aria-hidden") !== "true" || !p.parentElement.textContent.trim())).length;
-  // Görünen etiket erişilebilir adın içinde durur (WCAG 2.5.3). Adı aria-label ile verilen denetimde görünen metin
-  // adın içinde de geçmelidir. Ekran okuyucuya özel ve okuyucudan gizli parçalar görünen metin sayılmaz.
+  // Görünen etiket erişilebilir adın başında durur (WCAG 2.5.3). Sesle komut veren kullanıcı görünen kelimeyi söyler.
+  // Adı aria-label ile verilen denetimde ad, görünen metinle ve kelime sınırında başlamalıdır.
+  // Örneğin "Sepet" etiketinde "Sepet sayfasını açın" geçer. "Sepetinizi açın" ve "istoc.com sepetini açın" geçmez.
+  // Ekran okuyucuya özel ve okuyucudan gizli parçalar görünen metin sayılmaz.
   out.labelInName = [...document.querySelectorAll("a[aria-label], button[aria-label]")].filter(visible).filter((e) => {
     const copy = e.cloneNode(true);
     copy.querySelectorAll(".sr-only, [aria-hidden='true']").forEach((n) => n.remove());
     const seen = copy.textContent.replace(/\s+/g, " ").trim().toLocaleLowerCase("tr");
-    return seen && !e.getAttribute("aria-label").toLocaleLowerCase("tr").includes(seen);
+    const label = e.getAttribute("aria-label").replace(/\s+/g, " ").trim().toLocaleLowerCase("tr");
+    return seen && !(label.startsWith(seen) && !/[\p{L}\p{N}]/u.test(label.charAt(seen.length)));
   }).map((e) => name(e) + ": " + e.getAttribute("aria-label").slice(0, 30));
   return out;
 }
@@ -443,13 +460,25 @@ async function layout(page, engine, w, h) {
   check(engine, size, "bileşende en çok bir turuncu düğme", m.crowded.length === 0, m.crowded.join(", "));
   check(engine, size, "turuncu ilk ekranın yüzde 5'inden az", m.orangeShare < 0.05, `${(m.orangeShare * 100).toFixed(1)}%`);
   check(engine, size, "piktogramlar etiketli", m.barePictos === 0, `${m.barePictos}`);
-  check(engine, size, "görünen etiket erişilebilir adın içinde", m.labelInName.length === 0, m.labelInName.slice(0, 4).join(", "));
+  check(engine, size, "görünen etiket erişilebilir adın başında", m.labelInName.length === 0, m.labelInName.slice(0, 4).join(", "));
+  // Varsayılan yazıda alt gezinmenin beş öğesi de görünür. Bulunulan sayfanın öğesi yalnız büyütülmüş yazıda gizlenir.
+  const navCurrent = await page.evaluate(() => {
+    const nav = document.querySelector(".bottomnav");
+    const a = nav && nav.querySelector('a[aria-current="page"]');
+    return !nav || getComputedStyle(nav).display === "none" || (!!a && a.getClientRects().length > 0);
+  });
+  check(engine, size, "alt gezinmede bulunulan sayfanın öğesi görünür", navCurrent, "");
   // Kapalı grupların içeriği de ölçülür. Dar ekranda dizin grupları ve alt bölüm sütunları kapalı başlar.
-  // Kapalı içerik ilk ölçümde görünmez. Bu yüzden bütün gruplar açılır ve sayfa bir kez daha ölçülür.
+  // Sık sorulanlar, araçlar, kütüphane soruları ve talep ayrıntısı da kapalı başlar.
+  // Kapalı içerik ilk ölçümde görünmez. Bu yüzden bütün gruplar ve yanıtlar açılır, sayfa bir kez daha ölçülür.
   const opened = await page.evaluate(() => {
     const closed = [...document.querySelectorAll('[data-fold][data-open="false"]')].filter((g) => g.querySelector(".fold__btn").getClientRects().length);
     closed.forEach((g) => g.querySelector(".fold__btn").click());
-    return closed.length;
+    const answers = [...document.querySelectorAll(".faq, .tool, .libq, .talep__acil")]
+      .map((item) => item.querySelector("button"))
+      .filter((b) => b && b.getAttribute("aria-expanded") === "false" && b.getClientRects().length);
+    answers.forEach((b) => b.click());
+    return closed.length + answers.length;
   });
   if (opened) {
     await page.waitForTimeout(900);
@@ -457,7 +486,7 @@ async function layout(page, engine, w, h) {
     check(engine, size, "açılan gruplarda yatay taşma yok", m2.overflow <= 0, `taşma ${m2.overflow}px`);
     check(engine, size, "açılan gruplarda en küçük metin 14 px", m2.minFont >= 14, `${m2.minFont}px`);
     check(engine, size, "açılan gruplarda metin karşıtlığı yeterli", m2.lowContrast.length === 0, m2.lowContrast.slice(0, 5).join(" | "));
-    check(engine, size, "açılan gruplarda dokunma hedefi en az 44 px", m2.small.length === 0, m2.small.slice(0, 6).join(", "));
+    if (w < 1024 || m2.coarse) check(engine, size, "açılan gruplarda dokunma hedefi en az 44 px", m2.small.length === 0, m2.small.slice(0, 6).join(", "));
   }
   if (shots) {
     await page.evaluate(() => scrollTo(0, 0));
@@ -700,14 +729,25 @@ async function behavior(page, engine, w, h) {
   await page.click("[data-inc]");
   const q = await page.evaluate(() => ({ qty: document.querySelector("[data-qty]").textContent, sr: document.querySelector("[data-total-sr]").textContent, dec: document.querySelector("[data-dec]").getAttribute("aria-disabled") }));
   check(engine, size, "adet en az sipariş adedi kadar artar", q.qty === wantQty.toLocaleString("tr-TR") && q.sr === "Toplam " + wantTotal && q.dec === "false", JSON.stringify({ ...q, wantQty, wantTotal }));
+  // Sepet düğmesinin yazısı basınca ne olacağını söyler. Yazı değiştiği için düğme aria-pressed taşımaz.
+  // Ürün sepete girince yazı "Sepetten çıkarın" olur. Durum data-sepette özniteliğindedir.
+  const cardName = (slug) => page.evaluate((s) => {
+    const b = document.querySelector(`.pc[data-slug="${s}"] .pc__add`);
+    return { name: b.textContent.replace(/\s+/g, " ").trim(), pressed: b.hasAttribute("aria-pressed"), state: b.dataset.sepette };
+  }, slug);
+  const nameBefore = await cardName(sampleSlug);
   await page.click("[data-order-add]");
   await page.waitForTimeout(900);
+  const nameAfter = await cardName(sampleSlug);
+  check(engine, size, "sepet düğmesi basınca ne olacağını söyler",
+    !nameBefore.pressed && !nameAfter.pressed && nameBefore.state === "false" && nameAfter.state === "true"
+      && new RegExp(`^${want.moq} adet ekleyin: `).test(nameBefore.name) && /^Sepetten çıkarın: /.test(nameAfter.name), JSON.stringify({ nameBefore, nameAfter }));
   const c = await page.evaluate((slug) => ({
     units: document.querySelector("[data-cart-units]").textContent,
     total: document.querySelector("[data-cart-total]").textContent,
     bar: document.querySelector("[data-cartbar]").classList.contains("is-on"),
     inert: document.querySelector("[data-cartbar]").inert,
-    card: document.querySelector(`.pc[data-slug="${slug}"] .pc__add`).getAttribute("aria-pressed"),
+    card: document.querySelector(`.pc[data-slug="${slug}"] .pc__add`).dataset.sepette,
     note: (document.querySelector(".cartbar__note") || {}).textContent || "",
     said: document.querySelector("#durum").textContent,
   }), sampleSlug);
@@ -725,7 +765,7 @@ async function behavior(page, engine, w, h) {
     };
   });
   check(engine, size, "sepet örnek olduğunu söyler",
-    /örnek/.test(c.note) && /istoc\.com sepetine eklenmez/.test(c.note) && /örnek sepette/.test(c.said) && bar.labels.every((x) => x === "istoc.com sepetini açın. Örnek sepette 1 ürün var."), JSON.stringify({ note: c.note, said: c.said, labels: bar.labels }));
+    /örnek/.test(c.note) && /istoc\.com sepetine eklenmez/.test(c.note) && /örnek sepette/.test(c.said) && bar.labels.every((x) => x === "Sepet sayfasını istoc.com'da açın. Örnek sepette 1 ürün var."), JSON.stringify({ note: c.note, said: c.said, labels: bar.labels }));
   // Çubuk dar ekranda da kısa kalır. Not kendi satırında durur, dar bir sütuna sıkışmaz.
   check(engine, size, "sepet çubuğu ekranın dörtte birinden az yer kaplar", bar.share < 0.25 && bar.overflow <= 0 && bar.noteInside && bar.link >= 44, JSON.stringify(bar));
 
@@ -832,11 +872,14 @@ async function behavior(page, engine, w, h) {
   }).map((b) => b.textContent.trim()));
   check(engine, size, "üst arama açıkken üst bölümde en çok bir turuncu düğme", hdr.length <= 1, hdr.join(", "));
   // Fare odaklanan düğmenin üzerinde dursa da odak dolgusu görünür. Üzerine gelme rengi onu ezemez.
-  await page.hover(".header .search button");
+  // Önce klavyeyle odaklanılır, sonra fare düğmenin üzerine gelir. Fareyi gezdirmek klavye modunu kapatmaz.
+  // Denetim farenin gerçekten düğmenin üzerinde olduğunu da okur. Böylece üzerine gelme durumu olmadan geçmez.
   await page.focus("#q-ust");
   await page.keyboard.press(tab);
-  const hov = await page.evaluate(() => ({ on: !!document.activeElement.closest(".header .search") && document.activeElement.tagName === "BUTTON", bg: getComputedStyle(document.activeElement).backgroundColor, kb: document.documentElement.dataset.kb }));
-  check(engine, size, "fare üzerindeyken de odak dolgusu görünür", hov.on && hov.kb === "on" && hov.bg === "rgb(40, 112, 195)", JSON.stringify(hov));
+  await page.hover(".header .search button");
+  await page.waitForTimeout(120);
+  const hov = await page.evaluate(() => ({ on: !!document.activeElement.closest(".header .search") && document.activeElement.tagName === "BUTTON", over: document.activeElement.matches(":hover"), bg: getComputedStyle(document.activeElement).backgroundColor, kb: document.documentElement.dataset.kb }));
+  check(engine, size, "fare üzerindeyken de odak dolgusu görünür", hov.on && hov.over && hov.kb === "on" && hov.bg === "rgb(40, 112, 195)", JSON.stringify(hov));
   await page.mouse.move(4, 300);
   // Üst aramada yazan kullanıcının alanı, sayfa başa dönse de kapanmaz. Odak alandan çıkınca kapanır.
   await page.focus("#q-ust");
@@ -991,6 +1034,38 @@ async function behavior(page, engine, w, h) {
     }, target.index);
     check(engine, size, "dar ekrana dönünce odaktaki bağlantının grubu açılır",
       target.focused && target.inert === false && narrowed.open === "true" && narrowed.exp === "true" && narrowed.inert === false && narrowed.vis === "visible" && narrowed.focus, JSON.stringify({ target, narrowed }));
+    // Dar ekranda kapalı bir grubun düğmesi odaktadır. Ekran genişleyince düğme gizlenir.
+    // Odak grubun ilk bağlantısına geçmelidir. Kapalı grubun bölümü gizli (inert) olduğu için odak düşebilirdi.
+    // Bölüm geniş düzende bir geçişle görünür. Tarayıcı ilk karelerde bağlantıyı gizli sayabilir.
+    // Kare zamanlaması değişkendir. Denetim bu yüzden bölümün görünmesini 300 ms geciktirir. Böylece sonuç zamanlamaya bağlı olmaz.
+    await page.evaluate(() => {
+      const st = document.createElement("style");
+      st.id = "test-gecikme";
+      st.textContent = ".fold__panel { transition-delay: 300ms !important; }";
+      document.head.appendChild(st);
+    });
+    const closedBtn = await page.evaluate(() => {
+      const all = [...document.querySelectorAll(".dgroup")];
+      const g = all.find((x) => x.dataset.open === "false");
+      if (!g) return { index: -1, focused: false };
+      const b = g.querySelector(".fold__btn");
+      b.focus();
+      return { index: all.indexOf(g), focused: document.activeElement === b, inert: g.querySelector(".fold__panel").inert };
+    });
+    await page.setViewportSize({ width: 900, height: h });
+    await page.waitForTimeout(900);
+    const widened = await page.evaluate((i) => {
+      const g = document.querySelectorAll(".dgroup")[i];
+      if (!g) return null;
+      const a = document.activeElement;
+      return { first: a === g.querySelector(".fold__panel a"), active: a ? a.tagName + "." + a.className : "", inert: g.querySelector(".fold__panel").inert };
+    }, closedBtn.index);
+    // Sonraki denetimler kapalı grupla sürer. Gecikme kalkar, odak bırakılır, ekran yeniden daralır.
+    await page.evaluate(() => { document.getElementById("test-gecikme")?.remove(); if (document.activeElement) document.activeElement.blur(); });
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(700);
+    check(engine, size, "genişleyen ekranda kapalı grubun düğmesindeki odak ilk bağlantıya geçer",
+      closedBtn.focused && closedBtn.inert === true && !!widened && widened.first && widened.inert === false, JSON.stringify({ closedBtn, widened }));
   } else {
     check(engine, size, "geniş ekranda dizin grupları hep açık, başlık düz yazı", dz.open === dz.groups && dz.buttons === 0 && dz.labels === dz.groups, JSON.stringify(dz));
   }
@@ -1340,7 +1415,7 @@ async function focusTour(page, engine, w, h) {
   await page.waitForTimeout(900);
   await page.focus(".pc__name a");
   await page.keyboard.press(tab);
-  if (await active('.pc__add[aria-pressed="true"]')) reached.push(await visit("sepetteki ürün düğmesi"));
+  if (await active('.pc__add[data-sepette="true"]')) reached.push(await visit("sepetteki ürün düğmesi"));
   await page.focus(".footer__legal > .lnk");
   await page.keyboard.press(tab);
   if (await active(".cartbar")) reached.push(await visit("sepet çubuğu bağlantısı"));
@@ -1571,6 +1646,22 @@ async function textScale(engine, px, w, h, prepare) {
     // Alt gezinmenin etiketi kullanıcının seçtiği boyutta durur (küçük yazı tokenı: 0,875 kat). Sığmak için küçülmez.
     check(engine, size, "büyütülen yazıda alt gezinme etiketi küçülmez", f.navFont >= px * 0.875 - 0.5, `${f.navFont}px, beklenen en az ${px * 0.875}px`);
     check(engine, size, "büyütülen yazıda alt gezinme etiketleri birbirine değmez", f.navGap >= 4, `en dar boşluk ${f.navGap}px`);
+    if (w === SCALE_CART) {
+      // Sepet dolunca çubuk açılır. Büyük yazıda da çubuk ekranın üçte birinden az yer kaplar, taşmaz ve notu içinde durur.
+      await page.locator(".pc__add").first().scrollIntoViewIfNeeded();
+      await page.locator(".pc__add").first().click();
+      await page.waitForTimeout(900);
+      const bar = await page.evaluate(() => {
+        const el = document.querySelector(".cartbar");
+        const r = el.getBoundingClientRect();
+        const note = el.querySelector(".cartbar__note");
+        const n = note ? note.getBoundingClientRect() : null;
+        const link = el.querySelector("a").getBoundingClientRect();
+        return { on: el.classList.contains("is-on"), share: Number((r.height / innerHeight).toFixed(3)), overflow: el.scrollWidth - el.clientWidth,
+          noteInside: !!n && n.right <= r.right + 1 && n.left >= r.left - 1, link: Math.round(link.height), page: document.documentElement.scrollWidth - innerWidth };
+      });
+      check(engine, size, "büyütülen yazıda dolu sepet çubuğu ekrana sığar", bar.on && bar.share < 1 / 3 && bar.overflow <= 0 && bar.noteInside && bar.link >= 44 && bar.page <= 0, JSON.stringify(bar));
+    }
   }
   if (shots) await page.screenshot({ path: join(shots, `${engine}-${w}x${h}-yazi${px}.png`), fullPage: true });
   await browser.close();
@@ -1599,15 +1690,25 @@ async function forcedColors(browser, engine, prepare) {
   await page.locator('[data-filter="mutfak"]').scrollIntoViewIfNeeded();
   await page.click('[data-filter="mutfak"]');
   const ptr = await page.evaluate(() => { const el = document.querySelector('[data-filter="mutfak"]'); return { style: getComputedStyle(el).outlineStyle, kb: document.documentElement.dataset.kb || "", pressed: el.getAttribute("aria-pressed") }; });
-  check(engine, size, "zorlanmış renklerde fareyle basılan öğede çerçeve yok", ptr.kb === "" && ptr.style === "none" && ptr.pressed === "true", JSON.stringify(ptr));
+  // Metin alanı fareyle tıklanınca da :focus-visible durumuna girer. Çerçeve yalnız klavye modunda çizilmelidir.
+  await page.click("#t-urun");
+  const field = await page.evaluate(() => { const el = document.querySelector("#t-urun"); return { style: getComputedStyle(el).outlineStyle, kb: document.documentElement.dataset.kb || "", focused: document.activeElement === el, visible: el.matches(":focus-visible") }; });
+  check(engine, size, "zorlanmış renklerde fareyle basılan öğede çerçeve yok",
+    ptr.kb === "" && ptr.style === "none" && ptr.pressed === "true" && field.focused && field.kb === "" && field.style === "none", JSON.stringify({ ptr, field }));
+  // Sepetteki ürünün düğmesi de yalnız dolguyla ayrılır. Bir ürün sepete eklenir ve iki düğme karşılaştırılır.
+  // Süzgeç seçili olduğu için ilk kart gizli olabilir. Görünen ilk düğmeye tıklanır.
+  await page.locator(".pc__add:visible").first().scrollIntoViewIfNeeded();
+  await page.locator(".pc__add:visible").first().click();
+  await page.waitForTimeout(300);
   const sel = await page.evaluate(() => {
     const bg = (q) => getComputedStyle(document.querySelector(q)).backgroundColor;
     return {
       filter: bg('.filter[aria-pressed="true"]'), filterOff: bg('.filter[aria-pressed="false"]'), tab: bg('.seg button[aria-selected="true"]'), tabOff: bg('.seg button[aria-selected="false"]'),
-      pref: bg('.pref[aria-checked="true"]'), prefOff: bg('.pref[aria-checked="false"]'), bar: bg(".header__bar"), page: getComputedStyle(document.body).backgroundColor,
+      pref: bg('.pref[aria-checked="true"]'), prefOff: bg('.pref[aria-checked="false"]'), cart: bg('.pc__add[data-sepette="true"]'), cartOff: bg('.pc__add[data-sepette="false"]'),
+      bar: bg(".header__bar"), page: getComputedStyle(document.body).backgroundColor,
     };
   });
-  check(engine, size, "zorlanmış renklerde seçili durum ayırt edilir", sel.filter !== sel.filterOff && sel.tab !== sel.tabOff && sel.pref !== sel.prefOff && sel.bar !== sel.page, JSON.stringify(sel));
+  check(engine, size, "zorlanmış renklerde seçili durum ayırt edilir", sel.filter !== sel.filterOff && sel.tab !== sel.tabOff && sel.pref !== sel.prefOff && sel.cart !== sel.cartOff && sel.bar !== sel.page, JSON.stringify(sel));
   // Seçili öğenin yazısı ve içindeki yazılar okunur. Tarayıcı bu modda yazının arkasına sayfa zemini renginde bir levha çizer.
   // Seçim yazı rengi açıksa levhanın üstünde görünmez. Bu yüzden seçili öğede levha olmamalıdır (forced-color-adjust: none).
   // Yazı, seçim zemininden en az 4,5:1 karşıtlıkla ayrılmalıdır.
@@ -1625,19 +1726,52 @@ async function forcedColors(browser, engine, prepare) {
       return base;
     };
     // Bütün seçili öğeler ölçülür: seçili süzgeç, seçili sekme, seçili dil ve seçili para birimi.
-    return [...document.querySelectorAll('.filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"]')].map((el) => {
+    return [...document.querySelectorAll('.filter[aria-pressed="true"], .seg button[aria-selected="true"], .pref[aria-checked="true"], .pc__add[data-sepette="true"]')].map((el) => {
       const worst = Math.min(...[el, ...el.querySelectorAll("*")].filter((n) => [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())).map((n) => {
         const bg = under(n);
         const fg = over(parse(getComputedStyle(n).color), bg);
         const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
         return (hi + 0.05) / (lo + 0.05);
       }));
-      return { q: String(el.dataset.deger || el.dataset.filter || el.id).slice(0, 16), adjust: getComputedStyle(el).forcedColorAdjust, ratio: Number(worst.toFixed(2)) };
+      return { q: String(el.dataset.deger || el.dataset.filter || el.id || el.className).slice(0, 16), adjust: getComputedStyle(el).forcedColorAdjust, ratio: Number(worst.toFixed(2)) };
     });
   });
   check(engine, size, "zorlanmış renklerde seçili öğenin yazısı okunur", ink.every((x) => x.adjust === "none" && x.ratio >= 4.5), JSON.stringify(ink));
+  // Süs sahnesi ve yönlü yüzeyler bu modda metin rengine döner. İkisi de çizilmez.
+  const deco = await page.evaluate(() => {
+    const all = [...document.querySelectorAll(".scene, [data-surface]")];
+    return { all: all.length, drawn: all.filter((e) => e.getClientRects().length > 0).map((e) => String(e.getAttribute("class")).slice(0, 30)) };
+  });
+  check(engine, size, "zorlanmış renklerde süs sahnesi ve yüzeyler gizli", deco.all >= 3 && deco.drawn.length === 0, JSON.stringify(deco));
   if (shots) await page.screenshot({ path: join(shots, `${engine}-zorlanmis-renk.png`) });
   await ctx.close();
+  // Betik yokken klavye modu izlenemez. Çerçeve çizilmez. Odak, sistemin seçim rengindeki bir dolguyla görünür.
+  const nctx = await browser.newContext({ viewport: { width: 1024, height: 768 }, forcedColors: "active", javaScriptEnabled: false });
+  if (prepare) await prepare(nctx);
+  const np = await nctx.newPage();
+  await np.goto(url, { waitUntil: "load" });
+  await np.waitForTimeout(800);
+  for (let i = 0; i < 3; i++) await np.keyboard.press(engine === "webkit" ? "Alt+Tab" : "Tab");
+  const nf = await np.evaluate(() => {
+    const el = document.activeElement;
+    const st = getComputedStyle(el);
+    return { tag: el.tagName, outline: st.outlineStyle, adjust: st.forcedColorAdjust, bg: st.backgroundColor, page: getComputedStyle(document.body).backgroundColor, js: document.documentElement.classList.contains("js") };
+  });
+  check(engine, size, "betik yokken zorlanmış renklerde odak çerçevesiz bir dolguyla görünür",
+    !nf.js && nf.tag === "A" && nf.outline === "none" && nf.adjust === "none" && nf.bg !== nf.page && nf.bg !== "rgba(0, 0, 0, 0)", JSON.stringify(nf));
+  // Metin alanlarının odağı da görünür: alanın içinde düz bir alt çizgi belirir, çerçeve yoktur.
+  const fields = [];
+  for (const id of ["#q-ana", "#t-urun"]) {
+    await np.focus(id);
+    fields.push(await np.evaluate((q) => {
+      const el = document.querySelector(q);
+      const st = getComputedStyle(el);
+      return { id: q, focused: document.activeElement === el, visible: el.matches(":focus-visible"), outline: st.outlineStyle, adjust: st.forcedColorAdjust, line: /gradient/.test(st.backgroundImage) };
+    }, id));
+  }
+  check(engine, size, "betik yokken zorlanmış renklerde metin alanının odağı görünür",
+    fields.every((x) => x.focused && x.visible && x.outline === "none" && x.adjust === "none" && x.line), JSON.stringify(fields));
+  await nctx.close();
 }
 
 
@@ -1928,12 +2062,14 @@ async function bolge(page, engine, w, h) {
   check(engine, size, "her olgunun kaynağı ve denetim tarihi var", data.yerler.length >= 1 && badFact.length === 0, badFact.join(", "));
   const srcSame = m.items.every((i) => { const y = data.yerler.find((x) => x.kimlik === i.id); return y && y.fact && y.fact.source_url.includes(i.src?.href); });
   check(engine, size, "kaynak bağlantısı verideki kaynağa gider", srcSame, m.items.map((i) => i.src && i.src.href).join(" "));
-  check(engine, size, "bölüm satıcı bulunduğu anlamına gelmediğini söyler", /Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez\./.test(m.text) && !/Planlanan|Yakında/.test(m.text), "");
+  check(engine, size, "bölüm satıcı bulunduğu anlamına gelmediğini söyler", /Bir merkezin bu listede olması, oradaki satıcıların iStoc'ta olduğu anlamına gelmez\./.test(m.text) && !/Planlanan|Yakında/.test(m.text), "");
   const badAction = m.items.filter((i) => !i.teklif || i.teklif.text !== "Teklif isteyin" || i.teklif.href !== "#teklif" || !i.teklif.urun).map((i) => i.id);
   check(engine, size, "ana eylem teklif formuna gider", badAction.length === 0, badAction.join(", "));
   const badSrc = m.items.filter((i) => !i.src || !/^https:\/\//.test(i.src.href) || i.src.size < 14 || !i.src.text).map((i) => i.id);
   check(engine, size, "her yerin kaynak bağlantısı okunur", badSrc.length === 0, badSrc.join(", "));
-  check(engine, size, "bölüm bağlantıları boş ya da sahte hedefe gitmez", m.targetsOk && m.links.length <= m.items.length * 2 + 4, m.links.join(" "));
+  // Her satırda ana eylem, ana kaynak ve verideki ek kaynaklar vardır. Bölümün kendi iki bağlantısı da sayılır. Başka bağlantı eklenmez.
+  const allowedLinks = data.yerler.reduce((n, y) => n + 2 + ((y.fact && y.fact.ek_baglar) || []).length, 0) + 4;
+  check(engine, size, "bölüm bağlantıları boş ya da sahte hedefe gitmez", m.targetsOk && m.links.length <= allowedLinks, `${m.links.length}/${allowedLinks} ` + m.links.join(" "));
   check(engine, size, "bölüm satıcı varlığı ya da doğrulama uydurmaz", !/doğrulan|onaylı satıcı|\d+\s*(satıcı|üretici)|satıcı bulunur|satıcılar var/i.test(m.text), (m.text.match(/.{0,30}(doğrulan|onaylı|satıcı).{0,30}/i) || [""])[0]);
   check(engine, size, "bölge satırları vurgu kenarlı kutu değildir", m.boxed === 0, String(m.boxed));
   check(engine, size, "bölümde 14 px altında metin yok", m.small.length === 0, m.small.slice(0, 4).join(" | "));
@@ -1982,8 +2118,10 @@ async function bolge(page, engine, w, h) {
     check(engine, size, "aramada gizlenen merkez odaklanamaz", r.focusable === false, "");
     check(engine, size, "arama sürerken panelin erişilebilir adı eski sayıyı okumaz", !!r.name && !/daha görün/.test(r.name), r.name);
     await q.fill("zzzz eşleşmeyen");
-    const z = await page.evaluate(() => { const sec = document.querySelector("#bolgesel-tedarik"); const e = sec.querySelector("[data-bolge-bos]"); return { bos: !!e && !e.hidden, shown: sec.querySelectorAll("[data-bolge]:not([hidden])").length }; });
+    const z = await page.evaluate(() => { const sec = document.querySelector("#bolgesel-tedarik"); const e = sec.querySelector("[data-bolge-bos]"); return { bos: !!e && !e.hidden, shown: sec.querySelectorAll("[data-bolge]:not([hidden])").length, durum: document.querySelector("#durum").textContent }; });
     check(engine, size, "aramada eşleşme yoksa durum cümlesi görünür", z.bos && z.shown === 0, JSON.stringify(z));
+    // Duyuru da yol gösterir: ekran okuyucu kullanıcısı ne yapacağını duyar.
+    check(engine, size, "eşleşme yoksa duyuru ne yapılacağını söyler", /0 merkez listeleniyor\. Aramanıza uyan merkez yok\. Başka bir şehir ya da sektör yazın\./.test(z.durum), z.durum);
     await q.fill("");
     const back = await page.evaluate(() => { const sec = document.querySelector("#bolgesel-tedarik"); const m = sec.querySelector("[data-bolge-more]"); return { hidden: sec.querySelectorAll("[data-bolge][hidden]").length, bos: sec.querySelector("[data-bolge-bos]").hidden, btn: m ? m.querySelector("button").hidden : false, expanded: m ? m.querySelector("button").getAttribute("aria-expanded") : "", panel: m ? m.querySelector(".faq__panel").dataset.open : "" }; });
     check(engine, size, "arama temizlenince bütün merkezler ve panelin önceki durumu geri gelir", back.hidden === 0 && back.bos === true && back.btn === false && back.expanded === back.panel, JSON.stringify(back));
@@ -2277,6 +2415,9 @@ async function alici(page, engine, w, h) {
   check(engine, size, "alıcı talep bölümü tedarik bölümünden sonra ve footer'dan önce gelir", !!m && m.order, JSON.stringify(m && m.order));
   if (!m) return;
   check(engine, size, "alıcı talep bölümü planlanan hizmet etiketini taşır", m.plan, "");
+  const okunma = await page.evaluate(() => (document.querySelector("#alici-talepleri [data-talep-tarih]") || {}).textContent || "");
+  const okunmaGunu = new Date(data.checked_at + "T12:00:00Z").toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  check(engine, size, "alıcı bölümü kaynakların okunduğu günü yazar", okunma === `Kaynaklar ${okunmaGunu} günü okundu.`, okunma);
   check(engine, size, "alıcı talep bölümünün başlığı ve açıklaması doğru", m.title.endsWith("İhtiyacınızı yazın. Uygun satıcılar sizi bulsun.")
     && m.giris === "İşletmenizin bulunduğu bölgeyi ve alacağınız ürünü seçin. Talebiniz için gereken bilgileri hazırlayın."
     && m.not === "Bu bölüm planlanan alım alanlarını gösterir. Yayımlanmış alıcı veya talep listesi değildir."
@@ -2297,15 +2438,24 @@ async function alici(page, engine, w, h) {
     await link.scrollIntoViewIfNeeded();
     await link.click();
     await page.waitForTimeout(100);
-    const sel = await page.evaluate(() => { const e = document.querySelector("[data-rfq-alan]"); return { shown: !!e && !e.hidden && e.getBoundingClientRect().height > 0, text: e ? e.textContent.trim() : "", inForm: !!e && !!e.closest("#teklif"), value: document.querySelector("#t-urun").value }; });
+    const desc = () => page.evaluate(() => (document.querySelector("#t-urun").getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+    const sel = await page.evaluate(() => { const e = document.querySelector("[data-rfq-alan]"); return { id: e ? e.id : "", shown: !!e && !e.hidden && e.getBoundingClientRect().height > 0, text: e ? e.textContent.trim() : "", inForm: !!e && !!e.closest("#teklif"), value: document.querySelector("#t-urun").value }; });
     check(engine, size, "seçilen alım alanı formun yanında yazar", sel.shown && sel.inForm && y0 && sel.text === `Seçtiğiniz alım alanı: ${y0.isletme}, ${y0.ad}.` && !/adres|teslimat/i.test(sel.text) && sel.value === y0.editorial.teklif_urun, JSON.stringify(sel));
+    // Seçilen alan ürün alanının açıklamasıdır. Hata cümlesi gelince de bu bağ silinmez, iki açıklama birlikte okunur.
+    const linked = await desc();
+    await page.fill("#t-urun", "");
+    await page.evaluate(() => document.querySelector("[data-rfq]").requestSubmit());
+    const withError = await desc();
+    check(engine, size, "seçilen alım alanı ürün alanına bağlı, hata gelince bağ kalır",
+      !!sel.id && linked.includes(sel.id) && withError.includes(sel.id) && withError.includes("t-urun-hata"), JSON.stringify({ id: sel.id, linked, withError }));
     // Tedarik bölümündeki bağlantı alım alanı seçmez: satır gizlenir.
     const sup = page.locator("[data-bolge] a[data-bolge-teklif]").first();
     await sup.scrollIntoViewIfNeeded();
     await sup.click();
     await page.waitForTimeout(100);
     const gone = await page.evaluate(() => { const e = document.querySelector("[data-rfq-alan]"); return !!e && e.hidden; });
-    check(engine, size, "tedarik bağlantısı seçili alım alanını kaldırır", gone, String(gone));
+    const after = await desc();
+    check(engine, size, "tedarik bağlantısı seçili alım alanını kaldırır", gone && !after.includes(sel.id) && !after.includes("t-urun-hata"), JSON.stringify({ gone, after }));
     await page.fill("#t-urun", "");
   }
   check(engine, size, "alıcı bölümü gerçek profil ya da talep varmış gibi yazmaz", !/\d+\s*(alıcı|talep|işletme)\s*(var|bekliyor|listelendi)|talepler yayında|aktif talep|doğrulanmış alıcı/i.test(m.text) && m.imgs === 0, (m.text.match(/.{0,30}(aktif talep|talepler yayında|alıcı var).{0,30}/i) || [""])[0]);
@@ -2362,6 +2512,7 @@ async function newChecks(browser, page, engine) {
   await guarded(engine, "1440x900 hareket", "hareket", () => motion(browser, engine, 1440, 900));
 }
 const onlyBolge = process.argv.includes("--bolge");
+const onlyScale = process.argv.includes("--yazi");
 // --motor=chromium ya da --motor=webkit yalnız o motoru çalıştırır. Varsayılan ikisidir.
 const motorArg = (process.argv.find((a) => a.startsWith("--motor=")) || "").split("=")[1] || "";
 const ENGINES = [["chromium", chromium], ["webkit", webkit]].filter(([n]) => !motorArg || n === motorArg);
@@ -2393,6 +2544,13 @@ async function all() {
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+    if (onlyScale) {
+      if (engine === "chromium") for (const [px, w, h] of SCALES) await textScale(engine, px, w, h);
+      else notRun.push(`${engine}: bu motor kök yazı boyutu ayarını öykünmez`);
+      await bounded(browser.close(), 15000, "tarayıcı kapatma").catch(() => {});
+      report(engine);
+      continue;
+    }
     if (onlyBolge) {
       await newChecks(browser, page, engine);
       await guarded(engine, "390x844 betiksiz", "betiksiz", () => noScript(browser, engine));
@@ -2438,7 +2596,7 @@ async function all() {
     // Büyütülmüş yazı ve zorlanmış renkler yalnız Chromium'da öykünülür.
     if (engine === "chromium") {
       await forcedColors(browser, engine);
-      for (const [px, w, h] of [[20, 320, 568], [24, 320, 568], [20, 390, 844], [24, 390, 844]]) await textScale(engine, px, w, h);
+      for (const [px, w, h] of SCALES) await textScale(engine, px, w, h);
     } else {
       notRun.push(`${engine}: bu motor kök yazı boyutu ayarını ve zorlanmış renkleri öykünmez, bu iki denetim yalnız Chromium'da çalıştı`);
     }
@@ -2468,7 +2626,7 @@ const BREAKS = [
   { name: "hareket azaltmada hareket paketi yükleniyor", file: "index.html", run: "motion:390x844", expect: "hareket azaltmada paket indirilmez ve sahne durağandır",
     apply: swap('<script type="module" src="hareket/baslat.js"></script>', '<script type="module">import("./hareket/sahne.js").then((m) => m.start());</script>') },
   { name: "bölgede satıcı uyarısı kayboldu", file: "index.html", run: "bolge:320x568", expect: "bölüm satıcı bulunduğu anlamına gelmediğini söyler",
-    apply: swap("Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez.", "") },
+    apply: swap("Bir merkezin bu listede olması, oradaki satıcıların iStoc'ta olduğu anlamına gelmez.", "") },
   // Beşinci incelemenin bulguları. Her bozulma, düzeltilen bir kusuru geri getirir.
   { name: "seçenek adı seçim işaretinin altına giriyor", file: "styles.css", run: "layout:320x568", expect: "seçenek adı seçim işaretine değmez",
     apply: add(".pref { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 12px; } .pref__mark { grid-column: 1; } .pref__t { grid-column: 2; grid-row: 1; } .pref__on { grid-column: 3; }") },
@@ -2479,9 +2637,10 @@ const BREAKS = [
     apply: swap('<span class="sr-only">Ürünler: </span>', "") },
   { name: "ışığın altında metin soluk kalıyor", file: "styles.css", run: "layout:1024x768", expect: "metin karşıtlığı yeterli",
     apply: swap("background: radial-gradient(closest-side, rgba(79, 136, 207, 0.24), rgba(79, 136, 207, 0));\n  transform", "background: radial-gradient(closest-side, rgba(79, 136, 207, 0.5), rgba(79, 136, 207, 0));\n  transform") },
-  { name: "para birimi değişince sipariş toplamı eski kalıyor", file: "app.js", run: "behavior:390x844", expect: "para birimi değişince sepet ve sipariş toplamı yeniden hesaplanır",
+  // Bu iki bozulma, aynı koşudaki başka bir para birimi bozulmasıyla örtülürdü. Bu yüzden kendi koşularında denenir.
+  { name: "para birimi değişince sipariş toplamı eski kalıyor", file: "app.js", run: "behavior:390x844:siparis", expect: "para birimi değişince sepet ve sipariş toplamı yeniden hesaplanır",
     apply: swap("          order.repaint(true);\n", "") },
-  { name: "toplam her para biriminde dolar tutarından hesaplanıyor", file: "app.js", run: "behavior:1440x900", expect: "para birimi değişince sepet ve sipariş toplamı yeniden hesaplanır",
+  { name: "toplam her para biriminde dolar tutarından hesaplanıyor", file: "app.js", run: "behavior:1440x900:kur", expect: "para birimi değişince sepet ve sipariş toplamı yeniden hesaplanır",
     apply: swap('parseFloat(el.dataset["unit" + para.code.charAt(0) + para.code.slice(1).toLowerCase()])', "parseFloat(el.dataset.unitUsd)") },
   { name: "toplam yuvarlanmış birim fiyattan hesaplanıyor", file: "index.html", run: "behavior:320x568", expect: "en az sipariş tutarı sepetin toplamıyla aynı hesaplanır",
     apply: (t) => t.replace(/data-unit-(gbp|usd|eur)="(\d+\.\d\d)\d+"/g, 'data-unit-$1="$2"') },
@@ -2497,8 +2656,8 @@ const BREAKS = [
     apply: swap('function sync(g) { g.panel.inert = g.btn.getClientRects().length > 0 && g.el.dataset.open !== "true"; }', "function sync(g) { g.panel.inert = false; }") },
   { name: "dar ekrana dönünce odaktaki grup kapalı kalıyor", file: "app.js", run: "behavior:390x780", expect: "dar ekrana dönünce odaktaki bağlantının grubu açılır",
     apply: swap('} else if (button && g.el.dataset.open !== "true" && g.panel.contains(from)) {', "} else if (false) {") },
-  { name: "görünen etiket erişilebilir adda yok", file: "index.html", run: "layout:390x844", expect: "görünen etiket erişilebilir adın içinde",
-    apply: swap('<button class="pc__add" type="button" aria-pressed="false">', '<button class="pc__add" type="button" aria-pressed="false" aria-label="Sepete ekleyin">') },
+  { name: "görünen etiket erişilebilir adda yok", file: "index.html", run: "layout:390x844", expect: "görünen etiket erişilebilir adın başında",
+    apply: swap('<button class="pc__add" type="button" data-sepette="false">', '<button class="pc__add" type="button" data-sepette="false" aria-label="Sepete ekleyin">') },
   { name: "büyütülen yazıda alt gezinme etiketi küçülüyor", file: "styles.css", run: "scale:24:320x568", expect: "büyütülen yazıda alt gezinme etiketi küçülmez",
     apply: swap(".bottomnav a { font-size: max(14px, min(var(--t-sm), 7.5vw)); }", ".bottomnav a { font-size: max(14px, min(var(--t-sm), 4.4vw)); }") },
   { name: "büyütülen yazıda alt gezinme etiketleri birbirine değiyor", file: "styles.css", run: "scale:24:320x600", expect: "büyütülen yazıda alt gezinme etiketleri birbirine değmez",
@@ -2510,7 +2669,7 @@ const BREAKS = [
   { name: "odakta simge kendi kutusunun üstünde okunmuyor", file: "styles.css", run: "focus:390x844", expect: "odaktaki öğenin metni ve simgesi okunur",
     apply: add('html[data-kb="on"] :is(a, button):focus-visible i { color: inherit; }') },
   { name: "yatay telefonda sepet çubuğu yüksek", file: "styles.css", run: "landscape:844x390", expect: "yatay telefonda sepet çubuğu ekranın dörtte birinden az yer kaplar",
-    apply: swap("@media (max-height: 480px) and (max-width: 1023px) {\n  .bottomnav a { flex-direction: row;", "@media not all {\n  .bottomnav a { flex-direction: row;") },
+    apply: swap("@media (max-height: 480px) and (max-width: 1023px) and (orientation: landscape) {\n  .bottomnav a { flex-direction: row;", "@media not all {\n  .bottomnav a { flex-direction: row;") },
   { name: "büyütülen yazıda başlık taşıyor", file: "styles.css", run: "scale:24:320x568", expect: "büyütülen yazıda metin kutusuna ve ekrana sığar",
     apply: swap("--t-display: min(clamp(2.375rem, 1.2rem + 5.4vw, 5rem), max(12vw, 1.25rem));", "--t-display: clamp(2.375rem, 1.2rem + 5.4vw, 5rem);") },
   // İki bozulma aynı satırı değiştirir. Bu yüzden ayrı koşularda denenir (forced ve forced:levha).
@@ -2615,6 +2774,51 @@ const BREAKS = [
     apply: swap('c.addEventListener("click", function () { openCat(c, !wide.matches); });', 'c.addEventListener("click", function () { setTimeout(function () { openCat(c, !wide.matches); }, 400); });') },
 ];
 
+// Birleşik sürümün bağımsız incelemesinin bulguları (12 Kasım 2026). Her bozulma düzeltilen bir kusuru geri getirir.
+BREAKS.push(
+  { name: "genişleyen ekranda kapalı grubun odağı düşüyor", file: "app.js", run: "behavior:360x640", expect: "genişleyen ekranda kapalı grubun düğmesindeki odak ilk bağlantıya geçer",
+    apply: swap("if (first) focusSoon(first, g.btn, performance.now() + 1000);", "if (first) focusSoon(first, g.btn, 0);") },
+  { name: "betiksiz sayfada zorlanmış renklerde metin alanı odağı görünmüyor", file: "styles.css", run: "forced:betiksiz-alan", expect: "betik yokken zorlanmış renklerde metin alanının odağı görünür",
+    apply: (t) => t.replace(/  html:not\(\.js\) \.field input:focus-visible \{ forced-color-adjust: none;[^\n]*\n/, "") },
+  { name: "betiksiz sayfada zorlanmış renklerde arama alanı odağı görünmüyor", file: "styles.css", run: "forced:betiksiz-arama", expect: "betik yokken zorlanmış renklerde metin alanının odağı görünür",
+    apply: (t) => t.replace(/  html:not\(\.js\) \.search input:focus-visible \{ forced-color-adjust: none;[^\n]*\n/, "") },
+  { name: "kısa dikey pencerede alt gezinme yan yana düzende", file: "styles.css", run: "scale:16:360x480", expect: "büyütülen yazıda metin kutusuna ve ekrana sığar",
+    apply: swap("@media (max-height: 480px) and (max-width: 1023px) and (orientation: landscape) {\n  .bottomnav a { flex-direction: row;", "@media (max-height: 480px) and (max-width: 1023px) {\n  .bottomnav a { flex-direction: row;") },
+  { name: "zorlanmış renklerde sepetteki ürünün düğmesi ayırt edilmiyor", file: "styles.css", run: "forced:sepet", expect: "zorlanmış renklerde seçili durum ayırt edilir",
+    apply: (t) => t.split(', .pc__add[data-sepette="true"]').join("") },
+  { name: "alıcı bölümünde okuma günü yok", file: "index.html", run: "alici:390x844", expect: "alıcı bölümü kaynakların okunduğu günü yazar",
+    apply: (t) => t.replace(/<p class="bolge__tarih" data-talep-tarih>[^<]*<\/p>/, "") },
+  { name: "kapalı yanıtın yazısı küçük", file: "styles.css", run: "layout:390x844:yanit", expect: "açılan gruplarda en küçük metin 14 px",
+    apply: add(".faq__panel p { font-size: 12px; }") },
+  { name: "boş arama ne yapılacağını duyurmuyor", file: "app.js", run: "bolge:390x844:bos", expect: "eşleşme yoksa duyuru ne yapılacağını söyler",
+    apply: swap('var said = n === 0 && empty ? text + " " + empty.textContent : text;', "var said = text;") },
+  { name: "hata gelince seçilen alanın bağı siliniyor", file: "app.js", run: "alici:390x844:bag", expect: "seçilen alım alanı ürün alanına bağlı, hata gelince bağ kalır",
+    apply: swap("      describe(product, err.id, on);", '      if (on) product.setAttribute("aria-describedby", err.id); else product.removeAttribute("aria-describedby");') },
+  { name: "büyük yazıda ödeme yöntemi adı taşıyor", file: "styles.css", run: "scale:24:600x320", expect: "büyütülen yazıda metin kutusuna ve ekrana sığar",
+    apply: swap("@media (min-width: 37.5em) {\n  .ptiles", "@media (min-width: 600px) {\n  .ptiles") },
+  // Kısa dikey pencerede (360x480) varsayılan yazıyla beş öğe dikey düzende sığar. Yön koşulu kalkarsa öğe gereksiz yere gizlenir.
+  { name: "kısa dikey pencerede bulunulan sayfanın öğesi gizleniyor", file: "styles.css", run: "layout:360x480:yon", expect: "alt gezinmede bulunulan sayfanın öğesi görünür",
+    apply: swap("@media (max-height: 480px) and (max-width: 25em) and (orientation: landscape) {", "@media (max-height: 480px) and (max-width: 25em) {") },
+  { name: "sepet bağlantısının adı görünen kelimeyle başlamıyor", file: "index.html", run: "layout:390x844:sepet", expect: "görünen etiket erişilebilir adın başında",
+    apply: (t) => t.split('aria-label="Sepet sayfasını istoc.com\'da açın. Örnek sepette 0 ürün var."').join('aria-label="Sepetinizi açın"') },
+  { name: "sepet düğmesi eklendikten sonra da ekleme diyor", file: "app.js", run: "behavior:390x844:ad", expect: "sepet düğmesi basınca ne olacağını söyler",
+    apply: swap('$("span", b).textContent = on ? "Sepetten çıkarın" : card.dataset.moq + " adet ekleyin";', '$("span", b).textContent = card.dataset.moq + " adet ekleyin";') },
+  { name: "büyük yazıda dil adı kutusundan taşıyor", file: "styles.css", run: "scale:24:480x800", expect: "büyütülen yazıda metin kutusuna ve ekrana sığar",
+    apply: swap("@media (min-width: 30em) {\n  .prefs__group", "@media (min-width: 480px) {\n  .prefs__group") },
+  { name: "yatay telefonda büyük yazıda alt gezinme taşıyor", file: "styles.css", run: "scale:24:568x320", expect: "büyütülen yazıda metin kutusuna ve ekrana sığar",
+    apply: swap("@media (max-height: 480px) and (max-width: 25em) and (orientation: landscape) {", "@media not all {") },
+  { name: "büyük yazıda dolu sepet çubuğu yükseliyor", file: "styles.css", run: "scale:24:360x740", expect: "büyütülen yazıda dolu sepet çubuğu ekrana sığar",
+    apply: swap(".cartbar__note { flex: 1 0 100%; }", ".cartbar__note { flex: 0 1 72px; }") },
+  { name: "zorlanmış renklerde yüzeyler görünüyor", file: "styles.css", run: "forced:yuzey", expect: "zorlanmış renklerde süs sahnesi ve yüzeyler gizli",
+    apply: swap(".scene, .surface { display: none; }", ".scene { display: none; }") },
+  { name: "zorlanmış renklerde çerçeve klavye modu dışında da çiziliyor", file: "styles.css", run: "forced:fare", expect: "zorlanmış renklerde fareyle basılan öğede çerçeve yok",
+    apply: swap('  html[data-kb="on"] :focus-visible { outline: 2px solid CanvasText; }', "  :focus-visible { outline: 2px solid CanvasText; }") },
+  { name: "betiksiz sayfada zorlanmış renklerde çerçeve", file: "styles.css", run: "forced:betiksiz-cerceve", expect: "betik yokken zorlanmış renklerde odak çerçevesiz bir dolguyla görünür",
+    apply: swap('  html[data-kb="on"] :focus-visible { outline: 2px solid CanvasText; }', '  html[data-kb="on"] :focus-visible, html:not(.js) :focus-visible { outline: 2px solid CanvasText; }') },
+  { name: "betiksiz sayfada zorlanmış renklerde odak görünmüyor", file: "styles.css", run: "forced:betiksiz-dolgu", expect: "betik yokken zorlanmış renklerde odak çerçevesiz bir dolguyla görünür",
+    apply: swap('  html:not(.js):root :is(a, button, [role="option"], [role="tab"]):focus-visible { forced-color-adjust: none; background-color: Highlight; color: HighlightText; }\n', "") },
+);
+
 // Altıncı sürümün bozulmaları: yeni davranışların testi bunları yakalamalıdır.
 BREAKS.push(
   { name: "teklif özeti adetle güncellenmiyor", file: "app.js", run: "planned:390x844", expect: "teklif özeti ürün ve adet yazılınca anında güncellenir",
@@ -2637,11 +2841,20 @@ async function selfCheck() {
   let caught = 0;
   // --motor verilirse sınama da yalnız o motorda çalışır. Öteki motorun bozulmaları bu koşuda denenmez.
   const chosen = BREAKS.filter((b) => b.name.includes(selfOnly) && (!motorArg || (b.engine || "chromium") === motorArg));
-  const runs = [...new Set(chosen.map((b) => `${b.engine || "chromium"}|${b.run}`))];
+  // İki bozulma aynı koşuda aynı denetimi bekliyorsa biri ötekini örter. Öteki yakalanmasa da denetim düşerdi.
+  // Böyle bir eşleşme sınamanın kendi kusurudur ve FAIL sayılır.
+  const pairs = new Map();
+  for (const b of chosen) {
+    const k = `${b.engine || "chromium"}|${b.run}|${b.expect}`;
+    if (pairs.has(k)) lines.push(`FAIL aynı koşuda aynı beklenen denetim: "${pairs.get(k)}" ve "${b.name}"`);
+    else pairs.set(k, b.name);
+  }
+  const keyOf = (b) => `${b.engine || "chromium"}|${b.run}${selfSingle ? "|" + b.name : ""}`;
+  const runs = [...new Set(chosen.map(keyOf))];
   for (const key of runs) {
     const [engine, run] = key.split("|");
     const browser = await launch(engine);
-    const list = chosen.filter((b) => `${b.engine || "chromium"}|${b.run}` === key);
+    const list = chosen.filter((b) => keyOf(b) === key);
     const body = { ...source };
     for (const b of list) {
       const next = b.apply(body[b.file]);

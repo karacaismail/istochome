@@ -541,7 +541,7 @@ Tek kelimelik adlar da kaynaklıdır. Ödeme yöntemi, para birimi ve dil adlar�
 | Veri | Sayısı ya da dayanağı `data` klasöründen gelen metin. | 34 |
 | Dış kaynak | Bölgesel bölümlerin kaynaklı olgu cümlesi. Kaynağı `data/bolgeler.json` ve `data/alicilar.json` dosyalarındadır. | 74 |
 | Tasarım | Bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu. | 497 |
-| Etiket | Düğme, bağlantı, alan ve bölüm adı. Canlı sitedeki bir sayfanın adı da etikettir. | 367 |
+| Etiket | Düğme, bağlantı, alan ve bölüm adı. Canlı sitedeki bir sayfanın adı da etikettir. | 372 |
 | Plan | Planlanan hizmet ya da içerik. Canlı olgu değildir. Yalnız etiketli planlanan bölgede durur. | 189 |
 | Görünmeyen metin | Sayfa başlığı, ekran okuyucunun okuduğu adlar, alan içi örnekler ve yalnız ekran okuyucuya okunan metinler. | 38 |
 
@@ -561,8 +561,9 @@ Sayfadaki her adres denetlenir: bağlantılar, form hedefleri, paylaşım görse
 - **Kayıt sayfası.** Ürün, mağaza ve marka adresleri canlı sitenin site haritasında bulunmalıdır. Kategori adresleri canlı kategori ağacında bulunmalıdır. Mağaza adresi ayrıca işletmesi doğrulanmış bir mağazaya gitmelidir.
 - **Adres kalıbı.** Bağlantıdaki değişken adlarını canlı sayfanın kodu tanımalıdır. Bu adlar `q`, `min_order` ve `sort` değerleridir. Satıcı sayfasının kodu `#paketler` bölümünü de tanımalıdır.
 - **Dış adres.** Sosyal hesap adresleri canlı sitenin kodunda geçmelidir. Paylaşım görseli ve logo açılmalıdır.
+- **Bölge kaynağı.** Bölgesel bölümlerin kaynak adresleri veride kayıtlıdır. Derleme bu adresleri açmaz. Yalnız veride olduklarını denetler. Bu yüzden ayrı sayılırlar. Kaynakların okunduğu gün bölümün sonunda yazar. Yayın derlemesinde alıcı bölümü yoktur. Yayın denetimi alıcı kaynaklarını geçerli adres saymaz.
 
-`build.py` denetlenmemiş bir adres bulursa sayfayı üretmez. `kapi.mjs` aynı denetimi üretilen sayfada yineler. Son derlemede 252 ayrı adres denetlendi. Bunların 243'ü istoc.com adresidir.
+`build.py` denetlenmemiş bir adres bulursa sayfayı üretmez. `kapi.mjs` aynı denetimi üretilen sayfada yineler. Son derlemede 243 istoc.com adresi veri günündeki site listeleriyle denetlendi. 9 dış adres izin listesiyle denetlendi. 73 bölge kaynağı veride kayıtlıdır. Derleme bu kaynakları açmadı.
 
 Bu denetim adresin var olduğunu gösterir. Giriş isteyen sayfanın girişten sonra ne gösterdiğini göstermez.
 
@@ -986,16 +987,16 @@ Chromium ve WebKit sonuçları gerçek cihaz testi değildir.
 
 | Denetim | Durum | Not |
 |---|---|---|
-| `npm run build` | pass | Önizleme üretildi. 1.232 metnin hepsinin sınıfı bilinir. 320 ayrı adres denetlendi. |
+| `npm run build` | pass | Önizleme üretildi. 1.232 metnin hepsinin sınıfı bilinir. Sayfada 320 ayrı adres vardı. Bunların bölge kaynakları açılmadan sayılmıştı. Ayrım 22. bölümde düzeltildi. |
 | `npm run check` | pass | Tür denetimi geçti. 838 stil kuralı denetlendi. 125 ihlal örneğinin hepsi reddedildi. |
 | Hareket testi | pass | Chromium'da 71, WebKit'te 71 denetimin hepsi geçti. |
 | Tarayıcı testi, Chromium | pass | 792 denetimin hepsi geçti. |
 | Tarayıcı testi, WebKit (Safari ailesi) | pass | 764 denetimin hepsi geçti. |
 | Testin kendini sınaması | pass | 73 bozulmanın hepsi yakalandı. İlk koşuda 2 bozulma kaçtı. Biri 6. sürümün eskimiş bir tanımıydı, öteki ölçümdeki bir boşluktu. İkisi düzeltildi ve yeniden denendi. |
 | Kaynak denetimi | pass | 77 kaynaklı cümlenin hepsi canlı sitede bulundu. Veri 12 Kasım 2026 günü alındı. |
-| Veri tasarrufu tercihi | not_run | Tarayıcıda öykünülmedi. Kural kapısı önyükleyicinin bu tercihi okuduğunu kaynakta denetler. |
+| Veri tasarrufu tercihi | benzetim pass, gerçek not_run | Hareket testi tercihi betikle benzetti ve paket indirilmedi. Tarayıcının gerçek ayarı denenmedi. Bu satır önce yanlışlıkla yalnız not_run yazıyordu. |
 | Büyütülmüş yazı ve zorlanmış renkler, WebKit | not_run | WebKit bu iki ayarı öykünmez. İkisi Chromium'da geçti. |
-| Birleşik sürümün bağımsız incelemesi | not_run | İki kol ayrı ayrı incelendi. Birleşik sürüm bütün olarak incelenmedi. |
+| Birleşik sürümün bağımsız incelemesi | not_run | Bu kayıt sırasında iki kol ayrı ayrı incelenmişti. İnceleme sonra yapıldı. Sonucu 22. bölümdedir. |
 | Firefox | not_run | Kullanıcının kararıyla çalıştırılmaz. |
 | Gerçek Safari, iOS ve Android cihaz | not_run | Öykünme gerçek cihazın yerini tutmaz. |
 | Ekran okuyucu | not_run | Sesli okuma denenmedi. |
@@ -1005,3 +1006,72 @@ Chromium ve WebKit sonuçları gerçek cihaz testi değildir.
 
 - **Karşılamadaki yol kartları.** Kartın zemini saydamdı. İşaretçi ışığı alt satırın soluk yazısını 4,11:1 karşıtlığa düşürüyordu. Kartın zemini opak oldu.
 - **Sepet çubuğu.** Bağlantının adı "istoc.com sepeti" olunca 320 piksel ekranda çubuk üç satıra çıkıyordu. Çubuk ekranın yüzde 31'ini kaplıyordu. En dar ekranda sol pay daralır ve bağlantının ok simgesi kalkar. Çubuk artık ekranın yüzde 22'sini kaplar.
+
+## 22. Birleşik sürümün bağımsız incelemesi
+
+### 22.1 İnceleme ne buldu?
+
+12 Kasım 2026 günü birleşik sürümü uygulayıcıdan bağımsız bir inceleyici okudu. İnceleyici dosya değiştirmedi ve komut çalıştırmadı. İnceleyici 18 bulgu yazdı: 2 zorunlu, 8 önerilen ve 8 isteğe bağlı bulgu. Bulguların hepsi düzeltildi.
+
+Düzeltmeleri ikinci bir bağımsız inceleyici iki kez okudu. İlk okuma 18 düzeltmenin 14'ünü tam buldu. Bir yeni zorunlu kusur, dört önerilen ve yedi isteğe bağlı bulgu yazdı. Tam tarayıcı testi de dört kusur buldu. İkinci okuma sekiz değişikliğin hepsini doğru buldu. Bir zorunlu ve bir önerilen bulgu yazdı. Bu turların kaydı 22.4 bölümündedir.
+
+### 22.2 Zorunlu bulgular
+
+1. **Genişleyen ekranda odak düşüyordu.** Dar ekranda kapalı bir grubun düğmesi odaktaydı. Ekran genişleyince düğme gizlendi. Odak grubun ilk bağlantısına geçmeliydi, ama sayfanın gövdesine düştü. Kusur Chromium'da göründü. İki nedeni vardı. Bölüm hâlâ gizliydi (inert). Ayrıca bölümün görünürlüğü bir geçişle değişiyor. Chromium ilk karelerde bağlantıyı gizli sayıyor. Artık önce bölümün gizliliği kalkar. Sonra odak, bağlantı görünür olana kadar her karede yeniden denenir. Deneme en çok bir saniye sürer.
+2. **Sepet bağlantısının adı görünen kelimeyle başlamıyordu.** Ekranda "Sepet" yazıyordu. Bağlantının adı ise "istoc.com sepetini açın" diye başlıyordu. Sesle komut veren kullanıcı "Sepet" deyince bağlantı bulunmayabilirdi. Ad artık "Sepet sayfasını istoc.com'da açın." diye başlar. Test, adın görünen etiketle ve kelime sınırında başladığını denetler.
+
+### 22.3 Önerilen ve isteğe bağlı bulgular
+
+- **Birbirini örten bozulmalar.** Aynı koşudaki iki bozulmadan biri ötekinin denetimini de düşürüyordu. Böylece ikinci bozulmanın yakalanıp yakalanmadığı görünmüyordu. İki çift ayrı koşulara ayrıldı. Testin yeni tek bozulma kipi (`--sinama --tek`) her bozulmayı kendi koşusunda dener.
+- **Ürün kartındaki sepet düğmesi.** Düğme basılınca hem yazısı hem durumu değişiyordu. Artık düğmenin yazısı basınca ne olacağını söyler: "12 adet ekleyin" ya da "Sepetten çıkarın". Yazı değiştiği için düğme `aria-pressed` taşımaz. Ürünün sepette olduğunu onay işareti ve yeşil dolgu gösterir. Zorlanmış renklerde düğme sistemin seçim rengini alır.
+- **Zorlanmış renkler.** Yönlü yüzeyler bu modda metin rengine dönüyordu. Artık gizlenir. Betiksiz sayfadaki çevreleyen çerçeve kaldırıldı. Betiksiz sayfada bağlantı ve düğme odağı sistemin seçim rengiyle dolgulanır. Metin alanının odağı düz bir alt çizgidir. Kapı, çerçeveye yalnız klavye modunda ve tek biçimde izin verir: `outline: 2px solid CanvasText`.
+- **Bölge olguları.** Yedi cümle, görünen tek kaynağın desteklediğinden fazlasını söylüyordu. Örneğin cümle "işletmeler" diyordu, sayfada tek işletmenin kaynağı görünüyordu. Kaynaklar 12 Kasım 2026 günü yeniden okundu. Dört merkezde bütün işletme kaynakları artık sayfada görünür. Üç merkezde görünen kaynak tek işletmeyi gösteriyor. Bu üç cümle tekil yazıldı. Yağmur Ofset'in alan adı çözülmedi. Bu adres veriden çıkarıldı.
+- **Kaynak sayımı.** Derleme bölge kaynaklarını açmaz. Önceden bu adresler de "denetlendi" diye sayılıyordu. Artık ayrı sayılırlar. 73 adres veride kayıtlıdır. Derleme bu adresleri açmadı. Yayın denetimi alıcı kaynaklarını geçerli adres saymaz.
+- **Düşemeyen hareket denetimi.** "Ekran dışındaki sahne değişmez" denetimi görüntüye bakıyordu. Ekran dışındaki sahnenin görüntüsü zaten değişmez. Bu yüzden denetim hiçbir durumda düşemezdi. Yeni denetim, ekran dışındaki sahneye ölçüm ve yazım yapılıp yapılmadığına bakar. Hareket testinin yeni sınama kipi denetleyiciyi bozar. Bozulmuş pakette ekran dışındaki sahnelere ölçüm yapıldı ve denetim düştü.
+- **Büyütülmüş yazı.** Yazı yeni ekran boyutlarında ve dolu sepetle denendi. Üç kusur bulundu. Yatay telefonda alt gezinmenin etiketleri kutusundan taşıyordu. 480 piksel ekranda "Русский" dil adı kutusuna sığmıyordu. 600 ile 640 piksel arasında "Thoptan.com" kelimesi ödeme yöntemi kutusundan taşıyordu. Üç sınır da artık yazı boyutuna bağlıdır (em).
+- **Küçük bulgular.** Alıcı bölümü de kaynakların okunduğu günü yazar. Yerleşim ölçümü kapalı yanıtları da açar. Görünmeyen plan etiketi planlanan bölgeyi işaretlemez. Lisans başlığının silinmesi kapı sınamasında denenir. Satıcı uyarısının öznesi yazıldı: "Bir merkezin bu listede olması, oradaki satıcıların iStoc'ta olduğu anlamına gelmez." Boş arama, ne yapılacağını da duyurur. Seçilen alım alanı ürün alanının açıklamasıdır. Hata cümlesi gelince bu bağ silinmez.
+
+### 22.4 İkinci turun bulguları
+
+- **Betiksiz sayfada metin alanının odağı görünmüyordu (zorunlu).** Zorlanmış renkler alanın alt çizgisini siliyordu. Çizgi artık sistem renkleriyle çizilir. Test ana arama alanını ve teklif formunun ürün alanını dener.
+- **Odak zamanlaması.** Tam test, genişleyen ekrandaki odak kusurunun ilk düzeltmesini yetersiz buldu. Kusur karelerin zamanlamasına bağlıydı. Odak artık görünür olana kadar yeniden denenir. Test bölümün görünmesini 300 ms geciktirir. Böylece sonuç zamanlamaya bağlı olmaz.
+- **Sepet düğmesinin anlamı.** Sabit yazılı basılı düğme, ürünü yeniden ekliyormuş gibi okunuyordu. Düğmenin yazısı artık eylemi söyler.
+- **Sınırların iki yanı.** Yazı boyutuna bağlı her sınırın hemen altı, kendisi ve hemen üstü sınanır. Sınırlar 20 ve 24 px yazıda denenir. Bu deneme "Thoptan.com" taşmasını buldu.
+- **Testin kendi kusurları.** Geniş ekranda açılan yanıtlar sıkı hedef kuralına göre ölçülmüyordu. Bölge bağlantılarının üst sınırı ek kaynakları saymıyordu. Fareyle üzerine gelme denetimi, farenin düğmenin üzerinde olduğunu doğrulamıyordu. Üçü düzeltildi.
+- **Kapı.** Zorlanmış renk koşulu artık yalnız olumlu ve tek koşullu `@media` ile tanınır. `:not(:focus-visible)` odak durumu sayılmaz. Yayın derlemesinde kendini sınama da geçer.
+- **Kısa dikey pencere.** 360x480 gibi kısa dikey pencerede alt gezinmenin beş etiketi yan yana düzende sığmıyordu. Bu kusur birleşik sürümde de vardı. Yan yana düzen ve ona bağlı kurallar artık yalnız yatay ekranda geçerlidir. Test bu pencereyi varsayılan yazıyla dener.
+- **Eskimiş bozulma örneği.** Bir kural değişince eski bir bozulma örneğinin aradığı metin kalmamıştı. Örnek yeni metne göre düzeltildi.
+
+### 22.5 Kararlar ve bilinen sınırlar
+
+- Varsayılan yazıda dolu sepet çubuğu ekranın dörtte birinden az yer kaplar. Büyütülmüş yazıda sınır ekranın üçte biridir. Bu sınırı ajan seçti. Sınır kullanıcının onayını bekliyor.
+- Bölge verisinin denetim günü 11 Kasım 2026 olarak kalır. Bütün kaynaklar o gün okundu. Değişen yedi olgunun kaynakları 12 Kasım 2026 günü yeniden okundu.
+- Her gruptaki alan sayısı sıfırdan büyüktür. Bu yüzden alıcı süzgecinin boş grup duyurusu tarayıcıda denenmedi.
+- Yayın denetiminin alıcı kaynaklarını reddetmesi kapı sınamasında ayrıca denenmedi.
+
+### 22.6 Doğrulama kaydı
+
+Kontroller 12 Kasım 2026 günü macOS üzerinde çalıştı. Node 24.21.0, TypeScript 5.9.3 ve Playwright 1.64.1 kullanıldı.
+Chromium ve WebKit sonuçları gerçek cihaz testi değildir.
+
+| Denetim | Durum | Not |
+|---|---|---|
+| `npm run build` | pass | Önizleme üretildi. 1.237 metnin hepsinin sınıfı bilinir. 243 istoc.com adresi ve 9 dış adres denetlendi. 73 bölge kaynağı veride kayıtlıdır. Derleme bu kaynakları açmadı. |
+| `npm run check` | pass | Tür denetimi geçti. 845 stil kuralı denetlendi. Kapının kendini sınamasında 135 ihlal örneğinin hepsi reddedildi. |
+| Yayın derlemesi | pass | `--yayin` kapısı geçti. Kendini sınamada 133 ihlal örneğinin hepsi reddedildi. Yayın derlemesi Pages'e gönderilmedi. |
+| Kaynak denetimi | pass | 77 kaynaklı cümlenin hepsi canlı sitede bulundu. Veri 12 Kasım 2026 günü alındı. |
+| Hareket testi | pass | Chromium'da 71, WebKit'te 71 denetimin hepsi geçti. |
+| Hareket testinin kendini sınaması | pass | İki motorda da bozulmuş pakette ekran dışındaki sahnelere 240 ölçüm yapıldı ve denetim düştü. Bozulmasız pakette hiç ölçüm yapılmadı. |
+| Tarayıcı testi, Chromium | pass | 900 denetimin hepsi geçti. |
+| Tarayıcı testi, WebKit (Safari ailesi) | pass | 790 denetimin hepsi geçti. |
+| Büyütülmüş yazı (`--yazi`) | pass | 29 boyutta 176 denetimin hepsi geçti. Bu denetim yalnız Chromium'da çalışır. |
+| Tek bozulma kipi (`--sinama --tek`) | pass | 93 bozulmanın hepsi kendi koşusunda yakalandı. Hiçbir bozulma bir başkasıyla örtülmedi. Koşu 27 dakika sürdü. |
+| Veri tasarrufu tercihi | benzetim pass, gerçek not_run | Hareket testi tercihi betikle benzetti ve paket indirilmedi. Tarayıcının gerçek ayarı denenmedi. |
+| Büyütülmüş yazı ve zorlanmış renkler, WebKit | not_run | WebKit bu iki ayarı öykünmez. İkisi Chromium'da geçti. |
+| Bağımsız inceleme | pass | Birleşik sürümü bir inceleyici okudu. Düzeltmeleri ikinci bir inceleyici iki kez okudu. Son okumanın iki bulgusu düzeltildi. Bu son düzeltmeler yeniden okunmadı. |
+| Firefox | not_run | Kullanıcının kararıyla çalıştırılmaz. |
+| Gerçek Safari, iOS ve Android cihaz | not_run | Öykünme gerçek cihazın yerini tutmaz. |
+| Ekran okuyucu | not_run | Sesli okuma denenmedi. |
+| Metnin gerçek okurla denenmesi | not_run | Gerçek okurla denenmedi. |
+
+Tam tarayıcı testleri kısa dikey pencere kuralı değişmeden önce çalıştı. Bu değişiklik yalnız 480 pikselden kısa dikey pencereyi etkiler. O pencere büyütülmüş yazı koşusunda varsayılan yazıyla sınandı.

@@ -34,7 +34,46 @@ async function sceneState(p,selector){return p.locator(selector).evaluate(e=>{
 });}
 async function seek(p,selector,phase){await p.locator(selector).evaluate((e,t)=>{const svg=e.querySelector("svg");const mobileBox=svg&&getComputedStyle(svg).position==="absolute";const r=(mobileBox?svg:e).getBoundingClientRect();const top=r.top+scrollY;scrollTo(0,Math.max(0,top-innerHeight+t*(innerHeight+r.height)));},phase);await settle(p,selector);return sceneState(p,selector);}
 function different(a,b){return JSON.stringify(a.layers)!==JSON.stringify(b.layers);}
+// Ekran dışındaki sahnenin görüntüsü ilerleme sınırında zaten değişmez. Görüntüye bakan denetim bu yüzden düşemezdi.
+// Bu denetim denetleyicinin yaptığı işe bakar. Ekrandan en az 200 px uzaktaki sahne köküne ölçüm ve yazım yapılmamalıdır.
+// Kısa kaydırma o sahneyi ekrana getirmez. Ölçüm yapılırsa denetleyici görünmeyen sahne için de çalışıyordur.
+async function offscreenWork(p){return p.evaluate(async()=>{
+ const roots=[...document.querySelectorAll('[data-motion-scene]')];
+ const off=new Set(roots.filter(e=>{const r=e.getBoundingClientRect();return r.bottom<=-200||r.top>=innerHeight+200;}));
+ const proto=Element.prototype;const orig=proto.getBoundingClientRect;let hits=0;
+ proto.getBoundingClientRect=function(){if(off.has(this))hits++;return orig.call(this);};
+ const before=[...off].map(e=>e.getAttribute('style'));
+ scrollBy(0,60);await new Promise(r=>setTimeout(r,300));scrollBy(0,-60);await new Promise(r=>setTimeout(r,500));
+ proto.getBoundingClientRect=orig;
+ const after=[...off].map(e=>e.getAttribute('style'));
+ return {off:off.size,hits,written:before.some((s,i)=>s!==after[i])};
+});}
+const offscreenOk=(w)=>w.off>0&&w.hits===0&&!w.written;
 function near(a,b){return a.layers.length===b.layers.length&&a.layers.every((n,i)=>Math.abs(n.x-b.layers[i].x)<1.5&&Math.abs(n.y-b.layers[i].y)<1.5&&Math.abs(n.scale-b.layers[i].scale)<.02);}
+// Kendini sınama (--sinama). Bozulma sunucudan gelen hareket paketine yolda uygulanır, dosya değişmez.
+// Önce bozulmasız paketle denetim geçmelidir. Sonra bozulmuş paketle aynı denetim FAIL vermelidir.
+if(args.includes('--sinama')){
+ let code=1;
+ try{
+  browser=await bounded(pw[engine].launch(),12000,'tarayıcı');
+  const run=async(broken)=>{
+   const c=await context({viewport:{width:320,height:800}});
+   if(broken)await c.route('**/hareket/sahne.js*',async route=>{
+    const res=await route.fetch();const body=await res.text();const next=body.replace('scenes.filter((s) => s.live)','scenes.filter(() => true)');
+    if(next===body)throw new Error('bozulma uygulanamadı: hareket/sahne.js değişmiş olabilir');
+    await route.fulfill({response:res,body:next});
+   });
+   const p=await tab(c);await load(p);await p.waitForSelector('[data-motion-ready="true"]',{timeout:8000});
+   await seek(p,'[data-motion-scene="magnet"]',.28);
+   const w=await offscreenWork(p);await bounded(c.close(),3000,'bağlam kapatma');return w;
+  };
+  const clean=await run(false);const broken=await run(true);
+  const ok=offscreenOk(clean)&&!offscreenOk(broken);
+  console.log(`Hareket testi sınaması: bozulmasız ${JSON.stringify(clean)}, bozulmuş ${JSON.stringify(broken)}. Sonuç: ${ok?'PASS':'FAIL'}`);
+  code=ok?0:1;
+ }catch(e){console.log('NOT_RUN hareket testi sınaması: '+e.message);}
+ finally{if(browser)await browser.close().catch(()=>{});clearTimeout(watchdog);process.exit(code);}
+}
 try {
  browser=await bounded(pw[engine].launch(),12000,'tarayıcı');
  const c=await context({viewport:{width:320,height:800}});const p=await tab(c);const errors=[];const network=[];
@@ -140,8 +179,8 @@ try {
  await p.evaluate(()=>document.querySelector('#q-ana')?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true})));
  await p.waitForTimeout(1500);await p.evaluate(()=>{window.__testRaf=0;});await p.waitForTimeout(700);
  check('Kaydırma durunca kare döngüsü durur',await p.evaluate(()=>window.__testRaf)===0,await p.evaluate(()=>window.__testRaf));
- const heroOff=await sceneState(p,'[data-motion-scene="flow"]');await p.evaluate(()=>scrollBy(0,100));await p.waitForTimeout(700);
- check('Ekran dışındaki sahne değişmez',!different(heroOff,await sceneState(p,'[data-motion-scene="flow"]')));
+ const offWork=await offscreenWork(p);
+ check('Ekran dışındaki sahne ölçülmez ve yazılmaz',offscreenOk(offWork),offWork);
  const hiddenBefore=await sceneState(p,'[data-motion-scene="magnet"]');
  await p.evaluate(()=>{for(const [k,v]of[['hidden',true],['visibilityState','hidden']])Object.defineProperty(document,k,{configurable:true,get:()=>v});document.dispatchEvent(new Event('visibilitychange'));scrollBy(0,-100);});
  await p.waitForTimeout(600);check('Gizli sekmede sahne değişmez',!different(hiddenBefore,await sceneState(p,'[data-motion-scene="magnet"]')));

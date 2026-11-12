@@ -323,7 +323,7 @@ def product_card(i, slug, img, cat):
           </div>
           <div class="pc__foot">
             <dl class="terms">%(terms)s</dl>
-            <button class="pc__add" type="button" aria-pressed="false"><i>%(plus)s%(check)s</i><span>%(moq)d adet ekleyin</span><span class="sr-only" data-veri>: %(name)s</span></button>
+            <button class="pc__add" type="button" data-sepette="false"><i>%(plus)s%(check)s</i><span>%(moq)d adet ekleyin</span><span class="sr-only" data-veri>: %(name)s</span></button>
           </div>
         </article>
       </li>""" % dict(
@@ -668,25 +668,41 @@ def etiket_uyar(y):
     return label.endswith("ilçesi") if y["tur"] == "ilçe" else (y["tur"] in label and "ilçe" not in label)
 
 
+def kaynaklar(f):
+    """Olgunun sayfada görünen kaynakları: ana bağlantı (bagi) ve varsa ek bağlantılar (ek_baglar).
+    Çoğul bir olgu birden çok işletmeye dayanıyorsa her işletmenin kaynağı görünür. Örnek: "işletmeler bulunur"."""
+    return [(f["bagi"], f["bag_metni"])] + [(e["bagi"], e["bag_metni"]) for e in f.get("ek_baglar", [])]
+
+
+def kaynak_html(f, attr):
+    return "".join('<a class="bolge__src" href="%s" %s>%s</a>' % (esc(u), attr, esc(t)) for u, t in kaynaklar(f))
+
+
+def kaynak_uyar(f):
+    """Görünen her kaynak olgunun kaynak listesindedir ve iki kez görünmez."""
+    shown = [u for u, _t in kaynaklar(f)]
+    return all(u in f["source_url"] for u in shown) and len(set(shown)) == len(shown)
+
+
 def yer_dogrula(yerler, kaynak):
     """Tedarik ve alıcı verisi aynı kurallarla doğrulanır: tür ve etiket, denetim günü, kaynak, 3 koşul."""
     for y in yerler:
         assert y["tur"] in BOLGE_TURLERI and y["checked_at"] == kaynak["checked_at"], "Yerin türü ya da denetim günü eksik: %s" % y["kimlik"]
         assert etiket_uyar(y), "Yer etiketi türüyle uyuşmuyor: %s" % y["kimlik"]
-        assert y["fact"]["source_url"] and all(u.startswith("https://") for u in y["fact"]["source_url"]) and y["fact"]["bagi"] in y["fact"]["source_url"], "Olgunun kaynağı eksik: %s" % y["kimlik"]
+        assert y["fact"]["source_url"] and all(u.startswith("https://") for u in y["fact"]["source_url"]) and kaynak_uyar(y["fact"]), "Olgunun kaynağı eksik: %s" % y["kimlik"]
         assert len(y["editorial"]["kosullar"]) == 3, "Her yerde teklif için 3 koşul yazar: %s" % y["kimlik"]
 
 
 for _y in BOLGE["yerler"]:
     assert _y["tur"] in BOLGE_TURLERI and _y["checked_at"] == BOLGE["checked_at"], "Yerin türü ya da denetim günü eksik: %s" % _y["kimlik"]
     assert etiket_uyar(_y), "Yer etiketi türüyle uyuşmuyor: %s" % _y["kimlik"]
-    assert _y["fact"]["source_url"] and all(u.startswith("https://") for u in _y["fact"]["source_url"]) and _y["fact"]["bagi"] in _y["fact"]["source_url"], "Olgunun kaynağı eksik: %s" % _y["kimlik"]
+    assert _y["fact"]["source_url"] and all(u.startswith("https://") for u in _y["fact"]["source_url"]) and kaynak_uyar(_y["fact"]), "Olgunun kaynağı eksik: %s" % _y["kimlik"]
     assert len(_y["editorial"]["kosullar"]) == 3, "Her yerde teklif için 3 koşul yazar: %s" % _y["kimlik"]
 # Kaynak bağlantıları: tedarik merkezleri ve (önizlemede) alıcı talep alanları.
-BOLGE_KAYNAK = {y["fact"]["bagi"] for y in BOLGE["yerler"]} | ({y["fact"]["bagi"] for y in json.load(open(os.path.join(HERE, "data", "alicilar.json"), encoding="utf-8"))["yerler"]}
+BOLGE_KAYNAK = {u for y in BOLGE["yerler"] for u, _t in kaynaklar(y["fact"])} | ({u for y in json.load(open(os.path.join(HERE, "data", "alicilar.json"), encoding="utf-8"))["yerler"] for u, _t in kaynaklar(y["fact"])}
                                                               if not YAYIN and os.path.exists(os.path.join(HERE, "data", "alicilar.json")) else set())
 BOLGE_GIRIS = "Alacağınız ürüne göre ticaret merkezlerini karşılaştırın. Her merkezde hangi koşulları soracağınızı aşağıda bulabilirsiniz."
-BOLGE_NOT = "Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez."
+BOLGE_NOT = "Bir merkezin bu listede olması, oradaki satıcıların iStoc'ta olduğu anlamına gelmez."
 BOLGE_KOSUL = "Teklif isterken sorun"
 BOLGE_TARIH = "Kaynaklar %s günü okundu." % tr_date(BOLGE["checked_at"])
 # Uzun liste tek akış olmaz: ilk 6 merkez açıktır, kalanlar sayfanın açılır panelindedir. Betik yoksa panel açık durur.
@@ -714,11 +730,10 @@ def bolge_html():
             '<li class="bolge" data-bolge="%s" data-reveal style="--i:%d">'
             '<div class="bolge__who"><p class="bolge__need" data-bolge-ihtiyac>%s</p>'
             '<h3 class="bolge__yer" data-bolge-yer><span class="bolge__ad">%s</span> <span class="bolge__tur">%s</span></h3>%s</div>'
-            '<div class="bolge__why"><p class="bolge__fact" data-bolge-neden>%s</p>%s'
-            '<a class="bolge__src" href="%s" data-bolge-kaynak>%s</a></div>'
+            '<div class="bolge__why"><p class="bolge__fact" data-bolge-neden>%s</p>%s%s</div>'
             '<div class="bolge__ask"><p class="bolge__ask-t">%s</p><ul class="bolge__kosul" role="list" data-bolge-kosul>%s</ul>'
             '<a class="btn btn--ink btn--sm bolge__cta" href="#teklif" data-bolge-teklif data-urun="%s">Teklif isteyin%s</a></div></li>'
-            % (esc(y["kimlik"]), i % 4, esc(e["ihtiyac"]), esc(y["ad"]), esc(y["yer_etiketi"]), yer_meta(y), esc(f["metin"]), yorum, esc(f["bagi"]), esc(f["bag_metni"]),
+            % (esc(y["kimlik"]), i % 4, esc(e["ihtiyac"]), esc(y["ad"]), esc(y["yer_etiketi"]), yer_meta(y), esc(f["metin"]), yorum, kaynak_html(f, "data-bolge-kaynak"),
                BOLGE_KOSUL, "".join("<li>%s%s</li>" % (icon("onay", 18), esc(k)) for k in e["kosullar"]), esc(e["teklif_urun"]), OK18)
         )
     a = BOLGE["alim_plani"]
@@ -756,7 +771,7 @@ BOLGE_TASARIM = sorted(set(
     + [x for t in BOLGE["alim_plani"]["kontroller"] for x in split(t)]
 ))
 # Yerin adı da etikettir. Çok kelimeli ad (örneğin bir merkezin tam adı) sayfada metin olarak sınıflanır. Ad veriden gelir.
-BOLGE_ETIKET = sorted(set([t for y in BOLGE["yerler"] for t in (y["ad"], y["sektor"]) if len(t.split()) > 1] + [y["yer_etiketi"] for y in BOLGE["yerler"]] + [y["fact"]["bag_metni"] for y in BOLGE["yerler"]]
+BOLGE_ETIKET = sorted(set([t for y in BOLGE["yerler"] for t in (y["ad"], y["sektor"]) if len(t.split()) > 1] + [y["yer_etiketi"] for y in BOLGE["yerler"]] + [t for y in BOLGE["yerler"] for _u, t in kaynaklar(y["fact"])]
                           + [BOLGE_KOSUL, BOLGE["alim_plani"]["ust"], "Ürün kategorilerini inceleyin", "Bölgesel tedarik", BOLGE_ARA]))
 
 
@@ -780,6 +795,8 @@ ALICI_SATICI = "Satıcıysanız, ürünlerinize ihtiyaç duyabilecek işletme t�
 ALICI_KOSUL = "Teklif için hazırlanın"
 ALICI_DUGME = "Talebinizi hazırlayın"
 ALICI_BOS = "Bu grupta gösterilecek alan yok."
+# Alıcı alanlarının kaynakları da bir gün okundu. Gün, tedarik bölümündeki gibi bölümün sonunda yazar.
+ALICI_TARIH = ("Kaynaklar %s günü okundu." % tr_date(ALICI["checked_at"])) if ALICI else ""
 ALICI_NASIL = "İşletmenizi nasıl listelersiniz?"
 # Listeleme yardımı: hangi bilginin neden istendiğini anlatır. Form ya da örnek kayıt yoktur.
 ALICI_ALANLAR = [
@@ -810,11 +827,11 @@ def alici_html():
             '<div class="bolge__who"><p class="talep__isletme" data-talep-isletme>%s</p><p class="bolge__need">%s</p>'
             '<h3 class="bolge__yer" data-talep-yer><span class="bolge__ad">%s</span> <span class="bolge__tur">%s</span></h3>'
             '%s</div>'
-            '<div class="bolge__why"><p class="bolge__fact" data-talep-neden>%s</p>%s<a class="bolge__src" href="%s" data-talep-kaynak>%s</a></div>'
+            '<div class="bolge__why"><p class="bolge__fact" data-talep-neden>%s</p>%s%s</div>'
             '<div class="bolge__ask"><p class="bolge__ask-t">%s</p><ul class="bolge__kosul" role="list" data-talep-kosul>%s</ul>'
             '<a class="btn btn--ink btn--sm bolge__cta" href="#teklif" data-bolge-teklif data-urun="%s" data-alan="%s">%s%s</a></div></li>'
         ) % (esc(y["kimlik"]), esc(y["grup"]), esc(y["isletme"]), esc(e["ihtiyac"]), esc(y["ad"]), esc(y["yer_etiketi"]), yer_meta(y, " data-talep-sektor"),
-             esc(f["metin"]), yorum, esc(f["bagi"]), esc(f["bag_metni"]), ALICI_KOSUL,
+             esc(f["metin"]), yorum, kaynak_html(f, "data-talep-kaynak"), ALICI_KOSUL,
              "".join("<li>%s%s</li>" % (icon("onay", 18), esc(k)) for k in e["kosullar"]), esc(e["teklif_urun"]),
              esc("%s, %s." % (y["isletme"], y["ad"])), ALICI_DUGME, OK18)
     yerler = ALICI["yerler"]
@@ -829,10 +846,10 @@ def alici_html():
         '<div class="talep__filtre js-only" role="group" aria-label="Sektör grubuna göre süzün" data-talep-filtre>%s</div>'
         '<p class="talep__sonuc js-only" data-talep-sonuc>Tüm gruplarda %d alan var.</p><p class="talep__bos" data-talep-bos hidden>%s</p>'
         '<ol class="bolgeler" role="list">%s</ol>'
-        '%s%s</div></section>'
+        '%s<p class="bolge__tarih" data-talep-tarih>%s</p>%s</div></section>'
     ) % (surface("ag", 3), head(NO["talep"], "Alım alanları", "talep-baslik", ALICI_BASLIK, split=False), plan_tag("hizmet"),
          ALICI_GIRIS, ALICI_NOT, ALICI_SATICI, buttons, len(yerler), ALICI_BOS, first,
-         panel("talep-more", "data-talep-more", "%d alanı daha görün" % more, '<ol class="bolgeler" role="list">%s</ol>' % rest),
+         panel("talep-more", "data-talep-more", "%d alanı daha görün" % more, '<ol class="bolgeler" role="list">%s</ol>' % rest), ALICI_TARIH,
          panel("talep-nasil", "data-talep-nasil", ALICI_NASIL, '<p>%s</p><ul role="list">%s</ul>' % (ALICI_NASIL_GIRIS, nasil)))
 
 
@@ -841,7 +858,7 @@ def alici_html():
 _AY = ALICI["yerler"] if ALICI else []
 ALICI_DIS = sorted({x for y in _AY for x in split(y["fact"]["metin"])})
 ALICI_TASARIM = sorted(set([y["editorial"]["ihtiyac"] for y in _AY] + [x for y in _AY for t in [y["editorial"].get("yorum", "")] + y["editorial"]["kosullar"] for x in split(t)]))
-ALICI_ETIKET = sorted({t for y in _AY for t in [y["ad"], y["yer_etiketi"], y["fact"]["bag_metni"], y["sektor"], y["isletme"]] if len(t.split()) > 1})
+ALICI_ETIKET = sorted({t for y in _AY for t in [y["ad"], y["yer_etiketi"], y["sektor"], y["isletme"]] + [m for _u, m in kaynaklar(y["fact"])] if len(t.split()) > 1})
 ALICI_PLAN = [] if not ALICI else sorted(set(
     [x for t in (ALICI_BASLIK, ALICI_GIRIS, ALICI_SATICI, ALICI_BOS, ALICI_NASIL, ALICI_NASIL_GIRIS, ALICI_NOT) for x in split(t)]
     + [ALICI_KOSUL, ALICI_DUGME, "Alım alanları", "Tüm gruplar", "Tüm gruplarda %d alan var." % len(_AY), "%d alanı daha görün" % (len(_AY) - ALICI_ACIK)] + [x for k, v in ALICI_ALANLAR for x in [k] + split(v)]
@@ -1116,7 +1133,13 @@ print("index.html yazıldı (%s): %s bayt, %d menü kategorisi, %d ürün, %d ü
 # Canlı sitede her ürün bir kategoriye bağlı değildir. Bu yüzden iki toplam farklıdır.
 print("veri günü %s: ürün toplamı %s, kategoriye bağlı ürün %s" % (FACTS["alindi"], tr_num(FACTS["urun_toplami"]), tr_num(sum(COUNTS.values()))))
 print("kaynaklı cümle: %d, hepsi kaynağında bulundu (%s)" % (len(LEDGER["iddialar"]), LEDGER["alindi"]))
-print("adres: %d ayrı adres denetlendi (%d istoc.com), %d sayfa içi hedef var" % (len(ADDRESSES), sum(1 for a in ADDRESSES if urlsplit(a).netloc == "istoc.com"), len(anchors)))
+# Bölge kaynakları veride kayıtlıdır. Derleme onları açmaz, yalnız veride olduklarını denetler. Bu yüzden ayrı sayılır.
+_BOLGE_ADRES = [a for a in ADDRESSES if a in BOLGE_KAYNAK]
+_ISTOC_ADRES = [a for a in ADDRESSES if urlsplit(a).netloc == "istoc.com"]
+print("adres: %d istoc.com adresi veri günündeki site listeleriyle, %d dış adres izin listesiyle denetlendi. %d sayfa içi hedef var."
+      % (len(_ISTOC_ADRES), len(ADDRESSES) - len(_ISTOC_ADRES) - len(_BOLGE_ADRES), len(anchors)))
+print("bölge kaynağı: %d adres veride kayıtlı. Bu derleme kaynakları açmadı. Tedarik kaynakları %s günü okundu.%s"
+      % (len(_BOLGE_ADRES), tr_date(BOLGE["checked_at"]), (" Alıcı kaynakları %s günü okundu." % tr_date(ALICI["checked_at"])) if ALICI and not YAYIN else ""))
 print("görünmeyen metin: %d, hepsi kayıtlı" % len(HID_ROWS))
 # Bazı yolların altında her adres açılır (uygulama kabuğu). O yoldaki bağlantının denetimi yalnız sunucunun yanıt verdiğini gösterir.
 print("uygulama kabuğu olan yol: %s" % (", ".join(DZ["kabuk"]) or "yok"))

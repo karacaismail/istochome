@@ -208,6 +208,8 @@ export function motionCases(m, html, css) {
     ["hareket paketi sayfadan doğrudan yükleniyor", m, html.replace("</body>", '<script type="module" src="hareket/sahne.js"></script></body>'), css, "hareket"],
     ["sahnede öğe bütçesi aşıldı", m, html.replace(flowOpen, flowOpen + "<i></i>".repeat(60)), css, "bütçe"],
     ["lisans atfı silindi", { ...m, license: "" }, html, css, "lisans"],
+    // Derleme çıktısının başındaki lisans yorumu (/*! ... */) silinirse kapı bunu yakalar.
+    ["derleme çıktısında lisans başlığı silindi", { ...m, outputs: { ...m.outputs, "uyarlama.js": (m.outputs["uyarlama.js"] || "").replace(/\/\*![\s\S]*?\*\//, "") } }, html, css, "lisans"],
     ["katman dönüşümü geçişsiz yazılıyor", { ...m, outputs: { ...m.outputs, "sahne.js": (m.outputs["sahne.js"] || "").replace(/["']--dur-3["']/g, '"--hiz"') } }, html, css, "hareket"],
     ["eğri tokenı okunmuyor", { ...m, outputs: { ...m.outputs, "sahne.js": (m.outputs["sahne.js"] || "").replace(/["']--ease["']/g, '"--egri"') } }, html, css, "hareket"],
   ];
