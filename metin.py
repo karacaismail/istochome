@@ -2,9 +2,13 @@
 # Kural: sayfada görünen, en az iki kelimeli her metnin sınıfı bilinir. Sınıfı bilinmeyen metin sayfaya giremez.
 #   kaynak  canlı sitedeki bir sayfaya dayanan cümle (secim.py, IDDIALAR). veri.py kanıtını arar.
 #           Bu sınıfta eşleşme birebirdir. Sayısı değişen bir cümle başka bir cümledir.
+#   dis     istoc.com dışındaki bir kaynağa dayanan olgu cümlesi (data/bolgeler.json, fact.metin).
+#           Cümle kaynağının bağlantısıyla aynı satırda durur. kapi.mjs bağlantıyı ve denetim gününü denetler.
 #   veri    sayısı ya da dayanağı data/ klasöründen gelen metin (secim.py, VERI_METNI). Sayılar # ile yazılır.
 #   tasarim bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu (secim.py, TASARIM_METNI).
 #   etiket  düğme, bağlantı ve alan etiketi (secim.py, ETIKETLER). Canlı sitedeki bir sayfanın adı da etikettir.
+#   plan    planlanan hizmet ya da içerik (secim.py, PLAN_METNI ve plan yapıları). Canlı olgu değildir.
+#           Yalnız "Planlanan hizmet" ya da "Planlanan içerik" etiketli bölgede (data-plan) durabilir.
 # Veri kaynağından gelen adlar (ürün, kategori, mağaza) sayfada data-veri ile işaretlenir ve sınıflandırılmaz.
 # Görünmeyen metinler de kayıtlıdır: sayfa başlığı, öznitelik metinleri ve yalnız ekran okuyucuya okunan metinler
 # (secim.py, OZNITELIK_METNI). Görünen bir etiketin yinelemesi etiket listesinden tanınır.
@@ -28,17 +32,21 @@ def norm(text):
 
 def split(text):
     """Metni cümlelere böler. En az iki kelimeli parçalar alınır."""
-    return [p for p in re.split(r"(?<=[.?!])\s+", text) if len(p.split()) >= 2]
+    # Sayıdan hemen sonraki nokta cümle sonu sayılmaz (sıra sayısı). Örnek: "Topkapı 2. Matbaacılar Sitesi" tek parçadır.
+    return [p for p in re.split(r"(?<=[.?!])(?<!\d\.)\s+", text) if len(p.split()) >= 2]
 
 
-def page_texts(doc):
-    """Sayfada görünen, en az iki kelimeli bütün metinler.
-    Arama motoru açıklaması da sayılır. data-veri ile işaretli adlar ve yalnız ekran okuyucuya
-    okunan yinelemeler (sr-only) sayılmaz."""
-    out = []
+PLAN_TAGS = ("Planlanan hizmet", "Planlanan içerik")
+
+
+def walk_texts(doc):
+    """Sayfa metinleri ve planlanan bölgeler.
+    texts: (metin, planlanan bölgede mi) çiftleri. regions: data-plan taşıyan bölgeler, kimliği ve görünür etiketi.
+    Planlanan bölgenin görünür etiketi plan-tag sınıflı öğededir ve PLAN_TAGS içindeki metni yazar."""
+    texts, regions = [], []
     desc = re.search(r'<meta name="description" content="([^"]*)"', doc)
     if desc:
-        out += split(html.unescape(desc.group(1)))
+        texts += [(x, False) for x in split(html.unescape(desc.group(1)))]
     body = doc[doc.index("<body"):]
     body = re.sub(r"<!--[\s\S]*?-->", " ", body)
     body = re.sub(r"<(script|style|svg)\b[\s\S]*?</\1>", " ", body)
@@ -47,15 +55,30 @@ def page_texts(doc):
         closing, tag, attrs, text = m.group(1), (m.group(2) or "").lower(), m.group(3) or "", m.group(4)
         if text is not None:
             t = squeeze(html.unescape(text))
-            if t and not any(stack):
-                out += split(t)
+            region = next((s["region"] for s in reversed(stack) if s["region"]), None)
+            if t and region is not None and any(s["tag"] for s in stack) and t in PLAN_TAGS:
+                region["tagged"] = True
+            if t and not any(s["skip"] for s in stack):
+                texts += [(x, region is not None) for x in split(t)]
         elif closing:
             if tag not in VOID and stack:
                 stack.pop()
         elif tag not in VOID:
-            stack.append("data-veri" in attrs or "sr-only" in attrs)
+            item = {"skip": "data-veri" in attrs or "sr-only" in attrs, "tag": bool(re.search(r'\bclass="[^"]*\bplan-tag\b', attrs)), "region": None}
+            if re.search(r"\sdata-plan(\s|=|$)", attrs):
+                ident = re.search(r'\bid="([^"]+)"', attrs)
+                item["region"] = {"id": ident.group(1) if ident else "", "tagged": False}
+                regions.append(item["region"])
+            stack.append(item)
+    return texts, regions
+
+
+def page_texts(doc):
+    """Sayfada görünen, en az iki kelimeli bütün metinler.
+    Arama motoru açıklaması da sayılır. data-veri ile işaretli adlar ve yalnız ekran okuyucuya
+    okunan yinelemeler (sr-only) sayılmaz."""
     seen, uniq = set(), []
-    for s in out:
+    for s, _plan in walk_texts(doc)[0]:
         if s not in seen:
             seen.add(s)
             uniq.append(s)
@@ -97,10 +120,10 @@ def hidden_known(text, exact):
     return t in exact or t.rstrip(":").strip() in exact
 
 
-def classify(doc, sourced, data_copy, design_copy, labels):
+def classify(doc, sourced, data_copy, design_copy, labels, planned=(), outside=()):
     """Her metni sınıfıyla döndürür. Sınıfı olmayan metin "yok" sınıfını alır."""
     exact = {}
-    for name, items in (("etiket", labels), ("tasarim", design_copy), ("kaynak", sourced)):
+    for name, items in (("etiket", labels), ("plan", planned), ("tasarim", design_copy), ("dis", outside), ("kaynak", sourced)):
         for item in items:
             exact[squeeze(item)] = name
     folded = {norm(item) for item in data_copy}

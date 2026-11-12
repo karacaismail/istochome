@@ -1,0 +1,753 @@
+{
+  "aciklama": "Alıcıların talep hazırlaması için bölge ve sektör alanlarıdır. Olgular kaynaklıdır. Alım ihtiyaçları editoryal öneridir. Gerçek alıcı profili veya yayımlanmış talep değildir.",
+  "checked_at": "2026-11-11",
+  "yerler": [
+    {
+      "kimlik": "muratpasa-otel",
+      "ad": "Muratpaşa",
+      "tur": "ilçe",
+      "il": "Antalya",
+      "yer_etiketi": "Antalya ilinde Muratpaşa ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Konaklama",
+      "sektor_kodu": "konaklama",
+      "grup": "konaklama",
+      "isletme": "Oteller",
+      "fact": {
+        "metin": "Akra'nın tesis rehberinde Muratpaşa'daki oteller yer alır.",
+        "source_url": [
+          "https://www.akrahotels.com/tr/iletisim/"
+        ],
+        "bagi": "https://www.akrahotels.com/tr/iletisim/",
+        "bag_metni": "Kaynak: Akra Hotels, tesis adresleri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Oteliniz için havlu veya çarşaf alıyorsanız",
+        "yorum": "Oda sayınızı ve kullandığınız ölçüleri yazın. Teklifleri yıkama koşulları ve teslim tarihiyle karşılaştırın.",
+        "kosullar": [
+          "Ürün ölçüsünü ve kumaş içeriğini yazın.",
+          "Gereken adedi ve teslim tarihini belirtin.",
+          "Yıkama koşullarını ve numune seçeneğini sorun."
+        ],
+        "teklif_urun": "Otel için havlu ve çarşaf"
+      }
+    },
+    {
+      "kimlik": "bodrum-restoran",
+      "ad": "Bodrum",
+      "tur": "ilçe",
+      "il": "Muğla",
+      "yer_etiketi": "Muğla ilinde Bodrum ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Yeme içme",
+      "sektor_kodu": "yeme-icme",
+      "grup": "konaklama",
+      "isletme": "Restoranlar",
+      "fact": {
+        "metin": "Zuma, Bodrum'da sezonluk restoran hizmeti tanıtır.",
+        "source_url": [
+          "https://www.zumarestaurant.com/en/bodrum"
+        ],
+        "bagi": "https://www.zumarestaurant.com/en/bodrum",
+        "bag_metni": "Kaynak: Zuma, Bodrum restoranı",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Restoranınız için tabak veya bardak alıyorsanız",
+        "yorum": "Servis biçiminizi ve ürün ölçülerini belirtin. Sezon hazırlığı için teslim tarihini netleştirin.",
+        "kosullar": [
+          "Ürün ölçüsünü ve gereken adedi yazın.",
+          "Makinede yıkama koşullarını sorun.",
+          "Eksilen parçanın tekrar alım koşulunu sorun."
+        ],
+        "teklif_urun": "Restoran için tabak ve bardak"
+      }
+    },
+    {
+      "kimlik": "kusadasi-otel",
+      "ad": "Kuşadası",
+      "tur": "ilçe",
+      "il": "Aydın",
+      "yer_etiketi": "Aydın ilinde Kuşadası ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Konaklama",
+      "sektor_kodu": "konaklama",
+      "grup": "konaklama",
+      "isletme": "Oteller ve apart oteller",
+      "fact": {
+        "metin": "Korumar'ın tesis sayfasında Kuşadası'ndaki otel adresi ve oda hizmetleri bulunur.",
+        "source_url": [
+          "https://www.korumar.com.tr/iletisim/"
+        ],
+        "bagi": "https://www.korumar.com.tr/iletisim/",
+        "bag_metni": "Kaynak: Korumar, tesis bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Odalar için terlik veya banyo malzemesi alıyorsanız",
+        "yorum": "Oda başına kullanımı ve yenileme sıklığını yazın. Baskılı ve baskısız ürünleri ayrı karşılaştırın.",
+        "kosullar": [
+          "Ürün çeşidini ve gereken adedi yazın.",
+          "Logo baskısı isteğinizi belirtin.",
+          "Koli içeriğini ve tekrar teslim süresini sorun."
+        ],
+        "teklif_urun": "Otel odaları için terlik ve banyo malzemesi"
+      }
+    },
+    {
+      "kimlik": "bandirma-kanatli",
+      "ad": "Bandırma",
+      "tur": "ilçe",
+      "il": "Balıkesir",
+      "yer_etiketi": "Balıkesir ilinde Bandırma ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Kanatlı eti işleme",
+      "sektor_kodu": "kanatli",
+      "grup": "gida",
+      "isletme": "Kanatlı eti işleme tesisleri",
+      "fact": {
+        "metin": "Banvit, Bandırma'da piliç üretimi yaptığını açıklar.",
+        "source_url": [
+          "https://www.banvit.com/kurumsal/uretim"
+        ],
+        "bagi": "https://www.banvit.com/kurumsal/uretim",
+        "bag_metni": "Kaynak: Banvit, üretim bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Et ürünleri için kap veya film alıyorsanız",
+        "yorum": "Paketlenecek ürünün ağırlığını ve saklama koşulunu belirtin. Ambalajın ürüne uygunluğunu satıcıyla netleştirin.",
+        "kosullar": [
+          "Paket ağırlığını ve ambalaj ölçüsünü yazın.",
+          "Gıdaya temas uygunluk belgesini sorun.",
+          "Gereken adedi ve teslim sıklığını belirtin."
+        ],
+        "teklif_urun": "Et ürünleri için ambalaj kabı ve filmi"
+      }
+    },
+    {
+      "kimlik": "corlu-deri",
+      "ad": "Çorlu Deri Karma Organize Sanayi Bölgesi",
+      "tur": "sanayi bölgesi",
+      "il": "Tekirdağ",
+      "yer_etiketi": "Tekirdağ, Ergene'de sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Deri işleme",
+      "sektor_kodu": "deri",
+      "grup": "imalat",
+      "isletme": "Deri işleme atölyeleri",
+      "fact": {
+        "metin": "Çorlu Deri Karma Organize Sanayi Bölgesi, deri işleme faaliyetlerini açıklar.",
+        "source_url": [
+          "https://www.corluderiosb.org.tr/"
+        ],
+        "bagi": "https://www.corluderiosb.org.tr/",
+        "bag_metni": "Kaynak: Çorlu Deri Karma Organize Sanayi Bölgesi",
+        "yer_notu": "OSB adresi Ergene ilçesindedir. Bölgenin adı Çorlu Deri Karma OSB olarak korunur. Alım ihtiyacı editoryal öneridir."
+      },
+      "editorial": {
+        "ihtiyac": "Deri taşımak veya depolamak için ekipman alıyorsanız",
+        "yorum": "Malzemenin boyutunu ve taşıma ağırlığını yazın. Raf veya taşıma arabasının ölçüsünü netleştirin.",
+        "kosullar": [
+          "Ürünün ölçüsünü ve taşıma ağırlığını yazın.",
+          "Kullanım alanını ve gereken adedi belirtin.",
+          "Montaj ve teslim koşullarını sorun."
+        ],
+        "teklif_urun": "Deri atölyesi için raf ve taşıma arabası"
+      }
+    },
+    {
+      "kimlik": "luleburgaz-sut",
+      "ad": "Lüleburgaz",
+      "tur": "ilçe",
+      "il": "Kırklareli",
+      "yer_etiketi": "Kırklareli ilinde Lüleburgaz ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Süt ürünleri",
+      "sektor_kodu": "sut",
+      "grup": "gida",
+      "isletme": "Süt ürünleri işletmeleri",
+      "fact": {
+        "metin": "Danone, Lüleburgaz tesisinde sütlü ürünler ürettiğini açıklar.",
+        "source_url": [
+          "https://www.danone.com.tr/grow-with-danone.html"
+        ],
+        "bagi": "https://www.danone.com.tr/grow-with-danone.html",
+        "bag_metni": "Kaynak: Danone Türkiye, tesis bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Süt ürünleri için kap veya kapak alıyorsanız",
+        "yorum": "Ürün hacmini ve saklama koşullarını belirtin. Kap ile kapağın birlikte uyumunu kontrol edin.",
+        "kosullar": [
+          "Kabın hacmini ve kapak türünü yazın.",
+          "Baskıyı ve gereken adedi belirtin.",
+          "Gıdaya temas uygunluk belgesini sorun."
+        ],
+        "teklif_urun": "Süt ürünleri için kap ve kapak"
+      }
+    },
+    {
+      "kimlik": "gebze-kalip",
+      "ad": "Gebze Organize Sanayi Bölgesi",
+      "tur": "sanayi bölgesi",
+      "il": "Kocaeli",
+      "yer_etiketi": "Kocaeli, Gebze'de sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Kalıp imalatı",
+      "sektor_kodu": "kalip",
+      "grup": "imalat",
+      "isletme": "Kalıp imalatçıları",
+      "fact": {
+        "metin": "Gebze Organize Sanayi Bölgesi'ndeki Ocak Kalıp, kalıp üretimi ve parça işlemesi yapar.",
+        "source_url": [
+          "https://www.ocakkalip.com/"
+        ],
+        "bagi": "https://www.ocakkalip.com/",
+        "bag_metni": "Kaynak: Ocak Kalıp, faaliyet ve adres bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Kalıp üretimi için kesici takım alıyorsanız",
+        "yorum": "İşlenecek malzemeyi ve makinenin takım bağlantısını yazın. Uyumlu ürün için numune isteyin.",
+        "kosullar": [
+          "İşlenecek malzemeyi ve takım ölçüsünü yazın.",
+          "Makine modelini ve gereken adedi belirtin.",
+          "Numune ve teslim süresini sorun."
+        ],
+        "teklif_urun": "Kalıp işleme için kesici takım"
+      }
+    },
+    {
+      "kimlik": "arifiye-otomotiv",
+      "ad": "Arifiye",
+      "tur": "ilçe",
+      "il": "Sakarya",
+      "yer_etiketi": "Sakarya ilinde Arifiye ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Otomotiv yan sanayi",
+      "sektor_kodu": "otomotiv",
+      "grup": "imalat",
+      "isletme": "Otomotiv parça üreticileri",
+      "fact": {
+        "metin": "Arifiye Belediyesi, bölgenin sanayisinde otomotiv yan sanayisinin öne çıktığını belirtir.",
+        "source_url": [
+          "https://www.arifiye.bel.tr/arifiye-rehberi/arifiye-hakkinda/nufus-ve-ekonomi"
+        ],
+        "bagi": "https://www.arifiye.bel.tr/arifiye-rehberi/arifiye-hakkinda/nufus-ve-ekonomi",
+        "bag_metni": "Kaynak: Arifiye Belediyesi, ekonomi bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Üretiminiz için bağlantı elemanı alıyorsanız",
+        "yorum": "Parçanın teknik ölçüsünü ve kullanımını yazın. Tekliflerin aynı malzeme koşulunu karşılamasını isteyin.",
+        "kosullar": [
+          "Teknik çizimi ve malzeme türünü belirtin.",
+          "Parti adedini ve teslim tarihini yazın.",
+          "Numune ve tekrar üretim koşullarını sorun."
+        ],
+        "teklif_urun": "Otomotiv parçası için bağlantı elemanları"
+      }
+    },
+    {
+      "kimlik": "eskisehir-makine",
+      "ad": "Eskişehir Organize Sanayi Bölgesi",
+      "tur": "sanayi bölgesi",
+      "il": "Eskişehir",
+      "yer_etiketi": "Eskişehir, Odunpazarı'nda sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Makine imalatı",
+      "sektor_kodu": "makine",
+      "grup": "imalat",
+      "isletme": "Makine imalatçıları",
+      "fact": {
+        "metin": "Bakanlığın Eskişehir sanayi raporu, organize sanayi bölgesinde makine imalatını sayar.",
+        "source_url": [
+          "https://www.sanayi.gov.tr/assets/pdf/plan-program/ESK%C4%B0%C5%9EEH%C4%B0R.pdf",
+          "https://eosb.org.tr/vPage/hakkimizda"
+        ],
+        "bagi": "https://www.sanayi.gov.tr/assets/pdf/plan-program/ESK%C4%B0%C5%9EEH%C4%B0R.pdf",
+        "bag_metni": "Kaynak: Sanayi ve Teknoloji Bakanlığı, Eskişehir raporu",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Makine üretimi için kesici takım veya kaynak teli alıyorsanız",
+        "yorum": "İşlediğiniz metalin türünü ve üretim miktarını yazın. Kullanacağınız makineye uygun ürünleri karşılaştırın.",
+        "kosullar": [
+          "Malzemenin türünü ve kalınlığını yazın.",
+          "Takım ölçüsünü ve gereken miktarı belirtin.",
+          "Numune ve düzenli teslim koşullarını sorun."
+        ],
+        "teklif_urun": "Makine imalatı için kesici takım ve kaynak teli"
+      }
+    },
+    {
+      "kimlik": "kutahya-porselen",
+      "ad": "Merkez",
+      "tur": "ilçe",
+      "il": "Kütahya",
+      "yer_etiketi": "Kütahya ilinde Merkez ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Porselen",
+      "sektor_kodu": "porselen",
+      "grup": "imalat",
+      "isletme": "Porselen işletmeleri",
+      "fact": {
+        "metin": "Kütahya Ticaret ve Sanayi Odası, Merkez ilçedeki porselen işletmelerini listeler.",
+        "source_url": [
+          "https://en.kutso.org.tr/wp-content/uploads/2017/09/6.Manufacturing-and-Trading-Tile-Ceramics-%E2%80%93-Porcelain.pdf",
+          "https://kurumsal.kutahyaporselen.com/tr/iletisim-bilgilerimiz"
+        ],
+        "bagi": "https://en.kutso.org.tr/wp-content/uploads/2017/09/6.Manufacturing-and-Trading-Tile-Ceramics-%E2%80%93-Porcelain.pdf",
+        "bag_metni": "Kaynak: Kütahya Ticaret ve Sanayi Odası",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Porselen sevkiyatı için koruyucu ambalaj alıyorsanız",
+        "yorum": "Ürünün ölçüsünü ve sevkiyat biçimini yazın. Kutu içindeki koruma parçalarını satıcıyla birlikte belirleyin.",
+        "kosullar": [
+          "Ürün ölçüsünü ve koli içeriğini yazın.",
+          "Taşıma biçimini ve gereken adedi belirtin.",
+          "Koruma numunesi ve teslim tarihi isteyin."
+        ],
+        "teklif_urun": "Porselen sevkiyatı için koruyucu ambalaj"
+      }
+    },
+    {
+      "kimlik": "usak-tekstil",
+      "ad": "Uşak Organize Sanayi Bölgesi",
+      "tur": "sanayi bölgesi",
+      "il": "Uşak",
+      "yer_etiketi": "Uşak'ta sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Tekstil",
+      "sektor_kodu": "tekstil",
+      "grup": "tekstil",
+      "isletme": "İplik ve dokuma işletmeleri",
+      "fact": {
+        "metin": "Uşak Organize Sanayi Bölgesi'ndeki Polat Tekstil, iplik ve dokuma ürünleri sunar.",
+        "source_url": [
+          "https://www.polatbattaniye.com.tr/iletisim/"
+        ],
+        "bagi": "https://www.polatbattaniye.com.tr/iletisim/",
+        "bag_metni": "Kaynak: Polat Tekstil, ürün ve tesis bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Dokuma üretimi için makara veya ambalaj alıyorsanız",
+        "yorum": "Kullandığınız makinenin ölçüsünü ve ürünün ağırlığını belirtin. Tekrar alım miktarını ayrıca yazın.",
+        "kosullar": [
+          "Makara ölçüsünü ve malzemesini yazın.",
+          "Ürün ağırlığını ve gereken adedi belirtin.",
+          "Numune ve tekrar teslim süresini sorun."
+        ],
+        "teklif_urun": "Dokuma işletmesi için makara ve ambalaj"
+      }
+    },
+    {
+      "kimlik": "iscehisar-mermer",
+      "ad": "İscehisar Mermer İhtisas Organize Sanayi Bölgesi",
+      "tur": "sanayi bölgesi",
+      "il": "Afyonkarahisar",
+      "yer_etiketi": "Afyonkarahisar, İscehisar'da sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Mermer işleme",
+      "sektor_kodu": "mermer",
+      "grup": "imalat",
+      "isletme": "Mermer işleme tesisleri",
+      "fact": {
+        "metin": "İscehisar Mermer İhtisas Organize Sanayi Bölgesi, üretimdeki mermer işletmelerini listeler.",
+        "source_url": [
+          "https://www.iscehisarosb.org.tr/firmarehberi.aspx"
+        ],
+        "bagi": "https://www.iscehisarosb.org.tr/firmarehberi.aspx",
+        "bag_metni": "Kaynak: İscehisar Mermer İhtisas Organize Sanayi Bölgesi",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Alım ihtiyacı editoryal öneridir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Mermer işlemek için kesici disk veya elmas tel alıyorsanız",
+        "yorum": "Taşın türünü ve kesim makinesini belirtin. Uyumlu ürünü üretim koşullarınızla birlikte değerlendirin.",
+        "kosullar": [
+          "Taş türünü ve makine modelini yazın.",
+          "Disk veya tel ölçüsünü belirtin.",
+          "Gereken adedi ve teslim tarihini yazın."
+        ],
+        "teklif_urun": "Mermer için kesici disk ve elmas tel"
+      }
+    },
+    {
+      "kimlik": "bucak-mermer",
+      "ad": "Bucak",
+      "tur": "ilçe",
+      "il": "Burdur",
+      "yer_etiketi": "Burdur ilinde Bucak ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Mermer işleme",
+      "sektor_kodu": "mermer",
+      "grup": "imalat",
+      "isletme": "Mermer atölyeleri",
+      "fact": {
+        "metin": "Burdur Ticaret Odasının ihracatçı listesinde Bucak'taki mermer işletmeleri yer alır.",
+        "source_url": [
+          "https://www.butso.org.tr/icerikler/ihracatci-listesi"
+        ],
+        "bagi": "https://www.butso.org.tr/icerikler/ihracatci-listesi",
+        "bag_metni": "Kaynak: Burdur Ticaret ve Sanayi Odası",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Mermer kesmek için disk veya aşındırıcı alıyorsanız",
+        "yorum": "İşlediğiniz taşı ve kullandığınız makineyi belirtin. Satıcıdan uyumlu kesici ürün için teklif isteyin.",
+        "kosullar": [
+          "Taş türünü ve makine modelini yazın.",
+          "Disk ölçüsünü ve istediğiniz adedi belirtin.",
+          "Numune ve teslim süresini sorun."
+        ],
+        "teklif_urun": "Mermer kesme diski ve aşındırıcı"
+      }
+    },
+    {
+      "kimlik": "egirdir-meyve",
+      "ad": "Eğirdir",
+      "tur": "ilçe",
+      "il": "Isparta",
+      "yer_etiketi": "Isparta ilinde Eğirdir ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Meyve depolama",
+      "sektor_kodu": "meyve",
+      "grup": "gida",
+      "isletme": "Elma üreticileri ve depoları",
+      "fact": {
+        "metin": "Eğirdir'de elma üretimine bağlı soğuk hava depoları bulunur.",
+        "source_url": [
+          "https://baka.gov.tr/assets/upload/dosyalar/tr61-duzey-2-bolgesi-2024-2028-bolge-plani.pdf"
+        ],
+        "bagi": "https://baka.gov.tr/assets/upload/dosyalar/tr61-duzey-2-bolgesi-2024-2028-bolge-plani.pdf",
+        "bag_metni": "Kaynak: Batı Akdeniz Kalkınma Ajansı, bölge planı",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Elma depolamak veya taşımak için kasa alıyorsanız",
+        "yorum": "Kasanın taşıyacağı ağırlığı ve depolama biçimini belirtin. Üst üste yerleşme ölçüsünü satıcıyla netleştirin.",
+        "kosullar": [
+          "Kasanın ölçüsünü ve taşıma ağırlığını yazın.",
+          "İstediğiniz adedi ve teslim yerini belirtin.",
+          "Tekrar kullanım ve temizlik koşullarını sorun."
+        ],
+        "teklif_urun": "Elma depolama ve taşıma kasası"
+      }
+    },
+    {
+      "kimlik": "yuregir-narenciye",
+      "ad": "Yüreğir",
+      "tur": "ilçe",
+      "il": "Adana",
+      "yer_etiketi": "Adana ilinde Yüreğir ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Narenciye paketleme",
+      "sektor_kodu": "narenciye",
+      "grup": "gida",
+      "isletme": "Narenciye paketleme işletmeleri",
+      "fact": {
+        "metin": "Yüreğir'de narenciye üretimi ve paketlemesi yapan tesisler bulunur.",
+        "source_url": [
+          "https://adana.tarimorman.gov.tr/Sayfalar/GormeEngellilerDetay.aspx?Liste=Haber&OgeId=1253"
+        ],
+        "bagi": "https://adana.tarimorman.gov.tr/Sayfalar/GormeEngellilerDetay.aspx?Liste=Haber&OgeId=1253",
+        "bag_metni": "Kaynak: Adana İl Tarım ve Orman Müdürlüğü",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Narenciye sevkiyatı için kutu veya kasa alıyorsanız",
+        "yorum": "Ürünün cinsini ve paket ağırlığını yazın. Taşımaya uygun kutu için teklif hazırlayın.",
+        "kosullar": [
+          "Ürünün cinsini ve paket ağırlığını yazın.",
+          "Kutunun ölçüsünü ve baskı ihtiyacını belirtin.",
+          "Sevk tarihini ve gereken adedi yazın."
+        ],
+        "teklif_urun": "Narenciye sevkiyat kutusu ve kasası"
+      }
+    },
+    {
+      "kimlik": "antakya-mobilya",
+      "ad": "Antakya",
+      "tur": "ilçe",
+      "il": "Hatay",
+      "yer_etiketi": "Hatay ilinde Antakya ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Mobilya üretimi",
+      "sektor_kodu": "mobilya",
+      "grup": "imalat",
+      "isletme": "Mobilya atölyeleri",
+      "fact": {
+        "metin": "Hatay Valiliğinin sektör sayfası, Antakya'daki mobilya üretimini anlatır.",
+        "source_url": [
+          "https://www.hatay.gov.tr/mobiyacilik-sektoru"
+        ],
+        "bagi": "https://www.hatay.gov.tr/mobiyacilik-sektoru",
+        "bag_metni": "Kaynak: Hatay Valiliği",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Mobilya üretmek için menteşe veya ray alıyorsanız",
+        "yorum": "Ürettiğiniz dolabın ölçüsünü ve parça kullanımını belirtin. Uyumlu donanımları aynı koşullarla karşılaştırın.",
+        "kosullar": [
+          "Parçanın ölçüsünü ve bağlantı biçimini yazın.",
+          "Taşıma yükünü ve gereken adedi belirtin.",
+          "Numune ve tekrar sipariş koşullarını sorun."
+        ],
+        "teklif_urun": "Mobilya menteşesi ve çekmece rayı"
+      }
+    },
+    {
+      "kimlik": "onikisubat-iplik",
+      "ad": "Onikişubat",
+      "tur": "ilçe",
+      "il": "Kahramanmaraş",
+      "yer_etiketi": "Kahramanmaraş ilinde Onikişubat ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "İplik üretimi",
+      "sektor_kodu": "iplik",
+      "grup": "tekstil",
+      "isletme": "İplik işletmeleri",
+      "fact": {
+        "metin": "MEM Tekstil, Onikişubat'ta tesis adresi ve iplik ürünleri yayımlar.",
+        "source_url": [
+          "https://memtextile.com/iletisim.html",
+          "https://memtextile.com/"
+        ],
+        "bagi": "https://memtextile.com/iletisim.html",
+        "bag_metni": "Kaynak: MEM Tekstil, tesis ve ürün bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "İplik üretimi için bobin veya ambalaj alıyorsanız",
+        "yorum": "Bobinin makinenize uygun ölçüsünü belirtin. İpliğin taşınması için gereken ambalajı ayrıca yazın.",
+        "kosullar": [
+          "Bobinin ölçüsünü ve malzemesini yazın.",
+          "İhtiyacınız olan adedi ve tarihi belirtin.",
+          "Makineye uygun numune isteyin."
+        ],
+        "teklif_urun": "İplik bobini ve taşıma ambalajı"
+      }
+    },
+    {
+      "kimlik": "yesilyurt-kayisi",
+      "ad": "Yeşilyurt",
+      "tur": "ilçe",
+      "il": "Malatya",
+      "yer_etiketi": "Malatya ilinde Yeşilyurt ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Kayısı üretimi",
+      "sektor_kodu": "kayisi",
+      "grup": "gida",
+      "isletme": "Kayısı üreticileri",
+      "fact": {
+        "metin": "Yeşilyurt'ta kayısı yetiştirilir ve kurutmalık kayısı hazırlanır.",
+        "source_url": [
+          "https://malatya.tarimorman.gov.tr/Sayfalar/GormeEngellilerDetay.aspx?Liste=Haber&OgeId=921"
+        ],
+        "bagi": "https://malatya.tarimorman.gov.tr/Sayfalar/GormeEngellilerDetay.aspx?Liste=Haber&OgeId=921",
+        "bag_metni": "Kaynak: Malatya İl Tarım ve Orman Müdürlüğü",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Kayısı hasadı ve kurutması için ekipman alıyorsanız",
+        "yorum": "Hasat kasası veya kurutma örtüsü ihtiyacınızı ayrı ayrı yazın. Kullanım alanını ve ölçüyü belirtin.",
+        "kosullar": [
+          "İstediğiniz ürünün ölçüsünü yazın.",
+          "Gereken adedi ve hasat tarihini belirtin.",
+          "Malzemenin temizlenme koşullarını sorun."
+        ],
+        "teklif_urun": "Kayısı hasat kasası ve kurutma örtüsü"
+      }
+    },
+    {
+      "kimlik": "elazig-metal",
+      "ad": "Elazığ Organize Sanayi Bölgesi",
+      "tur": "sanayi bölgesi",
+      "il": "Elazığ",
+      "yer_etiketi": "Elazığ, Merkez'de sanayi bölgesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Metal profil üretimi",
+      "sektor_kodu": "metal",
+      "grup": "imalat",
+      "isletme": "Metal profil üreticileri",
+      "fact": {
+        "metin": "Elazığ Organize Sanayi Bölgesi rehberinde metal profil üretimi yapan işletme bulunur.",
+        "source_url": [
+          "https://osbik.elazigosb.org.tr/firma/ucelmas-metal/"
+        ],
+        "bagi": "https://osbik.elazigosb.org.tr/firma/ucelmas-metal/",
+        "bag_metni": "Kaynak: Elazığ Organize Sanayi Bölgesi",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Profil üretmek için sac veya bağlantı parçası alıyorsanız",
+        "yorum": "Malzemenin kalınlığını ve kaplamasını belirtin. Teklifleri aynı ölçü ve teslim koşullarıyla karşılaştırın.",
+        "kosullar": [
+          "Malzemenin türünü ve kalınlığını yazın.",
+          "Ölçüyü ve toplam miktarı belirtin.",
+          "Kesim ve teslim koşullarını sorun."
+        ],
+        "teklif_urun": "Profil üretimi için sac ve bağlantı parçaları"
+      }
+    },
+    {
+      "kimlik": "aziziye-sut",
+      "ad": "Aziziye",
+      "tur": "ilçe",
+      "il": "Erzurum",
+      "yer_etiketi": "Erzurum ilinde Aziziye ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Süt toplama",
+      "sektor_kodu": "sut",
+      "grup": "gida",
+      "isletme": "Süt toplayan işletmeler",
+      "fact": {
+        "metin": "Erzurum Ticaret Borsası, Aziziye'yi süt toplama projesinin kapsadığı ilçeler arasında sayar.",
+        "source_url": [
+          "https://erzurumtb.org.tr/pages/sut-sektoru-soguk-zincir-kurulumu-projesi"
+        ],
+        "bagi": "https://erzurumtb.org.tr/pages/sut-sektoru-soguk-zincir-kurulumu-projesi",
+        "bag_metni": "Kaynak: Erzurum Ticaret Borsası",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Süt taşımak için kap veya soğutma ekipmanı alıyorsanız",
+        "yorum": "Taşıdığınız süt miktarını ve taşıma süresini belirtin. Uygun ekipmanı satıcıyla belirleyin.",
+        "kosullar": [
+          "Taşıma miktarını ve süresini yazın.",
+          "Kabın malzemesini ve kapasitesini belirtin.",
+          "Temizlik ve bakım koşullarını sorun."
+        ],
+        "teklif_urun": "Süt taşıma kabı ve soğutma ekipmanı"
+      }
+    },
+    {
+      "kimlik": "arsin-findik",
+      "ad": "Arsin",
+      "tur": "ilçe",
+      "il": "Trabzon",
+      "yer_etiketi": "Trabzon ilinde Arsin ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Fındık işleme",
+      "sektor_kodu": "findik",
+      "grup": "gida",
+      "isletme": "Fındık işleme tesisleri",
+      "fact": {
+        "metin": "Arsin'deki Trabzon Tarım tesisi fındık işleme ve depolama faaliyetlerini açıklar.",
+        "source_url": [
+          "https://www.trabzontarim.com.tr/"
+        ],
+        "bagi": "https://www.trabzontarim.com.tr/",
+        "bag_metni": "Kaynak: Trabzon Tarım, tesis bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Fındık işlemek için elek veya taşıma bandı alıyorsanız",
+        "yorum": "İşlenecek ürünün boyutunu ve saatlik miktarını yazın. Parçanın makineye uyumunu önceden kontrol edin.",
+        "kosullar": [
+          "Makine modelini ve parça ölçüsünü yazın.",
+          "Saatlik işleme miktarını belirtin.",
+          "Montaj ve yedek parça koşullarını sorun."
+        ],
+        "teklif_urun": "Fındık işleme eleği ve taşıma bandı"
+      }
+    },
+    {
+      "kimlik": "tekkekoy-makine",
+      "ad": "Tekkeköy",
+      "tur": "ilçe",
+      "il": "Samsun",
+      "yer_etiketi": "Samsun ilinde Tekkeköy ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Makine imalatı",
+      "sektor_kodu": "makine",
+      "grup": "imalat",
+      "isletme": "Makine imalatçıları",
+      "fact": {
+        "metin": "Samsun Organize Sanayi Bölgesi rehberinde Tekkeköy'deki makine imalatçıları yer alır.",
+        "source_url": [
+          "https://www.samsunosb.org.tr/firmalar/faaliyetteki-firmalar.html"
+        ],
+        "bagi": "https://www.samsunosb.org.tr/firmalar/faaliyetteki-firmalar.html",
+        "bag_metni": "Kaynak: Samsun Merkez Organize Sanayi Bölgesi",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Makine üretmek için rulman veya motor alıyorsanız",
+        "yorum": "Parça kodunu ve çalışma koşullarını yazın. Üretim takviminize uygun teslim tarihi isteyin.",
+        "kosullar": [
+          "Parça kodunu ve teknik ölçüyü yazın.",
+          "Çalışma koşullarını ve adedi belirtin.",
+          "Teslim tarihi ve numune koşulunu sorun."
+        ],
+        "teklif_urun": "Makine üretimi için rulman ve motor"
+      }
+    },
+    {
+      "kimlik": "altinordu-findik",
+      "ad": "Altınordu",
+      "tur": "ilçe",
+      "il": "Ordu",
+      "yer_etiketi": "Ordu ilinde Altınordu ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Fındık işleme",
+      "sektor_kodu": "findik",
+      "grup": "gida",
+      "isletme": "Fındık paketleme işletmeleri",
+      "fact": {
+        "metin": "Altınordu'daki Erhan Fındık tesisi, fındık kırma ve eleme süreçlerini açıklar.",
+        "source_url": [
+          "https://www.erhanfindik.com/tesisimiz"
+        ],
+        "bagi": "https://www.erhanfindik.com/tesisimiz",
+        "bag_metni": "Kaynak: Erhan Fındık, tesis bilgileri",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Fındık satışı için torba veya kutu alıyorsanız",
+        "yorum": "Paketin taşıyacağı miktarı ve satış biçimini belirtin. Baskılı ve baskısız seçenekleri ayrı karşılaştırın.",
+        "kosullar": [
+          "Paket başına ürün ağırlığını yazın.",
+          "Baskıyı ve gereken paket adedini belirtin.",
+          "Numune ve teslim gününü sorun."
+        ],
+        "teklif_urun": "Fındık paketleme torbası ve kutusu"
+      }
+    },
+    {
+      "kimlik": "cayeli-cay",
+      "ad": "Çayeli",
+      "tur": "ilçe",
+      "il": "Rize",
+      "yer_etiketi": "Rize ilinde Çayeli ilçesi",
+      "checked_at": "2026-11-11",
+      "sektor": "Çay işleme",
+      "sektor_kodu": "cay",
+      "grup": "gida",
+      "isletme": "Çay işleyen işletmeler",
+      "fact": {
+        "metin": "ÇAYKUR'un tesis rehberinde Çayeli Çay Fabrikası yer alır.",
+        "source_url": [
+          "https://www.caykur.gov.tr/Pages/Unite/Hakkimizda.aspx?ParentId=12"
+        ],
+        "bagi": "https://www.caykur.gov.tr/Pages/Unite/Hakkimizda.aspx?ParentId=12",
+        "bag_metni": "Kaynak: ÇAYKUR, tesis rehberi",
+        "yer_notu": "Kaynak bölgedeki faaliyeti destekler. Önerilen alım ihtiyacı editoryaldir. Canlı talep veya platform üyeliği kanıtı değildir."
+      },
+      "editorial": {
+        "ihtiyac": "Çay taşımak için çuval veya palet alıyorsanız",
+        "yorum": "Ürünün taşınacağı ağırlığı ve depolama biçimini yazın. Teklifte malzeme ve teslim koşullarını birlikte değerlendirin.",
+        "kosullar": [
+          "Çuvalın veya paletin ölçüsünü yazın.",
+          "Taşıma ağırlığını ve gereken adedi belirtin.",
+          "Malzeme ve teslim koşullarını sorun."
+        ],
+        "teklif_urun": "Çay taşıma çuvalı ve paleti"
+      }
+    }
+  ]
+}

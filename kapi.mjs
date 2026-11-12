@@ -6,9 +6,11 @@
 // Kapının göremediği durumlar: sözde öğeyle ya da geçişli zeminle çizilen vurgu çubuğu,
 // betiğin çalışırken yazdığı stil ve yalnız ekranda ölçülebilen değerler (boyut, karşıtlık, hedef).
 // Metin denetiminin dışında kalan: tek kelimelik metin. Tek kelimelik olgu adlarını build.py ayrıca denetler.
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { readMotion, checkMotion, motionCases, tweenCheck } from "./kapi-hareket.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const flags = new Set(process.argv.slice(2).filter((a) => a.startsWith("--")));
@@ -264,6 +266,8 @@ function checkCss(source) {
 // Sayfada görünen, en az iki kelimeli bütün metinler. metin.py içindeki çıkarımın aynısıdır.
 // data-veri ile işaretli adlar ve yalnız ekran okuyucuya okunan yinelemeler (sr-only) sayılmaz.
 const squeeze = (t) => t.replace(/\s+/g, " ").trim();
+// Metni cümlelere böler. En az iki kelimeli parçalar alınır (metin.py split ile aynı). Sayıdan sonraki nokta (sıra sayısı) bölmez.
+const sentences = (t) => t.split(/(?<=[.?!])(?<!\d\.)\s+/).filter((x) => x.split(/\s+/).length >= 2);
 const normText = (t) => squeeze(t).replace(/\d[\d.,]*/g, "#");
 const plainText = (t) => t.replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 // Görünmeyen metinler: sayfa başlığı, öznitelik metinleri ve yalnız ekran okuyucuya okunan metinler (sr-only).
@@ -279,12 +283,16 @@ function hiddenTexts(doc) {
   for (const m of body.matchAll(/<([a-z0-9]+)\b([^>]*)>([^<]*)<\/\1>/g)) if (/\bclass="[^"]*\bsr-only\b/.test(m[2]) && !m[2].includes("data-veri")) out.push(m[3]);
   return [...new Set(out.map((t) => squeeze(plainText(t))).filter((t) => t.split(/\s+/).length >= 2))];
 }
-function pageTexts(doc) {
-  const out = [];
+// Sayfa metinleri ve planlanan bölgeler. Planlanan bölge data-plan özniteliği taşır.
+// Her metin, planlanan bir bölgenin içinde olup olmadığını bilir. Her bölge görünür etiketini (plan-tag) taşımalıdır.
+const PLAN_TAGS = ["Planlanan hizmet", "Planlanan içerik"];
+function walkTexts(doc) {
+  const texts = [];
+  const regions = [];
   const VOID = new Set(["img", "input", "br", "meta", "link", "hr"]);
-  const split = (t) => t.split(/(?<=[.?!])\s+/).filter((x) => x.split(/\s+/).length >= 2);
+  const split = (t) => t.split(/(?<=[.?!])(?<!\d\.)\s+/).filter((x) => x.split(/\s+/).length >= 2);
   const desc = doc.match(/<meta name="description" content="([^"]*)"/);
-  if (desc) out.push(...split(plainText(desc[1])));
+  if (desc) for (const t of split(plainText(desc[1]))) texts.push({ t, plan: false });
   const body = doc.slice(doc.indexOf("<body")).replace(/<!--[\s\S]*?-->/g, " ").replace(/<(script|style|svg)\b[\s\S]*?<\/\1>/g, " ");
   const stack = [];
   for (const m of body.matchAll(/<(\/?)([a-zA-Z0-9]+)([^>]*)>|([^<]+)/g)) {
@@ -293,12 +301,24 @@ function pageTexts(doc) {
     const attrs = m[3] || "";
     if (m[4] !== undefined) {
       const t = squeeze(plainText(m[4]));
-      if (t && !stack.some(Boolean)) out.push(...split(t));
+      const region = [...stack].reverse().find((s) => s.region);
+      if (t && region && stack.some((s) => s.tag) && PLAN_TAGS.includes(t)) region.region.tagged = true;
+      if (t && !stack.some((s) => s.skip)) for (const x of split(t)) texts.push({ t: x, plan: !!region });
     } else if (closing) {
       if (!VOID.has(tag) && stack.length) stack.pop();
-    } else if (!VOID.has(tag)) stack.push(attrs.includes("data-veri") || attrs.includes("sr-only"));
+    } else if (!VOID.has(tag)) {
+      const item = { skip: attrs.includes("data-veri") || attrs.includes("sr-only"), tag: /\bclass="[^"]*\bplan-tag\b/.test(attrs), region: null };
+      if (/\sdata-plan(\s|=|$)/.test(attrs)) {
+        item.region = { id: (attrs.match(/\bid="([^"]+)"/) || [])[1] || "", tagged: false };
+        regions.push(item.region);
+      }
+      stack.push(item);
+    }
   }
-  return [...new Set(out)];
+  return { texts, regions };
+}
+function pageTexts(doc) {
+  return [...new Set(walkTexts(doc).texts.map((x) => x.t))];
 }
 
 // Betikteki kullanıcıya görünen metinler: Türkçe harf taşıyan ya da boşluklu, teknik olmayan dizgiler.
@@ -316,12 +336,18 @@ function scriptTexts(js) {
   return [...out];
 }
 
+// Yasak paketler ve WebGL. Betikte içe aktarma, genel ad ya da WebGL bağlamı; sayfada betik adresi.
+const PAKET_JS = /\bimport\b[^;]*['"](three|gsap|ogl|react|react-dom)(\/[^'"]*)?['"]|require\(\s*['"](three|gsap|ogl|react)['"]\s*\)|\bTHREE\.|\bgsap\.|getContext\(\s*['"](webgl2?|experimental-webgl)['"]/;
+const PAKET_HTML = /<script\b[^>]*\bsrc="[^"]*\b(three|gsap|ogl|react|react-dom)\b[^"]*"/i;
+
 // JS: süre ve eğri CSS tokenlarından gelir. Odak gizlenmez.
 function checkJs(js, scriptCopy) {
   const fails = [];
   const fail = (rule, detail) => fails.push({ rule, where: "app.js", detail });
   if (/['"](linear|ease|ease-in|ease-out|ease-in-out)['"]|cubic-bezier\(|steps\(/.test(js)) fail("hareket", "token dışı eğri");
   if (/\.animate\(/.test(js)) fail("hareket", "betikte animate() kullanımı");
+  // Yüzeyler vanilla JS, SVG ve CSS ile çizilir (kullanıcı kararı 11 Kasım 2026). Three.js, GSAP, OGL, React ve WebGL eklenmez.
+  if (PAKET_JS.test(js)) fail("paket", "betikte yasak paket ya da WebGL");
   if (/\.style\.(transition|animation)/.test(js) || /setProperty\(\s*["'](transition|animation)/.test(js)) fail("hareket", "betikte geçiş ya da canlandırma stili");
   // Süre tokenı olduğu gibi kullanılır. Çarpılan ya da bölünen süre artık token değildir.
   if (/dur\([^)]*\)\s*[*\/]/.test(js)) fail("hareket", "süre tokenı üzerinde hesap");
@@ -432,7 +458,7 @@ function checkHtml(html, yayin, ledger, classes, site) {
       let u;
       try { u = new URL(address); } catch { return false; }
       if (u.protocol !== "https:") return false;
-      if (u.host !== "istoc.com") return site.sosyal.has(address) || libraries.some((l) => address === l || address.startsWith(l + "/"));
+      if (u.host !== "istoc.com") return site.sosyal.has(address) || (site.bolgeKaynak || new Set()).has(address) || libraries.some((l) => address === l || address.startsWith(l + "/"));
       const path = decodeURIComponent(u.pathname);
       const bare = path.replace(/\/+$/, "");
       const parts = bare.split("/");
@@ -501,7 +527,7 @@ function checkHtml(html, yayin, ledger, classes, site) {
   // Kaynak sınıfındaki her metin kanıt defterinde de bulunmalıdır. Böylece kaynaksız bir cümle "kaynak" diye geçemez.
   const proven = new Set((ledger.iddialar || []).map((c) => squeeze(c.metin)));
   for (const k of classes.kaynak || []) if (!proven.has(k)) fail("olgu", "data/metin.json", `kaynak sınıfında ama kanıt defterinde yok: ${k}`);
-  const exact = new Set([...(classes.kaynak || []), ...(classes.tasarim || []), ...(classes.etiket || [])]);
+  const exact = new Set([...(classes.kaynak || []), ...(classes.dis || []), ...(classes.tasarim || []), ...(classes.etiket || []), ...(classes.plan || [])]);
   const folded = new Set(classes.veri || []);
   const texts = pageTexts(html);
   if (texts.length < 120) fail("olgu", f, `metin çıkarımı beklenenden az: ${texts.length}`);
@@ -515,6 +541,126 @@ function checkHtml(html, yayin, ledger, classes, site) {
     const n = normHidden(t);
     if (!hidExact.has(n) && !hidExact.has(n.replace(/:+$/, "").trim())) fail("olgu", f, `kayıtsız görünmeyen metin: ${t}`);
   }
+  // Dış kaynaklı olgu: bölgesel tedarik bölümünün olgu cümleleri (data/bolgeler.json, fact.metin).
+  // Her cümle verideki bir olgudur. Olgunun https kaynağı ve geçerli bir denetim günü vardır.
+  // Cümle sayfada bir kez, kendi yerinin satırında geçer. Aynı satırdaki kaynak bağlantısı o olgunun kaynağına gider.
+  // Bölüm, satıcıların iStoc'ta bulunduğu anlamına gelmediğini yazar.
+  if (PAKET_HTML.test(html)) fail("paket", f, "sayfada yasak paket betiği");
+  // Yer verisi iki dosyadan gelir: tedarik merkezleri (data/bolgeler.json, tam 12) ve alıcı talep alanları (data/alicilar.json, tam 24).
+  // Her dosyada kimlikler tekildir. Her kaydın türü ve etiketi uyumludur, teklif için 3 koşulu ve tek sektörü vardır.
+  // Tür ilçe, semt, ticaret merkezi ya da sanayi bölgesidir. İlçenin etiketi "ilçesi" ile biter. Öteki türlerin etiketi türün adını taşır ve "ilçe" sözcüğünü kullanmaz, ilçenin adını yer olarak yazabilir.
+  // Bir yerde (şehir ve normalleştirilmiş yer adı) en çok 2 farklı sektör (sektor_kodu) olur. İki dosyanın birleşimine uygulanır.
+  // Kullanıcı kararı (11 Kasım 2026): bir şehirde birden çok merkez olabilir. Sınır şehre değil, her bölgeye, ilçeye ve merkeze uygulanır.
+  // Olgu cümlesi "dis" sınıfındadır. Cümle kendi bölümünde, kendi yerinin satırında bir kez geçer. Aynı satırdaki kaynak bağlantısı olgunun kaynağına gider.
+  const ZORUNLU_MERKEZ = ["istoc", "perpa", "megacenter", "giyimkent", "tekstilkent", "imc", "aykosan", "aymakoop", "masko", "modoko", "topkapi-matbaacilar", "imes", "ostim", "ivedik", "siteler", "elmadag-mobilya", "sasmaz", "aykusan", "izmir-ataturk", "kemalpasa", "kemeralti", "bursa-osb", "demirtas", "inegol", "konya-osb", "busan", "aykent", "konya-matbaacilar", "imes-dilovasi", "tosb", "gebze-osb", "baspinar", "melikgazi", "adana-osb", "denizli-osb", "buldan", "babadag", "cerkezkoy", "manisa-osb", "eskisehir-osb"];
+  const iso = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d || "") && !Number.isNaN(Date.parse(d));
+  const textOf = (h) => squeeze(h.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").replace(/&quot;/g, '"'));
+  const allFacts = new Set();
+  const sets = [
+    { file: "data/bolgeler.json", data: site && site.bolge, count: 22, atLeast: true, section: "bolgesel-tedarik", row: '<li class="bolge" data-bolge="', src: "data-bolge-kaynak", talep: false, more: "data-bolge-more" },
+    { file: "data/alicilar.json", data: site && site.alici, count: 24, section: "alici-talepleri", row: '<li class="bolge talep" data-talep="', src: "data-talep-kaynak", talep: true, more: "data-talep-more" },
+  ];
+  const trNorm = (t) => String(t || "").toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
+  // Yer anahtarı: şehir ve kanonik yer adı. Türkçe küçük harf, işaretler atılır, noktasız ı da i olur (ASCII yazımla eşleşir).
+  // "Organize Sanayi Bölgesi" ve "OSB" aynı yerdir. Böylece aynı yer farklı yazımla ikinci kez sayılmaz.
+  const yerAnahtari = (y) => `${trNorm(y.il)}|${trNorm(y.ad).replace(/organize sanayi bolgesi/g, "osb").replace(/[^a-z0-9]+/g, "")}`;
+  const perPlace = {};
+  for (const set of sets) {
+    if (set.talep && yayin) continue;
+    if (!set.data) { fail("bölge", set.file, "veri dosyası yok"); continue; }
+    const yerler = set.data.yerler || [];
+    // Tedarik merkezlerinin sayısı veriden gelir ve en az 22'dir. Alıcı alanları tam 24'tür.
+    if (set.atLeast ? yerler.length < set.count : yerler.length !== set.count) fail("bölge", set.file, `${set.atLeast ? "en az" : "tam"} ${set.count} kayıt olmalı, ${yerler.length} kayıt var`);
+    // Kullanıcının istediği merkezler (11 Kasım 2026): 12 İstanbul ve 28 ülke geneli merkez. Hiçbiri silinmez.
+    if (!set.talep) {
+      const ids = new Set(yerler.map((y) => y.kimlik));
+      const missing = ZORUNLU_MERKEZ.filter((id) => !ids.has(id));
+      if (missing.length) fail("bölge", set.file, `zorunlu merkez eksik: ${missing.join(", ")}`);
+    }
+    // Aynı yer ve aynı sektör ikinci kez eklenmez.
+    const keys = yerler.map((y) => `${yerAnahtari(y)}|${y.sektor_kodu}`);
+    const dups = keys.filter((k, i) => keys.indexOf(k) !== i);
+    if (dups.length) fail("bölge", set.file, `aynı yer ve sektör iki kez var: ${[...new Set(dups)].join(", ")}`);
+    if (new Set(yerler.map((y) => y.kimlik)).size !== yerler.length) fail("bölge", set.file, "yer kimlikleri tekil değil");
+    const own = new Map();
+    for (const y of yerler) {
+      const label = y.yer_etiketi || "";
+      const fits = y.tur === "ilçe" ? /ilçesi$/.test(label) : ["semt", "ticaret merkezi", "sanayi bölgesi"].includes(y.tur) && label.includes(y.tur) && !/ilçe/.test(label);
+      if (!fits) fail("bölge", set.file, `türü ya da etiketi geçersiz: ${y.kimlik}`);
+      if (((y.editorial || {}).kosullar || []).length !== 3) fail("bölge", set.file, `teklif için 3 koşul yok: ${y.kimlik}`);
+      if (typeof y.sektor !== "string" || !y.sektor || typeof y.sektor_kodu !== "string" || !y.sektor_kodu) fail("bölge", set.file, `tek sektör yok: ${y.kimlik}`);
+      if (!["gida", "tekstil", "konaklama", "imalat"].includes(y.grup)) fail("bölge", set.file, `grup geçersiz: ${y.kimlik}`);
+      if (set.talep && !y.isletme) fail("bölge", set.file, `işletme türü yok: ${y.kimlik}`);
+      (perPlace[yerAnahtari(y)] ||= new Set()).add(y.sektor_kodu);
+      const urls = (y.fact && y.fact.source_url) || [];
+      if (!iso(y.checked_at)) fail("olgu", set.file, `denetim günü yok: ${y.kimlik}`);
+      if (!urls.length || !urls.every((u) => /^https:\/\//.test(u)) || !urls.includes(y.fact.bagi)) fail("olgu", set.file, `olgunun kaynağı yok: ${y.kimlik}`);
+      for (const t of sentences((y.fact && y.fact.metin) || "")) { own.set(t, y); allFacts.add(t); }
+    }
+    const start = html.indexOf(`id="${set.section}"`);
+    if (start < 0) { fail("bölge", f, `bölüm yok: #${set.section}`); continue; }
+    const end = html.indexOf("</section>", start);
+    const area = html.slice(start, end);
+    const areaText = textOf(area);
+    const rows = area.split(set.row).slice(1);
+    if (rows.length !== yerler.length) fail("bölge", f, `#${set.section} bölümünde ${rows.length} satır var, veride ${yerler.length} kayıt var`);
+    for (const r of rows) {
+      const id = r.slice(0, r.indexOf('"'));
+      const y = yerler.find((x) => x.kimlik === id);
+      if (!y) { fail("olgu", f, `veride olmayan yer: ${id}`); continue; }
+      const href = (r.match(new RegExp(`<a\\b[^>]*href="([^"]+)"[^>]*${set.src}`)) || [])[1] || "";
+      if (!y.fact.source_url.includes(href.replace(/&amp;/g, "&"))) fail("olgu", f, `kaynak bağlantısı olgunun kaynağına gitmiyor: ${id}`);
+      const t = textOf(r.split(set.row)[0]);
+      for (const [sent, owner] of own) if (owner === y && !t.includes(sent)) fail("olgu", f, `olgu kendi yerinin satırında yok: ${sent}`);
+    }
+    for (const sent of own.keys()) if (areaText.split(sent).length - 1 !== 1) fail("olgu", f, `olgu bölümde bir kez geçmeli: ${sent}`);
+    if (!set.talep && !areaText.includes("Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez.")) fail("olgu", f, "bölge bölümünde satıcı uyarısı yok");
+    // Uzun liste tek akış olmaz: ilk 6 satır açıktır, kalanlar açılır paneldedir.
+    if (!area.includes(set.more) || (area.split(set.more)[0].split(set.row).length - 1) !== 6) fail("bölge", f, `#${set.section}: ilk 6 satır açık, kalan satırlar açılır panelde olmalı`);
+    if (set.talep) {
+      if (!areaText.includes("Bu bölüm planlanan alım alanlarını gösterir. Yayımlanmış alıcı veya talep listesi değildir.")) fail("olgu", f, "alıcı bölümünde planlanan alan uyarısı yok");
+      if (/\d+\s*(alıcı|talep|işletme)\s*(var|bekliyor|listelendi)|talepler yayında|aktif talep|doğrulanmış alıcı/i.test(areaText)) fail("vaat", f, "alıcı bölümü gerçek talep varmış gibi yazıyor");
+    }
+  }
+  const crowded = Object.entries(perPlace).filter(([, v]) => v.size > 2).map(([k, v]) => `${k}: ${[...v].join("/")}`);
+  if (crowded.length) fail("bölge", "data", `bir yerde en çok 2 farklı sektör olmalı: ${crowded.join(" | ")}`);
+  for (const k of classes.dis || []) if (!allFacts.has(k)) fail("olgu", "data/metin.json", `dış kaynak sınıfında ama yer verisinde yok: ${k}`);
+  // Planlanan hizmet ve içerik (kullanıcı kararı 11 Kasım 2026). Planlanan öneri canlı olgu gibi yazılmaz.
+  // Plan sınıfındaki metin yalnız data-plan bölgesinde durur. Her bölge "Planlanan hizmet" ya da "Planlanan içerik" etiketini gösterir.
+  // Plan sınıfındaki bir cümle kanıt defterinde olamaz. Yayın derlemesinde planlanan bölge bulunmaz.
+  const planSet = new Set(classes.plan || []);
+  for (const k of planSet) if (proven.has(k)) fail("plan", "data/metin.json", `planlanan metin kaynak sınıfında da var: ${k}`);
+  const walked = walkTexts(html);
+  for (const x of walked.texts) if (planSet.has(x.t) && !x.plan) fail("plan", f, `planlanan metin işaretli bölgenin dışında: ${x.t}`);
+  for (const r of walked.regions) if (!r.tagged) fail("plan", f, `planlanan bölgenin görünür etiketi yok: ${r.id || "adsız"}`);
+  if (yayin && walked.regions.length) fail("plan", f, `yayın derlemesinde planlanan bölge var: ${walked.regions.map((r) => r.id).join(", ")}`);
+  if (!yayin) {
+    const ids = new Set(walked.regions.map((r) => r.id));
+    for (const id of ["guvenli-odeme", "yeni-musteri", "yeniden-siparis", "araclar", "kutuphane"]) if (!ids.has(id)) fail("plan", f, `planlanan bölüm yok: ${id}`);
+    // Gezinmeden ve sayfanın başka bir yerinden bu iki bölüme bağlantı vardır.
+    for (const id of ["araclar", "kutuphane"]) if (count(new RegExp(`href="#${id}"`, "g")) < 2) fail("plan", f, `en az iki bağlantı yok: #${id}`);
+  }
+  // Kullanıcı metninde teknik jargon yoktur: RFQ ve escrow. Görünen metin ve öznitelik metni denetlenir.
+  const said = strip(html) + " " + [...html.matchAll(/\b(aria-label|placeholder|alt|title|content)="([^"]*)"/g)].map((m) => m[2]).join(" ");
+  for (const w of ["RFQ", "escrow"]) if (new RegExp(`\\b${w}\\b`, "i").test(said)) fail("jargon", f, `kullanıcı metninde ${w}`);
+  // Kaldırılan metinler geri gelmez (kullanıcı kararı 11 Kasım 2026).
+  // Gerekçesiz kısa sloganlar da geri gelmez (metin incelemesi, 11 Kasım 2026). Yerlerine gerekçeli cümle yazıldı.
+  // Örnek: "Fiyatı sormayın. Kartta yazıyor." yerine "Fiyat sormanıza gerek yok. Ürünlerin fiyatları aşağıdaki kartlarda yazıyor."
+  for (const t of ["Çarşıya gitmeyin", "Rakibiniz yoldayken", "Fiyatı sormayın", "Kartta yazıyor", "Söze değil, kayda güvenin", "Sormadan sipariş vermeyin",
+    "Aracıya pay bırakmayın", "Yola çıkmazsınız", "Altı nedeni var", "İsteğiniz hazır"]) if (said.includes(t)) fail("kaldırılan metin", f, t);
+  // "Canlı site" ve "canlı sepet" ekip sözüdür. Kullanıcı metni hedefi adıyla söyler: istoc.com, istoc.com sepeti. "Canlı destek" hizmet adıdır, serbesttir.
+  for (const m of said.matchAll(/canlı (site|sepet)\S*/gi)) fail("ekip sözü", f, m[0]);
+  if (/class="reason__why"/.test(html)) fail("kaldırılan metin", f, "gerekçe kartında Çünkü satırı");
+  // Ödeme garantisi vaat edilmez. Canlı iStoc ödemeyi tutmaz.
+  // Dar istisna: bölge verisindeki alıcı sorusu ürünün garanti koşullarını sormayı önerir (örneğin "Garanti ve teknik destek koşullarını sorun.").
+  // Bu bir platform vaadi değildir. İstisna yalnız verideki bu soruların sayısı kadardır. Sayfadaki başka her "garanti" sözü reddedilir.
+  const warranty = /garanti(?: ve teknik destek)? koşul\w*/gi;
+  const editorial = [...((site && site.bolge && site.bolge.yerler) || []), ...((!yayin && site && site.alici && site.alici.yerler) || [])]
+    .flatMap((y) => [(y.editorial || {}).yorum || "", ...((y.editorial || {}).kosullar || [])]).join(" ");
+  const allowedWarranty = (editorial.match(warranty) || []).length;
+  const warrantyOnPage = (said.match(warranty) || []).length;
+  const anyGuarantee = (said.match(/garanti/gi) || []).length;
+  if (anyGuarantee > Math.min(allowedWarranty, warrantyOnPage)) fail("vaat", f, "sayfada garanti sözü");
   return fails;
 }
 
@@ -538,7 +684,13 @@ const siteSource = {
   harita: { urun: new Set(dizinData.site_haritasi.urun), magaza: new Set(dizinData.site_haritasi.magaza), marka: new Set(dizinData.site_haritasi.marka) },
   sosyal: new Set(dizinData.sosyal),
   gorsel: new Set(Object.values(dizinData.gorseller)),
+  // Bölgesel tedarik ve alıcı talep bölümlerinin verisi ve kaynak bağlantıları. Alıcı verisi yoksa kapı bunu ihlal olarak yazar.
+  bolge: readData("bolgeler.json"),
+  alici: existsSync(join(here, "data", "alicilar.json")) ? readData("alicilar.json") : null,
 };
+siteSource.bolgeKaynak = new Set([...siteSource.bolge.yerler, ...((siteSource.alici || {}).yerler || [])].map((y) => y.fact.bagi));
+
+const motionSource = readMotion(here);
 
 if (flags.has("--sinama")) {
   // Kapı kendini sınar. Önce temiz kaynak geçmelidir. Sonra her ihlal örneği beklenen kuralla reddedilmelidir.
@@ -600,7 +752,10 @@ if (flags.has("--sinama")) {
     ["ekran genişliğiyle 14 px altına inen yazı", ".e1 { font-size: min(var(--t-sm), 4vw); }", "metin"],
     ["alt sınırı 14 px altında kalan max()", ".e2 { font-size: max(12px, 3vw); }", "metin"],
   ];
+  cssCases.push(["yönlü yüzeyde token dışı eğri ve süre", ".surface__drift { transition: transform 300ms ease-out; }", "hareket"]);
   const jsCases = [
+    ["gereksiz Three.js içe aktarması", 'import * as THREE from "three";', "paket"],
+    ["WebGL bağlamı", 'canvas.getContext("webgl");', "paket"],
     ["betikte animate()", "el.animate([{ opacity: 0 }], { duration: 200 });", "hareket"],
     ["betikte geçiş stili", 'el.style.transition = "opacity 1s";', "hareket"],
     ["betikte anahtar kelime eğri", 'el.animate(k, { easing: "ease-in-out" });', "hareket"],
@@ -610,6 +765,7 @@ if (flags.has("--sinama")) {
     ["betikte setProperty ile geçiş", 'el.style.setProperty("transition", "none");', "hareket"],
   ];
   const htmlCases = [
+    ["sayfada GSAP betiği", '<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>', "paket"],
     ["sınıfı sonda yazılmış alt çizgisiz bağlantı", '<a href="/x" class="lnk">Metin</a>', "gösterge"],
     ["hedefsiz bağlantı", '<a href="#">Uygulama</a>', "bağlantı"],
     ["satır içi stil", '<p style="color:red">x</p>', "satır içi stil"],
@@ -641,6 +797,18 @@ if (flags.has("--sinama")) {
     ["kayıtsız öznitelik metni ikinci biçimde", '<input type="text" placeholder="En ucuz toptancı burada">', "olgu"],
     ["details ile katlanan grup", "<details><summary>Dizin</summary></details>", "katlanan grup"],
     ["düğmesi grubundan farklı durumda", '<div class="fgroup" data-fold data-open="true"><div class="fold__h"><button class="fold__btn" type="button" aria-expanded="false" aria-controls="yok-1">Dizin</button></div></div>', "katlanan grup"],
+    // Altıncı sürüm: planlanan hizmet, jargon, kaldırılan metin ve ödeme vaadi
+    ["planlanan metin işaretsiz bölgede", `<p>${[...(classSource.plan || ["Planlanan metin yok."])].sort((x, y) => y.length - x.length)[0]}</p>`, "plan"],
+    ["etiketsiz planlanan bölge", '<div id="yeni-plan" data-plan><p>Bu sayfa bir tasarım önerisidir.</p></div>', "plan"],
+    ["kullanıcı metninde RFQ", '<a href="/x">RFQ formu</a>', "jargon"],
+    ["öznitelikte escrow", '<button type="button" aria-label="Escrow ile ödeyin">x</button>', "jargon"],
+    ["kaldırılan slogan geri geldi", "<p>Çarşıya gitmeyin.</p>", "kaldırılan metin"],
+    ["gerekçesiz ürün sloganı geri geldi", "<h2>Fiyatı sormayın. Kartta yazıyor.</h2>", "kaldırılan metin"],
+    ["kullanıcı metninde canlı site", '<a href="/x">Canlı sitede teklif isteği oluşturun</a>', "ekip sözü"],
+    ["öznitelikte canlı sepet", '<a href="/x" aria-label="Canlı sepeti açın">Sepet</a>', "ekip sözü"],
+    ["Çünkü satırı geri geldi", '<p class="reason__why">Çünkü</p>', "kaldırılan metin"],
+    ["ödeme garantisi vaadi", "<p>Paranız garanti altında.</p>", "vaat"],
+    ["bölge dışında garanti koşulu sözü", "<p>Ödeme garanti koşullarını iStoc sağlar.</p>", "vaat"],
   ];
   const lines = [];
   const base = [...checkCss(cssSource).fails, ...checkJs(jsSource, classSource.betik), ...checkHtml(htmlSource, yayin, ledgerSource, classSource, siteSource)];
@@ -675,14 +843,65 @@ if (flags.has("--sinama")) {
   const twoOn = htmlSource.replace('aria-checked="false"', 'aria-checked="true"');
   if (twoOn !== htmlSource && checkHtml(twoOn, yayin, ledgerSource, classSource, siteSource).some((x) => x.rule === "tercih")) caught++;
   else lines.push("FAIL kapı kaçırdı [tercih] grupta iki seçili seçenek");
-  const total = cssCases.length + jsCases.length + htmlCases.length + ledgerCases.length + 2;
+  // Bölgesel tedarik: kaynak uyarısının kaybı, kaynağı değişen bağlantı ve verisi olmayan dış kaynak cümlesi reddedilir.
+  const bolgeCases = [
+    ["satıcı uyarısı kayboldu", htmlSource.replace("Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez.", ""), classSource],
+    ["kaynak bağlantısı başka adrese gidiyor", htmlSource.replace(`href="${siteSource.bolge.yerler[0].fact.bagi.replace(/&/g, "&amp;")}"`, 'href="https://istoc.com/"'), classSource],
+    ["verisi olmayan dış kaynak cümlesi", htmlSource, { ...classSource, dis: [...(classSource.dis || []), "Uydurulmuş bölge olgusu burada."] }],
+  ];
+  for (const [name, h, cls] of bolgeCases) {
+    const ok = h !== htmlSource || cls !== classSource ? checkHtml(h, yayin, ledgerSource, cls, siteSource).some((x) => x.rule === "olgu") : false;
+    if (ok) caught++; else lines.push(`FAIL kapı kaçırdı [olgu] ${name}`);
+  }
+  // Hareket kapısı: TypeScript, eskimiş derleme, sahne bütçesi ve lisans atfı.
+  const mCases = motionCases(motionSource, htmlSource, cssSource);
+  for (const [name, mm, h, c, rule] of mCases) {
+    const ok = checkMotion(mm, h, c, yayin).some((x) => x.rule === rule);
+    if (ok) caught++; else lines.push(`FAIL kapı kaçırdı [${rule}] ${name}`);
+  }
+  // Yer verisi: bir şehirde üçüncü sektör ve tek sektörü olmayan kayıt reddedilir.
+  const yerCases = [];
+  if (siteSource.bolge.yerler.length) {
+    const first = siteSource.bolge.yerler[0];
+    const extra = (code) => ({ ...first, kimlik: `sinama-${code}`, sektor: code, sektor_kodu: code });
+    yerCases.push(["bir yerde üç farklı sektör", { ...siteSource, bolge: { ...siteSource.bolge, yerler: [...siteSource.bolge.yerler, extra("x1"), extra("x2"), extra("x3")] } }, "bölge"]);
+    // Aynı yer farklı yazımla: "Deneme OSB", "Deneme Organize Sanayi Bölgesi" ve "DENEME OSB" tek yerdir. Üç farklı sektör reddedilir.
+    const alias = (ad, code) => ({ ...first, kimlik: `sinama-${code}`, il: "Deneme", ad, sektor: code, sektor_kodu: code });
+    yerCases.push(["aynı yer farklı yazımla üçüncü sektör", { ...siteSource, bolge: { ...siteSource.bolge, yerler: [...siteSource.bolge.yerler, alias("Deneme OSB", "y1"), alias("Deneme Organize Sanayi Bölgesi", "y2"), alias("DENEME OSB", "y3")] } }, "bölge"]);
+    yerCases.push(["zorunlu merkez silindi", { ...siteSource, bolge: { ...siteSource.bolge, yerler: siteSource.bolge.yerler.filter((y) => y.kimlik !== "istoc") } }, "bölge"]);
+    yerCases.push(["kaydın sektörü yok", { ...siteSource, bolge: { ...siteSource.bolge, yerler: siteSource.bolge.yerler.map((y, i) => (i ? y : { ...y, sektor_kodu: "" })) } }, "bölge"]);
+  }
+  for (const [name, site, rule] of yerCases) {
+    const ok = checkHtml(htmlSource, yayin, ledgerSource, classSource, site).some((x) => x.rule === rule && /sektör|zorunlu merkez/.test(x.detail));
+    if (ok) caught++; else lines.push(`FAIL kapı kaçırdı [${rule}] ${name}`);
+  }
+  // Sürekli girdi: geçişi her hedefte yeniden başlatan eski davranış geri gelirse sınama bunu yakalar.
+  // Bozulma derlenmiş paketin geçici bir kopyasına uygulanır. Kopya işletim sisteminin geçici klasöründedir ve sonra silinir.
+  {
+    const tmp = mkdtempSync(join(tmpdir(), "kapi-hareket-"));
+    try {
+      mkdirSync(join(tmp, "hareket"));
+      const main = readFileSync(join(here, "hareket", "sahne.js"), "utf8");
+      // Bozulma: her yeni hedefte kuyruk sıfırlanır ve eğri yeniden başlar (eski, donan davranış).
+      const broken = main.replace("this.queue.push({ d: to - this.target, t: now });", "this.base = this.value; this.queue = [{ d: to - this.value, t: now }];");
+      writeFileSync(join(tmp, "hareket", "sahne.js"), broken);
+      writeFileSync(join(tmp, "hareket", "uyarlama.js"), readFileSync(join(here, "hareket", "uyarlama.js"), "utf8"));
+      const ok = broken !== main && (await tweenCheck(tmp, cssSource)).some((x) => /geride kalıyor|duruyor/.test(x.detail));
+      if (ok) caught++; else lines.push("FAIL kapı kaçırdı [hareket] sürekli girdide geçiş her karede yeniden başlıyor");
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+  const total = 1 + yerCases.length + cssCases.length + jsCases.length + htmlCases.length + ledgerCases.length + bolgeCases.length + mCases.length + 2;
   if (lines.length) console.log(lines.join("\n"));
   console.log(`Kapı sınaması: ${total} ihlal örneğinden ${caught} tanesi reddedildi. Sonuç: ${lines.length ? "FAIL" : "PASS"}`);
   process.exit(lines.length ? 1 : 0);
 }
 
 const cssResult = checkCss(cssSource);
-const fails = [...cssResult.fails, ...checkJs(jsSource, classSource.betik), ...checkHtml(htmlSource, yayin, ledgerSource, classSource, siteSource)];
+const fails = [...cssResult.fails, ...checkJs(jsSource, classSource.betik), ...checkHtml(htmlSource, yayin, ledgerSource, classSource, siteSource),
+  ...checkMotion(motionSource, htmlSource, cssSource, yayin).map((x) => ({ rule: x.rule, where: x.where, detail: x.detail })),
+  ...(await tweenCheck(here, cssSource))];
 const kind = yayin ? "yayın" : "önizleme";
 if (fails.length) {
   console.log(fails.map((x) => `FAIL [${x.rule}] ${x.where}: ${x.detail}`).join("\n"));

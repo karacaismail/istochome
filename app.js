@@ -409,7 +409,39 @@
         product.removeAttribute("aria-describedby");
       }
     }
-    product.addEventListener("input", function () { if (product.value.trim()) setError(false); });
+    /* Özet: ürün ve adet yazıldıkça anında güncellenir. Gecikme ve geçiş yoktur.
+       Kullanıcının yazdığı ad metin olarak yazılır, HTML olarak yorumlanmaz. */
+    var qty = $("#t-adet", form);
+    var sum = $("[data-rfq-sum-t]", form);
+    var empty0 = sum ? sum.textContent : "";
+    /* Adet katı pozitif tam sayıdır. Türkçe binlik gruplama kabul edilir (1.000 ya da 12.500).
+       Başka her biçim geçersizdir: eksi sayı, ondalık, harf, rastgele nokta ve güvenli tam sayı sınırını aşan sayı.
+       Geçersiz değer silinip düzeltilmez. Boş adet geçerlidir, özet adedi ister. */
+    function parseQty(raw) {
+      var t = raw.trim();
+      if (!t) return 0;
+      if (!/^(\d+|\d{1,3}(\.\d{3})+)$/.test(t)) return -1;
+      var n = Number(t.replace(/\./g, ""));
+      return Number.isSafeInteger(n) && n > 0 ? n : -1;
+    }
+    function summary() {
+      if (!sum) return;
+      var p = product.value.trim();
+      var n = parseQty(qty.value);
+      if (n < 0) {
+        qty.setAttribute("aria-invalid", "true");
+        qty.setAttribute("aria-describedby", "teklif-ozeti");
+        sum.textContent = "Adedi 1 ya da daha büyük bir tam sayıyla yazın. Örneğin 500 ya da 1.000.";
+        return;
+      }
+      qty.removeAttribute("aria-invalid");
+      qty.removeAttribute("aria-describedby");
+      if (p && n) sum.textContent = "İstek özeti: " + tr(n) + " adet " + p + ".";
+      else if (p) sum.textContent = "İstek özeti: " + p + ". Adedi de yazın.";
+      else sum.textContent = empty0;
+    }
+    product.addEventListener("input", function () { if (product.value.trim()) setError(false); summary(); });
+    qty.addEventListener("input", summary);
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var empty = !product.value.trim();
@@ -417,7 +449,7 @@
       note.hidden = !empty;
       done.hidden = empty;
       if (empty) { product.focus(); announce("Ürün adını yazın."); }
-      else announce("İsteğiniz gönderilmedi. Bu sayfa bir tasarım önerisidir.");
+      else announce("İsteğiniz gönderilmedi. Bu sayfa bir tasarım önerisidir. Gerçek isteği istoc.com'da gönderirsiniz.");
     });
   })();
 
@@ -446,7 +478,7 @@
         b.classList.add("is-bump");
       });
       /* Sepet bağlantıları canlı sitedeki sepeti açar. Sayaç ise bu örnek sepeti sayar. Etiket ikisini de söyler. */
-      links.forEach(function (l) { l.setAttribute("aria-label", "Canlı sepeti açın. Örnek sepette " + keys.length + " ürün var."); });
+      links.forEach(function (l) { l.setAttribute("aria-label", "istoc.com sepetini açın. Örnek sepette " + keys.length + " ürün var."); });
       unitsEl.textContent = keys.length ? keys.length + " ürün, " + tr(units) + " adet" : "Sepetiniz boş";
       /* Para birimi değişince toplam geçişsiz yazılır. Yeni simgeyle görünen ara sayı gerçek bir tutar olmazdı. */
       if (instant === true) totalEl._v = total;
@@ -471,7 +503,7 @@
     return {
       /* Sepet bu öneride canlı siteye bağlı değildir. Duyuru da bunu söyler. */
       /* src: birim fiyatı taşıyan öğe. Fiyat, seçili para birimine göre bu öğeden okunur. */
-      set: function (slug, name, src, qty) { lines[slug] = { name: name, src: src, qty: qty }; paint(); announce(name + ": " + tr(qty) + " adet örnek sepette. Ürün canlı sepete eklenmedi."); },
+      set: function (slug, name, src, qty) { lines[slug] = { name: name, src: src, qty: qty }; paint(); announce(name + ": " + tr(qty) + " adet örnek sepette. Ürün istoc.com sepetine eklenmedi."); },
       remove: function (slug, name) { delete lines[slug]; paint(); announce(name + " örnek sepetten çıkarıldı."); },
       has: function (slug) { return !!lines[slug]; },
       repaint: paint
@@ -601,8 +633,9 @@
     });
   })();
 
-  /* 10. Sık sorulanlar: tek tek açılır. Kapalı yanıt klavye ve okuyucudan gizlenir. */
-  $$(".faq").forEach(function (item) {
+  /* 10. Sık sorulanlar, araç ayrıntıları ve kütüphane öğeleri: tek tek açılır. Kapalı yanıt klavye ve okuyucudan gizlenir.
+     Durum (aria-expanded, data-open, inert) tıklama anında yazılır. Açılma görünümü CSS geçişiyle gelir. */
+  $$(".faq, .tool, .libq, .talep__acil").forEach(function (item) {
     var btn = $("button", item);
     var panel = $(".faq__panel", item);
     panel.inert = true;
@@ -789,6 +822,142 @@
       spots.forEach(function (el, i) {
         if (!list) el.style.removeProperty("--sy");
         else if (list[i] !== null) el.style.setProperty("--sy", list[i] + "px");
+      });
+    });
+  })();
+
+  /* 15. Hareketli sahneler bu dosyada değildir. TypeScript hareket paketi yönetir (src/hareket, derleme çıktısı hareket/).
+     Önyükleyici hareket/baslat.js dosyasıdır. Bu dosyada sahne için dinleyici ya da kare zamanlayıcısı yoktur. */
+
+  /* 16. Bölgesel tedarik: "Teklif isteyin" bağlantısı aynı sayfadaki teklif formuna gider.
+     Ürün alanı boşsa o yerin ürününü yazar, özet input olayıyla hemen güncellenir. Alan doluysa yazılan ürün silinmez.
+     Adres #teklif olur, sayfa forma anında kayar ve odak aynı anda ürün alanına geçer. Alan ekranda tam görünür. Yumuşak kaydırma yoktur.
+     Değiştirici tuşlu ya da orta tuşlu tıklama bağlantının doğal davranışına bırakılır (yeni sekme gibi).
+     Bağlantı sayfa içi bağlantıdır: betik yoksa da forma gider. */
+  (function () {
+    var product = $("#t-urun");
+    var target = $("#teklif");
+    var area = $("[data-rfq-alan]");
+    if (!product || !target) return;
+    $$("a[data-bolge-teklif]").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        if (!product.value.trim()) {
+          product.value = a.dataset.urun;
+          product.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        /* Alıcı talep alanından gelinirse seçilen alan formun yanında yazar. Tedarik bağlantısı bu satırı kaldırır. */
+        if (area) {
+          area.hidden = !a.dataset.alan;
+          area.textContent = a.dataset.alan ? "Seçtiğiniz alım alanı:" + " " + a.dataset.alan : "";
+        }
+        if (location.hash !== "#teklif") history.pushState(null, "", "#teklif");
+        target.scrollIntoView({ block: "start" });
+        /* Odak alanı gerekirse görünür yere kaydırır. Kısa yatay ekranda alan formun başlığından aşağıda kalabilir. */
+        product.focus();
+      });
+    });
+  })();
+
+  /* Arama ya da süzgeç sürerken açılır panel: eşleşen satırlar düğmesiz, açık listede görünür.
+     Panelin düğmesi ve üstündeki eski sayı ("... daha görün") gizlenir, panel açık tutulur.
+     Arama ya da süzgeç kalkınca panel kullanıcının bıraktığı duruma döner. Durum (data-open, aria-expanded, inert) anında yazılır. */
+  function holdOpen(more, on) {
+    if (!more) return;
+    var btn = $(".talep__btn", more);
+    var panel = $(".faq__panel", more);
+    if (!btn || !panel) return;
+    /* Panelin adı bu sürede bölümün başlığıdır (aria-labelledby). Gizli düğmedeki eski sayı okunmaz. Çıkışta eski ad geri gelir. Odak taşınmaz. */
+    var sec = more.closest("section");
+    var heading = sec ? sec.getAttribute("aria-labelledby") : null;
+    if (on) {
+      if (more._was === undefined) {
+        more._was = btn.getAttribute("aria-expanded") === "true";
+        more._label = panel.getAttribute("aria-labelledby");
+      }
+      btn.hidden = true;
+      btn.setAttribute("aria-expanded", "true");
+      panel.dataset.open = "true";
+      panel.inert = false;
+      if (heading) panel.setAttribute("aria-labelledby", heading);
+    } else if (more._was !== undefined) {
+      var was = more._was;
+      var label = more._label;
+      delete more._was;
+      delete more._label;
+      btn.hidden = false;
+      btn.setAttribute("aria-expanded", was ? "true" : "false");
+      panel.dataset.open = was ? "true" : "false";
+      panel.inert = !was;
+      if (label) panel.setAttribute("aria-labelledby", label);
+    }
+  }
+
+  /* 16b. Tedarik merkezi araması. Merkez adı, şehir ya da sektör yazılır, sonuç yazma anında güncellenir.
+     Arama Türkçe büyük ve küçük harfe ve işaretlere duyarsızdır. Yazılan her kelime satırda geçmelidir.
+     Eşleşmeyen satır hidden olur, böylece odak sırasından da çıkar. Eşleşen satır kapalı paneldeyse panel açılır.
+     Sonuç sayısı bölümde yazar ve #durum satırında duyurulur. Eşleşme yoksa durum cümlesi görünür.
+     Betik yoksa arama alanı görünmez (js-only), bütün merkezler okunur. Yerel seçim menüsü kullanılmaz. */
+  (function () {
+    var sec = $("#bolgesel-tedarik");
+    var input = sec ? $("[data-bolge-q]", sec) : null;
+    if (!input) return;
+    /* Türkçe küçük harf, işaretler atılır. Noktasız ı da i olur. Böylece "Istanbul" yazımı da İstanbul ile eşleşir. */
+    var norm = function (t) { return String(t).toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i"); };
+    var rows = $$("[data-bolge]", sec).map(function (li) {
+      var cells = [$(".bolge__ad", li), $(".bolge__tur", li)].concat($$(".yer__meta dd", li));
+      return { li: li, text: norm(cells.map(function (c) { return c ? c.textContent : ""; }).join(" ")) };
+    });
+    var more = $("[data-bolge-more]", sec);
+    var out = $("[data-bolge-sonuc]", sec);
+    var empty = $("[data-bolge-bos]", sec);
+    var last = null;
+    function run() {
+      var words = norm(input.value).split(/\s+/).filter(Boolean);
+      var n = 0;
+      rows.forEach(function (r) {
+        var on = words.every(function (w) { return r.text.indexOf(w) !== -1; });
+        r.li.hidden = !on;
+        if (on) n += 1;
+      });
+      holdOpen(more, words.length > 0);
+      if (empty) empty.hidden = n > 0;
+      var text = n + " " + "merkez listeleniyor.";
+      if (out) out.textContent = text;
+      if (text !== last) announce(text);
+      last = text;
+    }
+    input.addEventListener("input", run);
+  })();
+
+  /* 17. Alıcı talep alanları: grup süzgeci. Düğme aria-pressed taşır ve durum tıklama anında değişir.
+     Eşleşmeyen alan hidden olur, böylece odak sırasından da çıkar. Eşleşen bir alan kapalı paneldeyse panel açılır.
+     Sonuç sayısı bölümde yazar ve #durum satırında duyurulur. Eşleşen alan yoksa boş grup cümlesi görünür.
+     Betik yoksa süzgeç görünmez (js-only). 24 alan HTML içindedir. Betik yoksa açılır panel de açık durur. */
+  (function () {
+    var sec = $("#alici-talepleri");
+    if (!sec) return;
+    var buttons = $$("[data-talep-grup]", sec);
+    var items = $$("[data-talep]", sec);
+    var more = $("[data-talep-more]", sec);
+    var out = $("[data-talep-sonuc]", sec);
+    var empty = $("[data-talep-bos]", sec);
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var g = b.dataset.talepGrup;
+        buttons.forEach(function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+        var n = 0;
+        items.forEach(function (li) {
+          var on = !g || li.dataset.grup === g;
+          li.hidden = !on;
+          if (on) n += 1;
+        });
+        holdOpen(more, !!g);
+        if (empty) empty.hidden = n > 0;
+        var text = (g ? "Bu grupta" : "Tüm gruplarda") + " " + n + " " + "alan var.";
+        if (out) out.textContent = text;
+        announce(text);
       });
     });
   })();

@@ -5,13 +5,18 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
-// Playwright önce bu klasörde aranır. Bulunamazsa komşu site klasöründeki kurulum kullanılır.
+// Playwright verilen kurulumdan alınır. Bu komut paket kurmaz.
 let pw;
-try {
-  pw = createRequire(join(here, "package.json"))("@playwright/test");
-} catch {
-  pw = createRequire(join(here, "..", "site", "package.json"))("@playwright/test");
+const pwDirs = [process.env.PLAYWRIGHT_PACKAGE_DIR, here, join(here, "..", "site")].filter(Boolean);
+for (const dir of pwDirs) {
+  try {
+    pw = createRequire(join(dir, "package.json"))("@playwright/test");
+    break;
+  } catch {
+    // Sonraki kurulum denenir.
+  }
 }
+if (!pw) throw new Error(`Playwright bulunamadı. Denenen klasörler: ${pwDirs.join(", ")}`);
 
 const [url, dir, w = "1440", h = "900", prefix = "s", engine = "chromium"] = process.argv.slice(2);
 const browser = await pw[engine].launch();

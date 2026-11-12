@@ -1,0 +1,16 @@
+{
+  "name": "istochome",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "iStoc ana sayfa tasarım önerisi",
+  "scripts": {
+    "build:ts": "tsc -p tsconfig.json && node ts-damga.mjs",
+    "check:ts": "tsc -p tsconfig.json --noEmit",
+    "build": "npm run build:ts && python3 build.py",
+    "check": "npm run check:ts && node kapi.mjs && node kapi.mjs --sinama"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

@@ -1,4 +1,4 @@
-# iStoc ana sayfa: tasarım planı (5. sürüm)
+# iStoc ana sayfa: tasarım planı (6. sürüm)
 
 Bu belge ana sayfanın neden bu sırayla, bu renklerle ve bu bileşenlerle kurulduğunu anlatır. Renk, güven ve piktogram kararlarının kaynakları `ARASTIRMA.md` dosyasındadır.
 
@@ -17,8 +17,8 @@ Sayfanın iki okuyucusu var. Her biri "bu platformu kullanırım, çünkü" cüm
 
 | "iStoc'tan alırım, çünkü" | Sayfadaki kanıtı |
 |---|---|
-| Yola çıkmam. | Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırım. |
-| Kimin doğrulandığını görürüm. | Rozetli mağazanın kimlik ve işletme doğrulamasını iStoc yapar. 19 mağazanın 18 tanesi doğrulandı. |
+| Bulunduğum yerden sipariş veririm. | Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırım. |
+| Hangi mağazanın doğrulandığını görürüm. | Rozetli mağazanın kimlik ve işletme doğrulamasını iStoc yapar. 19 mağazanın 18 tanesi doğrulandı. |
 | Koşulu önceden görürüm. | Ürün kartında birim fiyat, KDV hariç fiyat, en az sipariş adedi ve hazırlık süresi yazar. |
 | Hangi hesaba ödeyeceğimi bilirim. | Yalnız sipariş sayfamda gösterilen hesaba ödeme yaparım. |
 | Siparişim kayıt altındadır. | iStoc kabul ettiğim koşulları saklar ve siparişi teslimata kadar izler. |
@@ -33,7 +33,7 @@ Sayfanın iki okuyucusu var. Her biri "bu platformu kullanırım, çünkü" cüm
 | Başvuru 4 dakika sürer. | Canlı sitedeki satıcı sayfası. Onay ortalama 2 iş günüdür, başvuru ücretsizdir. |
 | Mağazam doğrulanmış görünür. | Paket verisi. İşletme doğrulaması rozeti bütün paketlerde vardır. |
 
-Sayfanın değer önerisi şudur: "Çarşıya gitmeyin. Çarşı ekranınızda."
+Sayfanın değer önerisi şudur: "Toptan alın. Yeni müşterilere satın." Altında alıcının ve satıcının yolu ayrı durur. Çarşıda yüz yüze anlaşılan sipariş de buradan verilir ve kayıt altında kalır. Ayrıntı 18. bölümdedir.
 
 Dil iddialıdır, ama her iddianın dayanağı vardır. Slogan ve başlık sayfanın kendi sözüdür. Canlı site hakkındaki her cümle kanıt defterindedir. Ayrıntı 15. bölümdedir.
 
@@ -49,7 +49,7 @@ Sayfadaki her öğe beş işten birini yapar. Bu işlerden birini yapmayan öğe
 
 | Öğe türü | İşi | Nasıl yaratılır? | Örnek |
 |---|---|---|---|
-| Vaat | Sonucu söyler. | Okurun kelimeleriyle, kısa ve emir kipinde yazılır. | "Fiyatı sormayın. Kartta yazıyor." |
+| Fayda | Okurun ne kazanacağını söyler. | Başlık faydayı, açıklama gerekçeyi belirtir. | "Fiyatları ve sipariş şartlarını birlikte görün." |
 | Kanıt | Vaadi doğrular. | Sayı, rozet ya da kaynaklı cümledir. Günü yazar. | "19 mağazanın 18 tanesi doğrulandı." |
 | Eylem | Bir sonraki adıma götürür. | Fiil ve nesneyle yazılır. Ne olacağını söyler. | "Teklif isteği oluşturun" |
 | Güvence | Eylem anındaki korkuyu giderir. | Düğmenin hemen altında, tek cümleyle durur. | "Sepete eklemek ödeme başlatmaz." |
@@ -63,7 +63,7 @@ Bir bileşen tek bir soruyu yanıtlar ve tek bir ana eylem taşır. İçinde dö
 |---|---|---|---|---|
 | Arama kutusu | Değer önerisi | Dört canlı sayı ve günü | "Arayın" | "Örnek aramalar" kısa yolları |
 | Teklif kutusu | "Bir istek, birden fazla teklif" | Üç adım | "Teklif isteği oluşturun" | Formun veri göndermediği notu |
-| Gerekçe kartı | "Çünkü" ile başlayan başlık | Kaynaklı cümle ve sayı | Bölüm sonu düğmesi | Doğrulama işareti |
+| Gerekçe kartı | Değeri söyleyen başlık | Kaynaklı cümle ve sayı | Bölüm sonu düğmesi | Doğrulama işareti |
 | Ürün kartı | Ürün adı ve fiyat | En az adet, en az tutar, hazırlık süresi, rozet | "12 adet ekleyin" | Sepetin örnek olduğu notu |
 | Üretici kartı | Mağaza adı | Doğrulama, kuruluş yılı, ürün sayısı | "Mağazaya gidin" | "Mesaj yazın" bağlantısı |
 | Örnek sipariş | Koşulları önceden görme | Birim fiyat, koli, toplam | "Sepete ekleyin" | Ödemenin ne zaman yapıldığı |
@@ -203,11 +203,11 @@ Kullanıcının kararıyla bu projenin yazı tipi Ubuntu'dur.
 
 ### 8.1 Ana sayfadaki güven öğeleri
 
-- **Gerekçeler.** Altı gerekçe, her biri piktogram, "çünkü" etiketi, başlık ve kaynaklı cümle.
+- **Gerekçeler.** Altı gerekçe, her biri piktogram, başlık ve kaynaklı cümle.
 - **Çift taraflı doğrulama.** Alıcı kimliğini doğrular (KYC). Satıcının işletmesi doğrulanır (KYB). İkisi de sayfada adıyla yazar.
 - **Doğrulama rozeti.** Yeşil onay simgesi ve metin birlikte durur. Ürün kartında, üretici kartında ve örnek siparişte bulunur.
 - **Açık koşul.** Her ürün kartında beş koşul yazar. Bunlar fiyat, KDV hariç fiyat, en az adet, en az tutar ve hazırlık süresidir.
-- **Ödeme güvenliği.** Sayfa şunu açıkça yazar: "Yalnız sipariş sayfanızda gösterilen hesaba ödeme yaparsınız."
+- **Ödeme güvenliği.** Sayfa ödeme hesabını açıkça anlatır. "Yalnız sipariş sayfanızda gösterilen hesaba ödeme yaparsınız."
 - **Gerçek ve tarihli sayılar.** Ürün, kategori ve mağaza sayıları canlı veriden gelir. Sayıların altında verinin alındığı gün yazar.
 - **Ölü bağlantı yok.** Sayfadaki her canlı adresin açıldığı denetlenir. Ayrıntı 15. bölümdedir.
 - **Kaynaklı cümle.** Canlı site hakkındaki her cümle kanıt defterinde durur.
@@ -232,8 +232,8 @@ Sipariş süreci bölümü beş adımı anlatır. Her adımın yanında o adım�
 
 Kullanıcıyı bir adıma bağlayan düğme, altındaki güvence satırıyla tek bir gruptur (`.secure`). Satır, düğmeye basınca ne olacağını ve ne olmayacağını söyler.
 
-- Düğme metni fiille biter ve sonucu söyler: "Devam" yerine "Teklif isteği oluşturun".
-- Kilit piktogramı yalnız gerçek ödeme ve belge adımında kullanılır. Ana sayfada kilit yoktur. Kilit her yere konursa anlamını yitirir.
+- Düğme metni fiille biter ve sonucu söyler. Örneğin düğmede "Teklif isteği oluşturun" yazar.
+- Kilit piktogramı ödeme veya belge durumunu anlatır. Önizlemedeki planlanan ödeme akışında kilit, bekleyen tutarı anlatır. Planlanan hizmet etiketi bu akışın henüz sunulmadığını belirtir.
 - Sahte başarı gösterilmez. Teklif formu bu öneride veri göndermez. Form bunu gönderimden sonra açıkça yazar.
 - Sepet bu öneride canlı siteye bağlı değildir. Sipariş özeti çubuğu ve sesli duyuru bunu açıkça söyler.
 - Dil seçimi bu öneride sayfayı çevirmez. Seçeneklerin altında bu yazar.
@@ -349,7 +349,7 @@ Programatik strateji şudur: bir veri boyutundaki her değer için bir sayfa ür
 
 ### 11.1 Dokuz strateji
 
-Hiçbir strateji konuma bağlı değildir. Hiçbiri günlük yazısına dayanmaz.
+Bu ürün dizinindeki dokuz strateji konuma bağlı değildir. Hiçbiri günlük yazısına dayanmaz. Bölgesel tedarik bölümü ayrıca eklenir. Gerekçe BOLGE-STRATEJISI.md dosyasındadır.
 
 | Strateji | Veri boyutu | Örnek öğe | Canlı adres |
 |---|---|---|---|
@@ -390,7 +390,7 @@ Alt bölümün üçüncü katmanı içeriği türüne göre düzenler. Her öğe
 | Kural ve sözleşme | Tarafların uyacağı koşulu yazar. | Ürün listeleme kuralları, iade koşulları |
 | Araç | Okurun bir işini gördürür. | Teklif isteği formu, kimlik doğrulaması |
 
-**Planlanan içerik türleri.** Altı türün canlı sitede karşılığı yoktur, bunlar öneridir. Türler şunlardır: sözlük, hesaplayıcılar, şablonlar, karşılaştırmalar, sektör verileri ve kontrol listeleri. Bunlar yalnız önizleme derlemesinde görünür. Bağlantı değildir, çünkü hedefleri yoktur.
+**İçerik kütüphanesi.** Altı türün canlı sitede karşılığı yoktur, bunlar öneridir. Türler şunlardır: sözlük, hesaplayıcılar, şablonlar, karşılaştırmalar, sektör verileri ve kontrol listeleri. Her tür 3 ya da 4 öğe taşır. Öğe bağlantı değildir. Düğmeye basınca açıklaması sayfa içinde açılır. Kütüphane yalnız önizleme derlemesinde görünür. Ayrıntı 18. bölümdedir.
 
 ### 11.4 Sayfa üretimi için yol haritası
 
@@ -539,9 +539,11 @@ Tek kelimelik adlar da kaynaklıdır. Ödeme yöntemi, para birimi ve dil adlar�
 |---|---|---|
 | Kaynak | Canlı sitedeki bir sayfaya dayanan cümle. Kanıt defterinde durur. Eşleşme birebirdir. | 71 |
 | Veri | Sayısı ya da dayanağı `data` klasöründen gelen metin. | 34 |
-| Tasarım | Bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu. | 70 |
-| Etiket | Düğme, bağlantı, alan ve bölüm adı. | 134 |
-| Görünmeyen metin | Sayfa başlığı, ekran okuyucunun okuduğu adlar, alan içi örnekler ve yalnız ekran okuyucuya okunan metinler. | 31 |
+| Dış kaynak | Bölgesel bölümlerin kaynaklı olgu cümlesi. Kaynağı `data/bolgeler.json` ve `data/alicilar.json` dosyalarındadır. | 74 |
+| Tasarım | Bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu. | 497 |
+| Etiket | Düğme, bağlantı, alan ve bölüm adı. Canlı sitedeki bir sayfanın adı da etikettir. | 367 |
+| Plan | Planlanan hizmet ya da içerik. Canlı olgu değildir. Yalnız etiketli planlanan bölgede durur. | 189 |
+| Görünmeyen metin | Sayfa başlığı, ekran okuyucunun okuduğu adlar, alan içi örnekler ve yalnız ekran okuyucuya okunan metinler. | 38 |
 
 - Şablona yeni bir metin eklenirse ve sınıfı yazılmazsa `build.py` sayfayı üretmez.
 - Canlı site hakkında olgu bildiren cümle tasarım sınıfına yazılmaz.
@@ -593,7 +595,9 @@ Bu denetim adresin var olduğunu gösterir. Giriş isteyen sayfanın girişten s
 | `goruntu.mjs` | Bölüm bölüm ekran görüntüsü alır |
 | `serve.mjs` | Önizleme sunucusu |
 
-### Doğrulama durumu (12 Kasım 2026)
+### Beşinci sürümün doğrulama kaydı
+
+Bu tablo beşinci sürüm hattına aittir. İki bağımsız incelemenin düzeltmeleri bu hatta yapıldı. Altıncı sürümün sonuçları 18.6 bölümündedir. Birleşik sürümün sonuçları 21. bölümdedir.
 
 | Denetim | Durum | Not |
 |---|---|---|
@@ -617,7 +621,6 @@ Bu denetim adresin var olduğunu gösterir. Giriş isteyen sayfanın girişten s
 | Piktogramların kullanıcıyla sınanması | not_run | Ayrıntı `ARASTIRMA.md` dosyasındadır. |
 | Metnin gerçek okurla denenmesi | not_run | Gerçek okurla denenmedi. |
 
-Alt gezinmenin büyük yazıdaki boşluk düzeltmesi tam koşudan sonra yapıldı. Değişen dört büyük yazı denetimi ayrıca çalıştırıldı ve geçti. Son tam koşu sürüyor.
 
 Yerleşim denetimleri dokuz ekran boyutunda çalışır. Dar boyutlar 320, 360, 375 ve 390 piksel genişliktedir. 320 piksel iki ayrı yükseklikte sınanır. Diğer boyutlar yatay telefon, tablet, dizüstü ve masaüstüdür. Dar ekranda kapalı başlayan gruplar açılır ve sayfa bir kez daha ölçülür.
 
@@ -636,5 +639,369 @@ Davranış denetimleri ve klavye turu 320, 390 ve 1440 piksel genişlikte çalı
 9. **Bağlantı.** Teklif formu, sepet ve dil seçimi canlı siteye bağlı değildir.
 10. **Uygulama bağlantıları.** Canlı sitedeki App Store ve Google Play bağlantıları boştur. Bu yüzden alt bölüme konmadı.
 11. **Kategorisiz ürünler.** 1.765 ürün canlı sitede bir kategoriye bağlı değildir.
-12. **Planlanan içerik türleri.** Altı içerik türü öneridir. Canlı sitede karşılıkları yoktur.
+12. **Planlanan bölümler.** Güvenli ödeme, yeni müşteri, yeniden sipariş, hesaplama araçları ve içerik kütüphanesi öneridir. Canlı sitede karşılıkları yoktur. Ürün ekibi onaylamalıdır.
 13. **Büyük başlık sınırı.** İki kural çatışır. Bir kural "metin sığmak için küçültülmez" der. Diğer kural "başlık kelime ortasından bölünmez" der. Kullanıcı yazıyı yüzde 150 büyütürse dar ekranda büyük başlık küçülür. Küçülmeseydi uzun kelime ekrandan taşardı. Başlık yine de gövde metninden küçük olmaz. Bu uzlaşmayı kullanıcı onaylamalıdır.
+
+## 18. Altıncı sürüm: planlanan bölümler ve hareketli yüzeyler
+
+### 18.1 Ne değişti?
+
+- Karşılamanın ana cümlesi "Toptan alın. Yeni müşterilere satın." oldu.
+- Karşılamada iki yol var. Alıcının yolu "Toptan alıyorum", satıcının yolu "Toptan satıyorum" adını taşır.
+- "Çarşıya gitmeyin" ve "Rakibiniz yoldayken" metinleri kaldırıldı. Bağımsız "Çünkü" etiketi de kaldırıldı. Gerekçe anlatan cümlelerde "çünkü" kullanılabilir.
+- Teklif kutusu formun ne işe yaradığını yazar. Ürün ve adet yazılınca özet anında görünür. Altında dört adım vardır.
+- Kullanıcı metninde "RFQ" ve "escrow" kelimeleri geçmez. Kural kapısı bunları da reddeder.
+
+### 18.2 Bölüm sırası
+
+Planlanan bölümler yalnız önizleme derlemesinde vardır. Bölüm numaraları derlemede sırayla verilir.
+
+1. Alıcılar için
+2. Kategoriler
+3. Ürünler
+4. Üreticiler
+5. Sipariş süreci
+6. Güvenli ödeme (planlanan)
+7. Sık sorulanlar
+8. Satıcılar için
+9. Yeni müşteri (planlanan)
+10. Yeniden sipariş (planlanan)
+11. Hesaplama araçları (planlanan)
+12. Dizin
+
+Yayın derlemesinde planlanan bölümler yoktur. O derlemede sekiz bölüm kalır.
+
+### 18.3 Planlanan bölge kuralı
+
+- Planlanan her bölge `data-plan` özniteliği taşır.
+- Her bölge "Planlanan hizmet" ya da "Planlanan içerik" etiketini gösterir.
+- Planlanan metinler "plan" sınıfındadır. Bu metin bölgenin dışına çıkarsa `build.py` ve `kapi.mjs` durur.
+- Güvenli ödeme bölgesi bugünkü durumu da yazar: "Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez." Sayfa ödeme garantisi vermez.
+
+### 18.4 Hesaplama araçları
+
+Araçlar üç gruptur ve 12 araçtır. Liste ve sınırlar `ARASTIRMA.md` dosyasının 10. bölümündedir. Her araç kısa faydasını yazar. "Neyi hesaplar?" düğmesi girişi, çıktıyı ve sınırı açar. Araç bu öneride hesaplama yapmaz. Gezinme, alıcı bölümü, satıcı bölümü ve kütüphane `#araclar` bölümüne gider.
+
+### 18.5 Hareketli yüzeyler
+
+Her bölümün arkası aynı geçişli zemin değildir. Üç yüzey vardır:
+
+- **Ticaret ağı.** Düğümler ve onları bağlayan çizgiler.
+- **Nokta alanı.** Düzenli noktalar.
+- **Sipariş rotası.** Bölümü boydan boya geçen bir yol ve duraklar.
+
+Yüzey ekrana girince bir kez çizilir. İşaretçi yüzeyin üstündeyken yakın çizgiler belirginleşir. Sonsuz hareket yoktur, bu yüzden durdurma düğmesi gerekmez. Ekran dışındaki yüzey için iş yapılmaz. Sekme gizliyken çizim başlamaz. Hareket azaltma tercihinde yüzey çizilmiş haliyle durur. Yüzey içeriğin arkasındadır ve metnin yerini değiştirmez.
+
+
+### 18.6 Altıncı sürümün doğrulama kaydı
+
+Kontroller 11 Kasım 2026 günü macOS üzerinde çalıştı.
+Tarayıcı otomasyonu Playwright 1.64.1 kullandı.
+Chromium ve WebKit sonuçları gerçek cihaz testi değildir.
+
+| Denetim | Sonuç |
+|---|---|
+| Önizleme derlemesi | pass. 472 metin sınıflandırıldı. |
+| Kural kapısı | pass. 748 stil kuralı ve bir sayfa denetlendi. |
+| Kapının kendini sınaması | pass. 98 ihlal örneğinin tamamı reddedildi. |
+| İkinci tam tarayıcı koşusu | fail. Chromium üç, WebKit bir hata buldu. |
+| Bu hataların düzeltme koşusu | pass. Chromium 93, WebKit 74 denetimi geçti. |
+| Bağımsız incelemenin düzeltme öncesi koşusu | fail. İki motor da altışar hata buldu. |
+| Bağımsız incelemenin düzeltme sonrası koşusu | pass. Her motor 170 denetimi geçti. |
+| Yeni davranışların bozulma sınaması | pass. Altı bozulmanın tamamı yakalandı. |
+| Ekran dönüşü ve zorlanmış renk sınaması | pass. Üç bozulmanın tamamı yakalandı. |
+
+Tam test takımı son düzeltmelerden sonra yeniden çalıştırılmadı.
+Değişen davranışlar hedefli koşularla doğrulandı.
+Bu koşular ana test dosyasının aynı denetimlerini kullandı.
+
+Son koşu 320, 390 ve 1440 CSS px genişlikleri kapsadı.
+Adet doğrulaması, kart hizası, form ve açılır araç ayrıntıları sınandı.
+Önceki tam koşu dokuz ekran boyutunu kapsadı.
+Büyük yazı ve zorlanmış renk kontrolleri yalnız Chromium üzerinde çalıştı.
+
+Tasarım, uygulayıcıdan bağımsız bir inceleyici tarafından değerlendirildi.
+İnceleyici komut çalıştırmadı ve dosya değiştirmedi.
+Bulduğu başlık çakışması, hizalama ve teklif özeti sorunları düzeltildi.
+
+Firefox çalıştırılmadı.
+Gerçek Safari, iOS, Android ve ekran okuyucu kontrolleri yapılmadı.
+Gerçek okurla denenmedi.
+
+
+Son tamamlayıcı kontrolde adet hatası açıklaması alanla ilişkilendirildi.
+Bu ilişki Chromium ve WebKit üzerinde doğrulandı.
+Bağımsız incelemenin uygulama bulguları kapandı.
+Veri kaydı dosyası yayımlanan 4df7202 commitine dahil edildi.
+
+Türkçe denetimi sayfa metninde ve belgelerde çalıştı.
+Sayfa metnindeki üç uzun cümle, süreçleri anlatan açıklamalardır.
+Bu cümleler emir değildir ve 15 kelimelik açıklama hedefini aşmaz.
+Başlık ve menü etiketleri ayrı değerlendirilmiştir.
+
+
+### 18.7 Metinlerin anlamını tamamlayan düzeltme
+
+Kullanıcı, kısa ifadelerde anlamın kaybolduğunu bildirdi.
+Sayfa metinleri bu nedenle yeniden incelendi.
+Başlıklar, form açıklamaları ve araç terimleri düzeltildi.
+Kararların örnekleri `METIN-KARARLARI.md` dosyasındadır.
+
+
+Bu düzeltmede 481 metin sınıflandırıldı. Kaynaklı 71 cümle korundu.
+Kural kapısı geçti. Kapının 101 hata örneğinin tamamı reddedildi.
+Hedefli tarayıcı koşusu her motorda önce 167 başarı ve 13 hata verdi.
+Düzeltmelerden sonra her motorda 178 başarı ve 2 hata kaldı.
+Bu iki hata, eksik hacim böleni açıklamasından kaynaklanıyordu.
+Açıklama eklendikten sonra ilgili denetim Chromium ve WebKit üzerinde tekrar çalıştı.
+Her motorda 43 denetimin tamamı geçti.
+Kontroller 320, 390 ve 1440 CSS px genişliklerini kapsadı.
+Son ürün metni 320 ve 1440 CSS px genişliğinde görsel olarak incelendi.
+Bağımsız metin incelemesinde yanıltıcı işlem veya yeni güvence ifadesi bulunmadı.
+İnceleyicinin iki başlık kapsamı notu da düzeltildi.
+Tam tarayıcı takımı bu metin değişikliğinde yeniden çalıştırılmadı.
+Gerçek cihaz ve ekran okuyucu kontrolü yapılmadı. Gerçek okurla denenmedi.
+
+
+## 19. Önceki sürümün kaydı: bölgesel tedarik
+
+Bu bölüm `96f52a8` sürümünün geçmiş kaydıdır.
+Güncel seçim ve hareket kararı 20. bölümdedir.
+
+Bu ekleme yalnız ana sayfayı değiştirir.
+Onaylanan üst bölüm, alt bölüm ve mevcut ürün dizini korunur.
+Dizinden sonra bölgesel tedarik bölümü gelir.
+Ayrı ilçe sayfası üretilmedi.
+Gerekçe ve kaynaklar `BOLGE-STRATEJISI.md` dosyasındadır.
+
+### 19.1 Alıcının ihtiyacından başlayan içerik
+
+Buldan, Sürmene ve İnegöl ilçe olarak tanıtılır.
+Merter semt olarak tanıtılır.
+Her yer için işletme ihtiyacı ve üretim gerekçesi birlikte gösterilir.
+Alıcı, teklif isterken soracağı üç koşulu aynı satırda görür.
+Kaynak bağlantıları görünürdür. Bu bilgiler üzerine gelmeye bağlı değildir.
+
+Çok çeşit satan mağazalar için ayrı alım kontrol listesi bulunur.
+Liste, ürün adedini, koli içeriğini, taşıma maliyetini ve yeniden siparişi kapsar.
+Bölüm, bu bölgelerde iStoc satıcısı bulunduğunu iddia etmez.
+
+Teklif bağlantısı aynı sayfadaki forma gider.
+Ürün alanı boşsa ilgili ürün önerisi yazılır.
+Önceden yazılan ürün korunur. Odak ürün alanına geçer.
+Betik kapalıysa bağlantı yine form bölümüne gider.
+
+### 19.2 Dekoratif yüzeylerin hareketi
+
+Karşılama dalgası yatay, bölgesel ızgara çapraz hareket eder.
+Araçlardaki noktalar dikey hareket eder.
+Planlanan ödeme bölümündeki rota yatay hareket eder.
+Hareketli ana yüzey sayısı dörttür.
+Metinler ve düğmeler bu hareketle yer değiştirmez.
+
+Kaydırma hareketi en çok 24 CSS px olur.
+Fareye bağlı hareket en çok 8 CSS px olur.
+Çizgiler sabit aralıklıdır. Bölüm uzadıkça desen büyümez.
+Hareket azaltma tercihinde yüzeyler durağandır.
+Gizli sekmede ve ekran dışındaki yüzeylerde hareket hesaplanmaz.
+Yeni kütüphane, Three.js, Canvas veya WebGL eklenmedi.
+
+### 19.3 Kontrol kaydı
+
+Kontroller 11 Kasım 2026 günü macOS üzerinde çalıştırılır.
+Node 24.21.0, Python 3.9.6 ve Playwright 1.64.1 kullanılır.
+Aşağıdaki sonuçlar yalnız bu eklemenin kapsamını belirtir.
+Önceki sürümlerin sonuçları bu sürümün kanıtı değildir.
+
+
+| Denetim | Sonuç |
+|---|---|
+| Önizleme derlemesi | pass. 530 metin sınıflandırıldı. |
+| Kural kapısı | pass. 800 stil kuralı ve bir sayfa denetlendi. |
+| Kapının bozulma sınaması | pass. 108 örneğin tamamı reddedildi. |
+| İlk hedefli Chromium koşusu | fail. 84 denetim geçti, dokuz denetim kaldı. |
+| İkinci hedefli Chromium koşusu | fail. 78 denetim geçti, iki bekleme koşulu hatalıydı. |
+| Son hedefli Chromium koşusu | pass. 93 denetimin tamamı geçti. Yükleme sorunu yoktu. |
+| Tarayıcı testlerinin bozulma sınaması | pass. Uyarı, hareket ve form gruplarındaki dört bozulma yakalandı. |
+| Yedi genişlikte yerleşim | pass. Taşma ve 14 CSS px altında yazı bulunmadı. |
+| Bağımsız kod ve görsel inceleme | pass. Açık bulgu kalmadı. |
+| Son WebKit koşusu | not_run. Tarayıcı siteye gitmeden sekme oluştururken takıldı. |
+
+Yerleşim kontrolü 320, 360, 375, 390, 768, 844 ve 1440 CSS px genişlikleri kapsadı.
+568 × 320 görünümünde teklif alanının odağı ve görünürlüğü ayrıca doğrulandı.
+320 ve 1440 CSS px görüntüleri görsel olarak incelendi.
+Ubuntu yazı tipinin yüklenmesi doğrulandı.
+
+Yüzey ilk görünüşünde ilerleme hesaplanmıyordu. Görünürlük olayı bu hesabı artık başlatır.
+Testlerde giriş hareketi ile kaydırma hareketi birbirinden ayrıldı.
+Bitmiş animasyonları bekleyen yanlış koşul düzeltildi.
+Saydam ve etkisiz sepet çubuğu gerçek örtüşme sayılmıyor.
+Kısa yatay görünümde çubuğun altındaki noktada ürün alanı bulundu.
+Dolu örnek sepetin aynı görünümdeki durumu bu eklemede ayrıca sınanmadı.
+
+Son hedefli komut şöyledir:
+
+`PLAYWRIGHT_PACKAGE_DIR=<kurulu paket klasörü> node tarayici-testi.mjs <önizleme adresi> --bolge --motor=chromium`
+
+Bozulma koşuları `--sinama=bölge`, `--sinama=yönlü` ve `--sinama=teklif bağlantısı` kullandı.
+Son seçenek komut satırında tırnak içine alınır.
+
+Türkçe denetimi yeni metinlerde ve değişen belgelerde çalıştı.
+Uzun kelime uyarıları elle incelendi. İsimler ve koşullar korundu.
+README içindeki üç uzun ifade açıklamadır ve 15 kelime hedefini aşmaz.
+Gerçek okurla denenmedi.
+
+Tam tarayıcı takımı bu eklemede yeniden çalıştırılmadı.
+WebKit hatası sayfanın çalışmadığını kanıtlamaz. Bu sürümün WebKit sonucu doğrulanmamıştır.
+Firefox çalıştırılmadı. Gerçek Safari, iOS, Android ve ekran okuyucu kontrolleri yapılmadı.
+Pages önizlemesi arama motorlarına kapalı kalır.
+
+## 20. TypeScript hareketleri ve ticaret merkezleri
+
+Bu ekleme ana sayfanın arka planlarını ve bölgesel tedarik bölümünü günceller.
+Ayrı içerik sayfası üretilmez.
+Üst bölüm, alt bölüm ve mevcut alışveriş akışı korunur.
+
+### 20.1 Tedarik için 45 merkez ve alıcılar için 24 bölge
+
+Kurumsal kaynaklarla doğrulanan ticaret ve üretim faaliyetleri esas alınır.
+Her satır ihtiyacı, seçimin gerekçesini ve üç kontrol sorusunu taşır.
+Olgu cümlesi ile editoryal öneri veri dosyasında ayrıdır.
+
+12 İstanbul merkezi ve son istenen 28 merkez listede bulunur.
+Beş merkez önceki kayıtlarla eşleştiği için tek kayıtta birleştirildi.
+Son genişletmede mevcut merkezlerden hiçbiri çıkarılmadı. Tedarik listesi 45 kayıt içerir.
+Her merkez en fazla iki sektörle temsil edilir.
+Sınır şehre değil, aynı merkez veya bölgeye uygulanır.
+Denizli OSB'nin ilçesi resmi adres doğrultusunda Honaz olarak düzeltildi.
+
+Tedarik bölümünde ilk altı merkez açık görünür.
+Diğer merkezler aynı bölümde açılır.
+Merkez, şehir ve sektör araması eşleşen satırları gösterir.
+Betik çalışmazsa bütün merkezler okunabilir.
+
+Alıcı bölümünde 24 bölge ve işletme türü bulunur.
+Alıcı, işletmesine uygun alanı seçerek talep hazırlamaya başlar.
+Satıcı, bu işletmelerin olası alım ihtiyaçlarını görür.
+Liste gerçek alıcı profilleri veya yayımlanmış talepler içermez.
+Sektör filtreleri ve ilk altı kayıt uzun listeyi yönetir.
+
+Kaynaklar ve seçim sınırları `BOLGE-STRATEJISI.md` dosyasındadır.
+Platformda bu merkezlerden satıcı bulunduğu iddia edilmez.
+Form bağlantısı kullanıcının yazdığı ürünü korur.
+Seçilen alıcı alanı formda ayrıca açıklanır.
+
+### 20.2 Gerçek kaynak uyarlaması
+
+React Bits hesapları TypeScript'e uyarlanır.
+Waves, GridMotion, DotGrid ve MagnetLines kaynakları kullanılır.
+Kaynak commit ve lisans, `THIRD_PARTY_NOTICES.md` dosyasında kayıtlıdır.
+WebGL çizimi yerine SVG ve HTML katmanları kullanılır.
+React veya Three.js çalışma zamanı eklenmez.
+Altı sahne yön, kavis, ölçek ve karşıt katman hareketlerini paylaşır.
+Ayrıntılı kararlar `HAREKET-TASARIMI.md` dosyasındadır.
+
+TypeScript 5.9.3 kilit dosyasında sabittir.
+`npm run build` JavaScript çıktılarını ve ana sayfayı üretir.
+`npm run check` türleri, derleme damgasını ve proje kurallarını denetler.
+Azaltılmış harekette ve veri tasarrufunda ana hareket paketi istenmez.
+Sonlu geçişler merkezi süre ve Cubic eğrisi kullanır.
+
+### 20.3 Doğrulama kaydı
+
+Kontroller 11 Kasım 2026 tarihinde macOS üzerinde yapıldı.
+Tarayıcılar izole Playwright oturumlarında çalıştırıldı.
+Node 24.21.0, TypeScript 5.9.3 ve Playwright 1.64.1 kullanıldı.
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run build` | Geçti. Önizleme üretildi. |
+| `npm run check` | Geçti. Tür denetimi ve 828 stil kuralı denetlendi. |
+| `node kapi.mjs --sinama` | 123 bozulma örneğinin tamamı reddedildi. |
+| `node tarayici-testi.mjs <adres> --bolge --motor=chromium` | 157 kontrol geçti. Başarısız kontrol yok. |
+| `node motion-testi.mjs <adres> --motor=chromium` | 71 kontrol geçti. Başarısız kontrol yok. |
+| Türkçe metin denetimi | Yeni metinlerde hata bulunmadı. Uzun kelime uyarıları elle incelendi. |
+| WebKit | İlk sekme süre sınırında açılamadı. Davranış sonucu `not_run` kaldı. |
+
+Hareket testi önce 320 CSS px genişlikte çalışır.
+Sonra 360, 375, 390, 844, 768 ve 1440 genişliklerini denetler.
+844 genişlikte ekran yüksekliği 390 olur. Bu, yatay telefon denemesidir.
+Bölge akışı 320 ve 1440 genişliklerde denetlendi.
+Kontroller, fare ve klavye davranışlarını ve hareket azaltma tercihini kapsar.
+Veri tasarrufu tercihi hareket testinde benzetimle denendi.
+Bu sonuç gerçek bir mobil ağ ölçümü değildir.
+
+Bağımsız incelemede arama sayısı ve ASCII yazım eşleşmesi düzeltilmiştir.
+“OSB” ve “Organize Sanayi Bölgesi” aynı bölge olarak denetlenir.
+Arama sırasında panel adı, gizlenen düğmedeki eski sayıyı taşımaz.
+Alıcı verisi de derleme sırasında kaynak ve alan kontrollerinden geçer.
+
+Sürekli kaydırmada eski geçiş art arda duraklayan kareler üretiyordu.
+Tarayıcı ölçümü art arda üç duraklayan kare gösterdi.
+Yeni geçişler merkezi Cubic eğrisini birlikte hesaplar.
+Girdi sürerken iki kare boyunca duraklamayı yakalayan kontrol geçer.
+Tek hedef değişimi merkezi eğriyi tam olarak korur.
+Girdi durunca hareket sonlu süre içinde biter.
+
+Görsellerde metin katmanı sabittir. Dekorasyon kartların arkasından geçebilir.
+Satıcı bölümünün kenarında şekiller saydamlaşır.
+Başlıkların son görünümü geçişler bittikten sonra ayrıca denetlendi.
+320 genişlikte ilk başlık görünür ve başka öğeyle örtülmez.
+
+Tam tarayıcı takımı bu eklemede yeniden çalıştırılmadı.
+Firefox çalıştırılmadı.
+Gerçek Safari, iOS, Android ve ekran okuyucu kontrolleri yapılmadı.
+Gerçek okurla denenmedi.
+
+Bağımsız son incelemede incelenen kapsam için engelleyici bulgu kalmadı.
+Bu karar tam site denetimi anlamına gelmez.
+
+Yerel kanıtlar `.pane/prompts` klasöründedir. Bu klasör yayımlanmaz.
+Son hareket kaydı `motion-frozen/chromium.json` dosyasıdır.
+Bölge kaydı `final-bolge-chromium.log` dosyasıdır.
+Yerel başarı, GitHub Pages yayınının doğrulandığı anlamına gelmez.
+
+## 21. İnceleme düzeltmelerinin altıncı sürümle birleştirilmesi
+
+### 21.1 Ne oldu?
+
+Beşinci sürümden sonra iş iki kola ayrıldı. İki kol da 11 Kasım 2026 gecesindeki aynı ara durumdan başladı.
+
+- Bir kol altıncı sürümü kurdu. Bu kol metinleri yeniden yazdı, planlanan bölümleri, bölgesel tedarik bölümünü ve TypeScript hareket paketini ekledi.
+- Öteki kol iki bağımsız incelemenin bulgularını düzeltti. Kayıt 16. bölümdeki beşinci sürüm tablosundadır.
+
+12 Kasım 2026 günü iki kol birleştirildi. 19 dosyada 75 çakışma parçası tek tek çözüldü. Hiçbir commit silinmedi.
+
+### 21.2 Birleştirme kuralları
+
+- **Metin ve bölümler altıncı sürümden alındı.** Karşılama, gerekçe başlıkları, planlanan bölümler ve bölgesel bölümler korundu.
+- **Erişilebilirlik ve doğruluk düzeltmeleri inceleme kolundan alındı.** Katlanan grubun yeni yapısı ve odak koruması bu koldandır. Zorlanmış renk, büyütülen yazı, kanıt kuralı ve bağlantı denetimi de bu koldandır.
+- **İki kol aynı sorunu ayrı çözdüyse sınanmış çözüm seçildi.** Örneğin ekran dönünce odak koruması inceleme kolundan alındı, çünkü kapanan grubun içini de hemen gizler.
+- **Üretilen dosyalar yeniden üretildi.** `index.html` ve `data/metin.json` birleşik kaynaktan derlendi.
+
+### 21.3 Birleşik sürümün doğrulama kaydı
+
+Kontroller 12 Kasım 2026 günü macOS üzerinde çalıştı. Node 24.21.0, TypeScript 5.9.3 ve Playwright 1.64.1 kullanıldı.
+Chromium ve WebKit sonuçları gerçek cihaz testi değildir.
+
+| Denetim | Durum | Not |
+|---|---|---|
+| `npm run build` | pass | Önizleme üretildi. 1.232 metnin hepsinin sınıfı bilinir. 320 ayrı adres denetlendi. |
+| `npm run check` | pass | Tür denetimi geçti. 838 stil kuralı denetlendi. 125 ihlal örneğinin hepsi reddedildi. |
+| Hareket testi | pass | Chromium'da 71, WebKit'te 71 denetimin hepsi geçti. |
+| Tarayıcı testi, Chromium | pass | 792 denetimin hepsi geçti. |
+| Tarayıcı testi, WebKit (Safari ailesi) | pass | 764 denetimin hepsi geçti. |
+| Testin kendini sınaması | pass | 73 bozulmanın hepsi yakalandı. İlk koşuda 2 bozulma kaçtı. Biri 6. sürümün eskimiş bir tanımıydı, öteki ölçümdeki bir boşluktu. İkisi düzeltildi ve yeniden denendi. |
+| Kaynak denetimi | pass | 77 kaynaklı cümlenin hepsi canlı sitede bulundu. Veri 12 Kasım 2026 günü alındı. |
+| Veri tasarrufu tercihi | not_run | Tarayıcıda öykünülmedi. Kural kapısı önyükleyicinin bu tercihi okuduğunu kaynakta denetler. |
+| Büyütülmüş yazı ve zorlanmış renkler, WebKit | not_run | WebKit bu iki ayarı öykünmez. İkisi Chromium'da geçti. |
+| Birleşik sürümün bağımsız incelemesi | not_run | İki kol ayrı ayrı incelendi. Birleşik sürüm bütün olarak incelenmedi. |
+| Firefox | not_run | Kullanıcının kararıyla çalıştırılmaz. |
+| Gerçek Safari, iOS ve Android cihaz | not_run | Öykünme gerçek cihazın yerini tutmaz. |
+| Ekran okuyucu | not_run | Sesli okuma denenmedi. |
+| Metnin gerçek okurla denenmesi | not_run | Gerçek okurla denenmedi. |
+
+İlk tam koşu birleşik sürümde iki kusur buldu. İkisi de düzeltildi ve ikinci tam koşu geçti.
+
+- **Karşılamadaki yol kartları.** Kartın zemini saydamdı. İşaretçi ışığı alt satırın soluk yazısını 4,11:1 karşıtlığa düşürüyordu. Kartın zemini opak oldu.
+- **Sepet çubuğu.** Bağlantının adı "istoc.com sepeti" olunca 320 piksel ekranda çubuk üç satıra çıkıyordu. Çubuk ekranın yüzde 31'ini kaplıyordu. En dar ekranda sol pay daralır ve bağlantının ok simgesi kalkar. Çubuk artık ekranın yüzde 22'sini kaplar.

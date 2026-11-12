@@ -146,7 +146,7 @@ Bu konuda bağımsız bir terk oranı sayısı bulunamadı.
 | Veri gerektiği kadar istenir. | Teklif isteği yalnız ürünü ve adedi sorar. |
 | Ödemeyi kimin aldığı açıktır. | Sayfa iki ödeme yolunu da yazar: doğrudan satıcıya ya da, sunulursa, Thoptan.com'a. |
 | Ödeme doğru hesaba gider. | Sayfa şunu yazar: alıcı yalnız sipariş sayfasında gösterilen hesaba ödeme yapar. |
-| Kilit simgesi boşa harcanmaz. | Kilit yalnız gerçek ödeme ve belge adımında kullanılır. Ana sayfada kilit yoktur. |
+| Kilit simgesi boşa harcanmaz. | Kilit, planlanan ödeme akışında bekleyen tutarı anlatır. Hizmetin planlandığı görünür etikette yazar. |
 
 ## 5. Piktogramlar
 
@@ -243,3 +243,62 @@ Bu bölüm bir uyumluluk beyanı değildir. Sayfa ekran okuyucuyla ve gerçek ci
 | WCAG 2.2 | https://www.w3.org/TR/WCAG22/ |
 | 2022 yönetmeliği, Resmî Gazete | https://www.resmigazete.gov.tr/eskiler/2022/12/20221229-5.htm |
 | 2017 tebliği, Resmî Gazete | https://www.resmigazete.gov.tr/eskiler/2017/06/20170606-12.htm |
+
+## 10. Hesaplama araçları: üç turluk değerlendirme
+
+Araç listesi 11 Kasım 2026 günü kilitlendi. Liste üç turda çıktı. Listeyi iki yapay zekâ ajanı hazırladı. Araştırmacı ajan Claude, orkestratör ajan Codex idi. İki ajan listelerini ayrı hazırladı ve karşılaştırdı.
+
+1. **Birinci tur.** Araştırmacı ajan 16 aday önerdi. Orkestratör ajan bağımsız olarak 12 aday çıkardı.
+2. **İkinci tur.** Riskli ve kapsam dışı adaylar çıkarıldı. Bunlar hukuki eşik, temerrüt faizi, damga vergisi, ihracat, e-belge ve palet yerleşimi hesaplarıdır. Bu hesaplar hukuki ya da mali yanlışlık riski taşır.
+3. **Üçüncü tur.** 12 aracın adı, girişi ve çıktısı kabul edildi. Her aracın alıcıya ve satıcıya ortak yararı değerlendirildi. Ayrıntının ana sayfa içinde açılması kabul edildi.
+
+### Kilitlenen liste
+
+| Grup | Araçlar |
+|---|---|
+| Fiyat ve sipariş | Sipariş maliyeti, KDV dahil ve hariç fiyat, adetli alım indirimi, teklif karşılaştırma |
+| Kargo ve ödeme | Koli ve adet, kargo hacmi ve ağırlığı, para birimi çevirme, ödeme takvimi |
+| Kâr ve stok | Birim kâr, masrafı karşılayan satış, stok yeterlilik süresi, yeniden sipariş zamanı |
+
+İlk sekiz araç ve son iki araç alıcı ile satıcı için ortaktır. Birim kâr ve masrafı karşılayan satış, satıcı ile yeniden satan alıcı içindir.
+
+### Araçların sınırları
+
+- Teklif karşılaştırma yalnız size gelen teklifleri yan yana koyar. Teklif isteği göndermez.
+- Toplu alım indiriminde oranı satıcı ya da kullanıcı yazar. Bu bir platform indirimi değildir.
+- Kargo hacminde herkes için geçerli tek bir bölen yoktur. Bölen kargo firmasına göre değişir. Palet adedi hesaplanmaz.
+- Para birimi çevirmede kurun tarihi ve kaynağı yazılır. Araç kuru kendiliğinden almaz.
+- Ödeme takvimi yalnız tarih ve tutar planıdır. Faizsiz finansman sözü değildir.
+- Birim kâr brüt farktır. İşletmenin net kârı değildir.
+- Günlük satış sıfırsa stok süresi hesaplanmaz. Satış fiyatı birim maliyetten yüksek değilse başabaş hesaplanmaz. Bu iki kural, araçlar yapılırken gereksinim olarak kullanılacak.
+
+Araçlar bu öneride hesaplama yapmaz. Ana sayfada her araç kısa faydasını yazar. "Neyi hesaplar?" düğmesi girişi, çıktıyı ve sınırı sayfa içinde açar. Ayrı araç sayfası yoktur.
+
+### Kaynaklar
+
+| Konu | Adres |
+|---|---|
+| Kâr oranı hesabı | https://www.shopify.com/tools/profit-margin-calculator |
+| Toplam ihracat fiyatı ve maliyet kalemleri | https://www.trade.gov/determine-total-export-price |
+| Koli ölçme ve tartma, hacimsel ağırlık | https://uk.express.dhl.com/measuring-and-weighing-advice/ |
+| Başabaş ve küçük işletme hesapları | https://bec.www.sba.gov/ |
+| Yeniden sipariş noktası | https://www.shopify.com/ca/blog/reorder-point |
+| Stok raporları | https://help.shopify.com/en/manual/reports-and-analytics/shopify-reports/report-types/default-reports/inventory-reports |
+
+## 11. Planlanan hizmetlerin kaynağı
+
+Yeni müşteri, yeniden sipariş ve güvenli ödeme bölümleri 19 Ekim değer önerilerine dayanır. Kaynak dosya şudur: https://github.com/karacaismail/19ekim/blob/main/src/data/degerOnerisi.ts
+
+Ana sayfa için beş değer seçildi:
+
+1. Hazır alım talepleri
+2. Yeni bayiler
+3. Stok değerlendirme
+4. Müşteriyle yeniden sipariş
+5. Kayıtlı koşullar
+
+Bu hizmetler canlı sitede yoktur. Sayfada "Planlanan hizmet" etiketiyle durur.
+
+Güvenli ödeme de planlanan bir modeldir. Canlı iStoc ödemeyi tutmaz ve ödemeye aracılık etmez. Bu yüzden sayfa teslimden sonra ödeme garantisi vermez. Model bir ödeme kuruluşuyla sözleşme ister.
+
+Sonraki metin incelemesinde araç adı "Toplu alım indirimi" oldu.

@@ -3,22 +3,32 @@
 //     Chromium ve WebKit'te (Safari ailesi) yerleşimi, renk rollerini, karşıtlığı, odağı ve etkileşimleri sınar.
 //     İki denetim yalnız Chromium'da çalışır: büyütülmüş kök yazı boyutu ve zorlanmış renkler.
 //     WebKit bu iki ayarı öykünmez. Çıktıda NOT_RUN satırı bunu yazar.
+//   node tarayici-testi.mjs [adres] --motor=chromium   (ya da --motor=webkit)
+//     Yalnız o motoru çalıştırır. Diğer seçeneklerle birlikte kullanılabilir.
+//   node tarayici-testi.mjs [adres] --bolge
+//     Yalnız bölgesel tedarik bölümünü, hareketli yüzeyleri ve betiksiz görünümü sınar.
 //   node tarayici-testi.mjs [adres] --sinama
 //     Test kendini sınar. Bilinen her bozulma kaynağa uygulanır. İlgili denetim FAIL vermelidir.
 // Playwright, komşu site klasöründeki kurulumdan alınır. Önizleme sunucusu açık olmalıdır.
 import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
-// Playwright önce bu klasörde aranır. Bulunamazsa komşu site klasöründeki kurulum kullanılır.
+// Playwright önce PLAYWRIGHT_PACKAGE_DIR ile verilen klasörde aranır (içinde node_modules olan klasör).
+// Sonra bu klasörde, en son komşu site klasöründe aranır. Test paket kurmaz.
 let playwright;
-try {
-  playwright = createRequire(join(here, "package.json"))("@playwright/test");
-} catch {
-  playwright = createRequire(join(here, "..", "site", "package.json"))("@playwright/test");
+const pwDirs = [process.env.PLAYWRIGHT_PACKAGE_DIR, here, join(here, "..", "site")].filter(Boolean);
+for (const dir of pwDirs) {
+  try {
+    playwright = createRequire(join(dir, "package.json"))("@playwright/test");
+    break;
+  } catch {
+    // Sonraki klasör denenir.
+  }
 }
+if (!playwright) throw new Error(`Playwright bulunamadı. Denenen klasörler: ${pwDirs.join(", ")}`);
 const { chromium, webkit } = playwright;
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
@@ -33,6 +43,28 @@ const facts = JSON.parse(readFileSync(join(here, "data", "ana-sayfa.json"), "utf
 const rates = JSON.parse(readFileSync(join(here, "data", "kur.json"), "utf8")).TRY;
 const topCats = JSON.parse(readFileSync(join(here, "data", "kategoriler.json"), "utf8")).length;
 const SYM = { GBP: "£", USD: "$", EUR: "€", TRY: "₺" };
+// Bölgesel tedarik bölümünün tek veri kaynağı. Dosya yoksa bölüm denetimleri FAIL verir, test çökmez.
+const bolgeFile = join(here, "data", "bolgeler.json");
+const bolgeData = existsSync(bolgeFile) ? JSON.parse(readFileSync(bolgeFile, "utf8")) : null;
+// Yer listesi veriden gelir (kullanıcı kararı 11 Kasım 2026). En az 6 gerçek ticari alım merkezi olur.
+// Geçerli türler: ilçe, semt, ticaret merkezi ve sanayi bölgesi. İlçenin etiketi "ilçesi" ile biter.
+// Öteki türlerin etiketi türün adını taşır ve "ilçe" sözcüğünü kullanmaz. Etiket ilçenin adını yer olarak yazabilir. Örnek: "İstanbul, Bağcılar'da ticaret merkezi".
+// Kullanıcı kararı (11 Kasım 2026): tedarik bölümünde en az 22 merkez olur, sayı veriden gelir. Alıcı talep bölümünde tam 24 alan olur.
+// Aynı yer ve aynı sektör ikinci kez eklenmez.
+// Bir yerde (şehir ve normalleştirilmiş yer adı) en çok 2 farklı sektör (sektor_kodu) bulunur. Bir şehirde birden çok merkez olabilir.
+// Her kayıt tek sektördür. Kural iki dosyanın birleşimine uygulanır.
+const BOLGE_EN_AZ = 22;
+const trNorm = (t) => String(t || "").toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
+// Yer anahtarı: şehir ve kanonik yer adı. Türkçe küçük harf, işaretler atılır, noktasız ı da i olur (ASCII yazımla eşleşir).
+// "Organize Sanayi Bölgesi" ve "OSB" aynı yerdir. Böylece aynı yer farklı yazımla ikinci kez sayılmaz.
+const yerAnahtari = (y) => `${trNorm(y.il)}|${trNorm(y.ad).replace(/organize sanayi bolgesi/g, "osb").replace(/[^a-z0-9]+/g, "")}`;
+const aliciFile = join(here, "data", "alicilar.json");
+const aliciData = existsSync(aliciFile) ? JSON.parse(readFileSync(aliciFile, "utf8")) : null;
+const GRUPLAR = ["gida", "tekstil", "konaklama", "imalat"];
+const BOLGE_TURLERI = ["ilçe", "semt", "ticaret merkezi", "sanayi bölgesi"];
+const etiketUyar = (y) => (y.tur === "ilçe" ? /ilçesi$/.test(y.yer_etiketi || "") : (y.yer_etiketi || "").includes(y.tur) && !/ilçe/.test(y.yer_etiketi || ""));
+// Sayfada yazan yer etiketi: yerin adı ve verideki yer etiketi. Örnek: "Laleli İstanbul, Fatih'te semt".
+const yerEtiketi = (y) => `${y.ad} ${y.yer_etiketi}`;
 // Bir ürünün KDV dahil, yuvarlanmamış birim tutarı. build.py ile aynı işlem ve aynı sıra: sekiz ondalık.
 // Toplam bu değerden hesaplanır. Yuvarlanmış birim fiyat adetle çarpılsaydı toplam, çevrilen gerçek tutardan sapardı.
 const unitOf = (slug, cur = "USD") => {
@@ -262,7 +294,7 @@ function measure() {
   out.numbers = [...document.querySelectorAll("main .mh__no")].map((e) => e.textContent.trim());
   out.numbersVisible = [...document.querySelectorAll("main .mh__no")].every(visible);
   // Bölüm başlığı bölümün adını da okutur: bölüm adı başlığın içinde durur, gözle okunan üst satır okuyucudan gizlidir.
-  // Böylece bölgenin adı yalnız slogan olmaz ("Ürünler: Fiyatı sormayın.").
+  // Böylece bölgenin adı yalnız slogan olmaz ("Ürünler: Fiyat sormanıza gerek yok.").
   out.sloganNames = [...document.querySelectorAll("main .mh")].filter((h) => {
     const kicker = h.querySelector(".mh__kicker").textContent.trim();
     return !h.querySelector("h2").textContent.trim().startsWith(kicker + ":") || h.querySelector(".mh__top").getAttribute("aria-hidden") !== "true";
@@ -693,7 +725,7 @@ async function behavior(page, engine, w, h) {
     };
   });
   check(engine, size, "sepet örnek olduğunu söyler",
-    /örnek/.test(c.note) && /canlı sepete eklenmez/.test(c.note) && /örnek sepette/.test(c.said) && bar.labels.every((x) => x === "Canlı sepeti açın. Örnek sepette 1 ürün var."), JSON.stringify({ note: c.note, said: c.said, labels: bar.labels }));
+    /örnek/.test(c.note) && /istoc\.com sepetine eklenmez/.test(c.note) && /örnek sepette/.test(c.said) && bar.labels.every((x) => x === "istoc.com sepetini açın. Örnek sepette 1 ürün var."), JSON.stringify({ note: c.note, said: c.said, labels: bar.labels }));
   // Çubuk dar ekranda da kısa kalır. Not kendi satırında durur, dar bir sütuna sıkışmaz.
   check(engine, size, "sepet çubuğu ekranın dörtte birinden az yer kaplar", bar.share < 0.25 && bar.overflow <= 0 && bar.noteInside && bar.link >= 44, JSON.stringify(bar));
 
@@ -1002,12 +1034,15 @@ async function behavior(page, engine, w, h) {
       // Tıklanmayan öğe üzerine gelince değişmez: gerekçe kartı, ödeme yöntemi ve alt bölümdeki ödeme satırı.
       // Üzerine gelince değişen öğe tıklanır sanılır.
       const changed = [];
-      // Beliren öğenin geçişi ölçümü karıştırmasın. Öğeler önce görünür yapılır ve geçişin bitmesi beklenir.
-      await page.evaluate(() => document.querySelectorAll("[data-reveal]").forEach((e) => e.classList.add("is-in")));
-      await page.waitForTimeout(1300);
       for (const sel of [".reasons .reason", ".sell__list .reason", ".ptile", ".paylist li"]) {
         const el = page.locator(sel).first();
         await el.scrollIntoViewIfNeeded();
+        // Öğe ekrana girince belirir. Durağan hal, beliriş geçişi bittikten sonra ölçülür.
+        // Geçiş, sınıf eklendikten sonraki karede başlar. Bu yüzden önce iki kare beklenir.
+        await el.evaluate(async (e) => {
+          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+          await Promise.all(e.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => {})));
+        });
         const snap = () => el.evaluate((e) => {
           const st = getComputedStyle(e);
           const after = getComputedStyle(e, "::after");
@@ -1354,6 +1389,31 @@ async function noScript(browser, engine, prepare) {
     text: await nojs.evaluate(() => (document.querySelector(".prefs .nojs-only") || {}).textContent || ""),
   };
   check(engine, size, "JavaScript kapalıyken çalışmayan seçenek ve doğru olmayan cümle görünmez", dead.radios === 0 && dead.jsOnly === 0 && dead.fixed === 1 && /olarak gösterilir/.test(dead.text), JSON.stringify(dead));
+  // Betik yokken bölgesel tedarik bölümü açık durur ve yönlü yüzeylerin örüntüsü çizili görünür.
+  const nb = await nojs.evaluate(() => {
+    const sec = document.querySelector("#bolgesel-tedarik");
+    const p = document.querySelector("[data-motion-scene] path");
+    return { sec: !!sec && getComputedStyle(sec.querySelector("[data-bolge]") || sec).opacity === "1" && sec.getBoundingClientRect().height > 200, path: p ? getComputedStyle(p).strokeDashoffset : "yok" };
+  });
+  check(engine, size, "JavaScript kapalıyken bölge bölümü ve yüzey örüntüsü görünür", nb.sec && nb.path === "0px", JSON.stringify(nb));
+  // Betik yokken tedarik aramasının alanı görünmez. Panel açık durur, bütün merkezler görünür.
+  const nbs = await nojs.evaluate(() => {
+    const sec = document.querySelector("#bolgesel-tedarik");
+    if (!sec) return null;
+    const ara = sec.querySelector("[data-bolge-ara]");
+    const rows = [...sec.querySelectorAll("[data-bolge]")];
+    return { ara: ara ? getComputedStyle(ara).display : "yok", all: rows.length, shown: rows.filter((li) => li.getBoundingClientRect().height > 40).length };
+  });
+  if (nbs) check(engine, size, "JavaScript kapalıyken bütün merkezler okunur, arama alanı görünmez", nbs.ara === "none" && nbs.all > 0 && nbs.shown === nbs.all, JSON.stringify(nbs));
+  // Betik yokken alıcı talep bölümünün süzgeci görünmez. Açılır panel açık durur, 24 alanın hepsi görünür.
+  const na = await nojs.evaluate(() => {
+    const sec = document.querySelector("#alici-talepleri");
+    if (!sec) return null;
+    const filt = sec.querySelector("[data-talep-filtre]");
+    const shown = [...sec.querySelectorAll("[data-talep]")].filter((li) => li.getBoundingClientRect().height > 40).length;
+    return { all: sec.querySelectorAll("[data-talep]").length, shown, filter: filt ? getComputedStyle(filt).display : "yok" };
+  });
+  if (na) check(engine, size, "JavaScript kapalıyken alıcı alanları okunur, süzgeç görünmez", na.all === 24 && na.shown === 24 && na.filter === "none", JSON.stringify(na));
   // İlk durak içeriğe atla bağlantısıdır. Üçüncü durakta odak dolgusu ve alt çizgi görünmelidir.
   // Dolgu, sayfadaki odak dolgularından biridir: lacivert, beyaz, vurgu mavisi ya da logonun ara tonu.
   await nojs.keyboard.press(tab);
@@ -1461,7 +1521,10 @@ function fits() {
   // Ekranın dışına çıkan metin
   out.out = texts.filter((e) => { const r = e.getBoundingClientRect(); return r.right > innerWidth + 1 || r.left < -1; }).map(name);
   // Kutusuna sığmayan metin: içeriği kutusundan geniştir. Satır içi öğenin kutusu yoktur, o sayılmaz.
-  out.cut = texts.filter((e) => getComputedStyle(e).display !== "inline" && e.clientWidth > 0 && e.scrollWidth > e.clientWidth + 1).map((e) => name(e) + " " + e.scrollWidth + ">" + e.clientWidth);
+  // Satır içi öğenin (örneğin başlıktaki vurgu) kendi kutusu yoktur. O metin, içinde durduğu ilk blok öğeye göre ölçülür.
+  // Böylece kutusundan taşan ama ekranın kenar payında kalan kelime de yakalanır.
+  const blockOf = (e) => { let n = e; while (n && getComputedStyle(n).display === "inline") n = n.parentElement; return n; };
+  out.cut = [...new Set(texts.map(blockOf))].filter((e) => e && free(e) && e.clientWidth > 0 && e.scrollWidth > e.clientWidth + 1).map((e) => name(e) + " " + e.scrollWidth + ">" + e.clientWidth);
   out.minFont = Math.min(...texts.map((e) => parseFloat(getComputedStyle(e).fontSize)));
   const nav = [...document.querySelectorAll(".bottomnav a")].filter(visible).map((a) => a.getBoundingClientRect());
   out.navFits = nav.every((r) => r.left >= -1 && r.right <= innerWidth + 1);
@@ -1577,18 +1640,775 @@ async function forcedColors(browser, engine, prepare) {
   await ctx.close();
 }
 
+
+// Altıncı sürümün bölümleri: karşılamadaki iki yol, teklif özeti, planlanan bölgeler, araç ayrıntıları,
+// içerik kütüphanesi ve hareketli yüzeyler. Durum tıklama anında okunur, geçiş beklenmez.
+async function planned(page, engine, w, h) {
+  const size = `${w}x${h}`;
+  await page.setViewportSize({ width: w, height: h });
+  await page.goto(url, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  const hero = await page.evaluate(() => ({
+    h1: document.querySelector("h1").textContent.replace(/\s+/g, " ").trim(),
+    paths: [...document.querySelectorAll(".paths .path")].map((a) => a.getAttribute("href")),
+  }));
+  check(engine, size, "karşılama alıcıyı ve satıcıyı iki yolla anlatır", hero.h1.endsWith("Toptan alın. Yeni müşterilere satın.") && hero.paths.join(" ") === "#urunler #saticilar", JSON.stringify(hero));
+  // Teklif özeti yazma anında güncellenir.
+  await page.fill("#t-urun", "saklama kabı");
+  await page.fill("#t-adet", "500");
+  const sum = await page.evaluate(() => document.querySelector("[data-rfq-sum-t]").textContent);
+  // Özet gönderilmiş bir istek gibi görünmez. Boş özet ne olacağını söyler. Form notu düğmenin göndermediğini ve gerçek isteğin yerini söyler.
+  const rfqCopy = await page.evaluate(() => ({
+    note: document.querySelector("[data-rfq-note]").textContent.trim(),
+    done: document.querySelector("[data-rfq-done]").textContent.replace(/\s+/g, " ").trim(),
+    next: document.querySelector("#teklif-sonra").textContent.trim(),
+  }));
+  check(engine, size, "teklif formu gönderilmediğini ve gerçek isteğin yerini söyler",
+    rfqCopy.note.includes("Düğme isteğinizi kimseye göndermez.") && rfqCopy.note.includes("Gerçek isteği istoc.com'da gönderirsiniz.")
+    && rfqCopy.done.includes("Gerçek isteği istoc.com'da gönderirsiniz.") && rfqCopy.next.endsWith("?") && !rfqCopy.next.startsWith("Sonra"), JSON.stringify(rfqCopy));
+  // Başlık faydayı, açıklama gerekçeyi söyler. Araç adları ve araçlara giden bağlantılar tek ve açık adla yazar.
+  const names = await page.evaluate(() => ({
+    urun: document.querySelector("#urun-baslik").textContent.replace(/^Ürünler: /, "").trim(),
+    lead: document.querySelector("#urunler .mh__lead").textContent.trim(),
+    tools: [...document.querySelectorAll("#araclar .tool h4")].map((h) => h.textContent.trim()),
+    toTools: [...document.querySelectorAll('a[href="#araclar"]')].filter((a) => !a.closest(".nav, .header, .lib")).map((a) => a.textContent.trim()),
+  }));
+  check(engine, size, "ürün başlığı faydayı, açıklaması gerekçeyi söyler",
+    names.urun === "Fiyatları ve sipariş şartlarını birlikte görün." && names.lead.startsWith("Fiyat sormanıza gerek yok çünkü ürünlerin fiyatları aşağıda yazıyor."), JSON.stringify(names));
+  check(engine, size, "araç adları ve araç bağlantıları açık",
+    names.tools.includes("Toplu alım indirimi") && names.tools.includes("Masrafı karşılayan satış adedi")
+    && names.toTools.length >= 2 && names.toTools.every((t) => t === "Hesaplama araçlarını görün"), JSON.stringify({ tools: names.tools, toTools: names.toTools }));
+  check(engine, size, "teklif özeti ürün ve adet yazılınca anında güncellenir", sum === "İstek özeti: 500 adet saklama kabı.", sum);
+  // Özet her tuşta okunmaz: canlı bölge değildir. Gönderim sonucunu sayfanın durum satırı (#durum) okur.
+  const live = await page.evaluate(() => document.querySelector("[data-rfq-sum]").getAttribute("aria-live"));
+  check(engine, size, "teklif özeti her tuşta okunmaz", live === null, String(live));
+  // Adet katı pozitif tam sayıdır. Türkçe binlik gruplama (1.000) kabul edilir. Başka biçim hazır sayılmaz.
+  const qtyCases = [["-5", null], ["1,5", null], ["5x10", null], ["1.5", null], ["0", null], ["99999999999999999999", null], ["1.000", "1.000"], ["12.500", "12.500"], ["500", "500"]];
+  const bad = [];
+  for (const [input, shown] of qtyCases) {
+    await page.fill("#t-adet", input);
+    const st = await page.evaluate(() => ({ t: document.querySelector("[data-rfq-sum-t]").textContent, inv: document.querySelector("#t-adet").getAttribute("aria-invalid"), desc: document.querySelector("#t-adet").getAttribute("aria-describedby") }));
+    const ok = shown === null
+      ? st.t === "Adedi 1 ya da daha büyük bir tam sayıyla yazın. Örneğin 500 ya da 1.000." && st.inv === "true" && st.desc === "teklif-ozeti"
+      : st.t === `İstek özeti: ${shown} adet saklama kabı.` && st.inv === null;
+    if (!ok) bad.push(`${input}: ${st.t} (${st.inv})`);
+  }
+  check(engine, size, "adet yalnız pozitif tam sayı olarak kabul edilir", bad.length === 0, bad.join(" | "));
+  await page.fill("#t-adet", "500");
+  // Gerekçe kartının sıra numarası başlığa ve piktograma değmez. Kartlar ve akış adımları aynı hizada başlar.
+  const lay = await page.evaluate(() => {
+    const hits = [];
+    for (const li of document.querySelectorAll(".reason")) {
+      const r = li.getBoundingClientRect();
+      const ps = getComputedStyle(li, "::before");
+      const c = document.createElement("canvas").getContext("2d");
+      c.font = `${ps.fontWeight} ${ps.fontSize} ${ps.fontFamily}`;
+      const w = c.measureText("06").width;
+      const box = { left: r.right - parseFloat(ps.right) - w, top: r.top + parseFloat(ps.top), bottom: r.top + parseFloat(ps.top) + parseFloat(ps.lineHeight || ps.fontSize) * 1 };
+      if (!isFinite(box.bottom)) box.bottom = box.top + parseFloat(ps.fontSize) * 1.5;
+      const range = document.createRange();
+      range.selectNodeContents(li.querySelector("h3"));
+      const rects = [...range.getClientRects(), li.querySelector(".picto").getBoundingClientRect()];
+      if (rects.some((q) => q.right > box.left && q.left < r.right && q.bottom > box.top && q.top < box.bottom)) hits.push(li.querySelector("h3").textContent.trim().slice(0, 24));
+    }
+    const rows = (sel, inner) => {
+      const by = {};
+      for (const li of document.querySelectorAll(sel)) {
+        const r = li.getBoundingClientRect();
+        if (!r.height) continue;
+        (by[Math.round(r.top + scrollY)] ||= []).push(Math.round(li.querySelector(inner).getBoundingClientRect().top - r.top));
+      }
+      return Object.values(by).filter((row) => row.some((x) => x !== row[0]));
+    };
+    return { hits, reason: rows(".reason", "h3"), flow: rows(".pp__flow li", ".pp__who") };
+  });
+  check(engine, size, "gerekçe kartında numara başlığa değmez", lay.hits.length === 0, lay.hits.join(" | "));
+  check(engine, size, "kartlar ve akış adımları aynı hizada başlar", !lay.reason.length && !lay.flow.length, JSON.stringify(lay));
+  // Planlanan her bölge görünür etiketini taşır. Gezinme ve alt bölüm araçlara ve kütüphaneye gider.
+  const plan = await page.evaluate(() => ({
+    regions: [...document.querySelectorAll("[data-plan]")].map((r) => [r.id, !!r.querySelector(".plan-tag")]),
+    links: ["araclar", "kutuphane"].map((id) => document.querySelectorAll(`a[href="#${id}"]`).length),
+    tools: document.querySelectorAll("#araclar .tool").length,
+    groups: document.querySelectorAll("#araclar .tgroup").length,
+    lib: [...document.querySelectorAll("#kutuphane .lib__type")].map((t) => t.querySelectorAll(".libq").length),
+  }));
+  check(engine, size, "planlanan bölgeler etiketli", plan.regions.length >= 5 && plan.regions.every((r) => r[1]), JSON.stringify(plan.regions));
+  check(engine, size, "araçlarda 3 grup ve 12 araç var", plan.tools === 12 && plan.groups === 3, JSON.stringify(plan));
+  check(engine, size, "kütüphanede 6 tür ve türde 3 ya da 4 öğe var", plan.lib.length === 6 && plan.lib.every((n) => n >= 3 && n <= 4), JSON.stringify(plan.lib));
+  check(engine, size, "araçlara ve kütüphaneye en az iki bağlantı gider", plan.links.every((n) => n >= 2), JSON.stringify(plan.links));
+  // Araç ayrıntısı: tıklama ve klavye ile açılır, durum anında yazılır.
+  const btn = page.locator("#arac-1-1-b");
+  await btn.scrollIntoViewIfNeeded();
+  await btn.click();
+  const open = await page.evaluate(() => {
+    const b = document.querySelector("#arac-1-1-b");
+    const p = document.getElementById(b.getAttribute("aria-controls"));
+    return { exp: b.getAttribute("aria-expanded"), state: p.dataset.open, inert: p.inert, text: p.textContent };
+  });
+  check(engine, size, "araç ayrıntısı tıklama anında açılır", open.exp === "true" && open.state === "true" && open.inert === false && open.text.includes("henüz hesaplama yapmaz"), JSON.stringify(open));
+  await page.focus("#arac-1-1-b");
+  await page.keyboard.press("Enter");
+  const closed = await page.evaluate(() => document.querySelector("#arac-1-1-b").getAttribute("aria-expanded"));
+  check(engine, size, "araç ayrıntısı Enter ile kapanır", closed === "false", closed);
+  // Terim açıklamalı uzun ayrıntılar da tam açılır: metin panelden taşmaz ve kesilmez.
+  // Yeniden sipariş zamanı aracı tedarik süresini ve güvenlik stokunu günlük sözle açıklar. Birim kâr brüt farkı açıklar.
+  const longs = [];
+  for (const id of ["arac-3-4", "arac-3-1", "arac-2-2"]) {
+    await page.locator(`#${id}-b`).scrollIntoViewIfNeeded();
+    await page.locator(`#${id}-b`).click();
+    await page.waitForTimeout(450);
+    longs.push(await page.evaluate((id) => {
+      const p = document.getElementById(id);
+      const inner = p.firstElementChild;
+      const pr = p.getBoundingClientRect(), ir = inner.getBoundingClientRect();
+      const words = [...inner.querySelectorAll("p")].every((q) => q.scrollWidth <= q.clientWidth + 1);
+      return { id, open: p.dataset.open, fits: ir.bottom <= pr.bottom + 1 && ir.right <= pr.right + 1 && words, text: inner.textContent };
+    }, id));
+  }
+  const terms = longs.map((l) => l.text).join(" ");
+  check(engine, size, "uzun araç ayrıntısı tam açılır ve taşmaz", longs.every((l) => l.open === "true" && l.fits), JSON.stringify(longs.map(({ id, open, fits }) => ({ id, open, fits }))));
+  check(engine, size, "araç terimleri günlük sözle açıklanır",
+    ["Güvenlik stoku, ", "Tedarik süresi, ", "Brüt fark, ", "Hacim böleni, ", "Hacimsel ağırlık, "].every((t) => terms.includes(t)), terms.slice(0, 200));
+  const lb = page.locator("#lib-b1-1");
+  await lb.scrollIntoViewIfNeeded();
+  await lb.click();
+  const libOpen = await page.evaluate(() => document.querySelector("#lib-b1-1").getAttribute("aria-expanded"));
+  check(engine, size, "kütüphane öğesi sayfa içinde açılır", libOpen === "true", libOpen);
+  // Durağan yüzeyler ve hareketli sahneler süstür: okuyucudan gizlidir ve tıklanmaz (kullanıcı kararı 11 Kasım 2026).
+  // Eski giriş çizimi (is-on) ve işaretçi aydınlatması (is-near) kalktı. Hareket sözleşmesini motion() sınar.
+  await page.goto(url, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  const surf = await page.evaluate(() => {
+    const list = [...document.querySelectorAll("[data-surface], [data-motion-scene]")];
+    return { n: list.length, hidden: list.every((e) => e.getAttribute("aria-hidden") === "true" && getComputedStyle(e).pointerEvents === "none") };
+  });
+  check(engine, size, "yüzeyler gizli ve tıklanmaz", surf.n >= 8 && surf.hidden, JSON.stringify(surf));
+}
+
+// Yeni bölüm ve hareket denetimleri sayfayı DOM hazır olunca sınar. Dış yazı tipinin yüklenmesi beklenmez.
+// Bir koşu zaman aşımına uğrarsa o koşunun denetimi FAIL olur. Diğer koşular ve sonuç yine yazılır.
+// Yükleme sorunu ile uygulama hatası ayrı yazılır. Sayfa, bağlam ya da sekme açılamazsa satır "YÜKLEME" ile başlar ve NOT_RUN olur.
+// NOT_RUN geçmiş sayılmaz: koşunun çıkış kodu 1 olur. Uygulama denetiminin kendisi gevşemez.
+const loadIssues = [];
+class LoadError extends Error {}
+const bounded = (promise, ms, what) => Promise.race([
+  promise,
+  new Promise((_, reject) => setTimeout(() => reject(new LoadError(`${what} ${ms} ms içinde bitmedi`)), ms)),
+]);
+async function open(page) {
+  try {
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.waitForFunction(() => document.readyState !== "loading" && !!document.querySelector("footer"), null, { timeout: 10000 });
+  } catch (e) {
+    throw new LoadError(`sayfa açılamadı: ${String(e.message || e).split("\n")[0]}`);
+  }
+}
+// Yeni denetimlerin açtığı bağlamlar. Koşu bitince ya da yarıda kalınca sınırlı süreyle kapatılır.
+const made = [];
+async function newCtx(browser, opts) {
+  const ctx = await bounded(browser.newContext(opts), 15000, "bağlam açma");
+  made.push(ctx);
+  return ctx;
+}
+async function newTab(ctx) {
+  return bounded(ctx.newPage(), 15000, "sekme açma");
+}
+async function guarded(engine, size, name, run) {
+  try {
+    await run();
+  } catch (e) {
+    const msg = String(e.message || e).split("\n")[0];
+    if (e instanceof LoadError) {
+      loadIssues.push(`${engine} ${size} ${name}`);
+      notRun.push(`${engine} ${size} ${name}: YÜKLEME ${msg}`);
+    } else check(engine, size, `${name} koşusu tamamlanır`, false, msg);
+  } finally {
+    for (const ctx of made.splice(0)) await bounded(ctx.close(), 10000, "bağlam kapatma").catch((e) => notRun.push(`${engine} ${size} ${name}: YÜKLEME ${e.message}`));
+  }
+}
+
+// Bölgesel tedarik bölümü. Dizinden sonra, footer'dan önce gelir.
+// Önce işletmenin ihtiyacı yazar, sonra yerler gelir. Her yerin nedeni ve teklif için 3 koşulu hep görünür.
+// Ana eylem aynı sayfadaki teklif formunu o yerin ürünüyle doldurur. Satıcı varlığı ve doğrulama yazılmaz.
+async function bolge(page, engine, w, h) {
+  const size = `${w}x${h}`;
+  await page.setViewportSize({ width: w, height: h });
+  await open(page);
+  await page.waitForTimeout(600);
+  check(engine, size, "bölge verisi tek dosyada var", !!bolgeData && Array.isArray(bolgeData.yerler), bolgeFile);
+  const data = bolgeData || { yerler: [], alim_plani: {} };
+  // Yerin türü geçerli, etiketi türüyle uyumlu, ili yazılı ve kimliği tekildir. Yer sayısı en az 6'dır.
+  const wrongType = data.yerler.filter((y) => !BOLGE_TURLERI.includes(y.tur) || !y.il || !etiketUyar(y)).map((y) => y.kimlik);
+  const uniq = new Set(data.yerler.map((y) => y.kimlik)).size === data.yerler.length;
+  const fold = await page.evaluate(() => {
+    const more = document.querySelector("#bolgesel-tedarik [data-bolge-more]");
+    const rows = [...document.querySelectorAll("#bolgesel-tedarik [data-bolge]")];
+    return { more: !!more, open: more ? more.querySelector("button").getAttribute("aria-expanded") : null, inMore: rows.map((li) => (more && more.contains(li) ? 1 : 0)).join("") };
+  });
+  check(engine, size, "ilk 6 merkez açık, kalan merkezler kapalı panelde", fold.more && fold.open === "false" && /^0{6}1+$/.test(fold.inMore), JSON.stringify(fold));
+  if (fold.more) {
+    const btn = page.locator("#bolgesel-tedarik [data-bolge-more] button");
+    await btn.scrollIntoViewIfNeeded();
+    await btn.click();
+    await page.waitForTimeout(700);
+  }
+  const dup = data.yerler.map((y) => `${yerAnahtari(y)}|${y.sektor_kodu}`).filter((k, i, all) => all.indexOf(k) !== i);
+  check(engine, size, "veride en az 22 merkez var, kayıt tekrar etmez ve türü doğru etiketli", data.yerler.length >= BOLGE_EN_AZ && uniq && dup.length === 0 && wrongType.length === 0, [...wrongType, ...dup].join(", ") || String(data.yerler.length));
+  const m = await page.evaluate(() => {
+    const sec = document.querySelector("#bolgesel-tedarik");
+    if (!sec) return null;
+    const dizin = document.querySelector("#dizin");
+    const footer = document.querySelector("footer");
+    const shown = (e) => !!e && e.getClientRects().length > 0 && getComputedStyle(e).visibility === "visible" && e.getBoundingClientRect().height > 0;
+    const hiddenBehind = (e) => !!e.closest("details:not([open]), [hidden], [aria-hidden='true'], [data-open='false'], [inert]");
+    const need = sec.querySelector("[data-bolge-giris]");
+    const list = sec.querySelector("[data-bolgeler]");
+    const items = [...sec.querySelectorAll("[data-bolge]")].map((li) => {
+      const teklif = li.querySelector("a[data-bolge-teklif]");
+      const src = li.querySelector("a[data-bolge-kaynak]");
+      const kosul = [...li.querySelectorAll("[data-bolge-kosul] > li")];
+      const parts = ["[data-bolge-yer]", "[data-bolge-ihtiyac]", "[data-bolge-neden]"].map((q) => li.querySelector(q));
+      return {
+        id: li.dataset.bolge,
+        yer: (parts[0] || {}).textContent?.replace(/\s+/g, " ").trim() || "",
+        ihtiyac: (parts[1] || {}).textContent?.trim() || "",
+        neden: (parts[2] || {}).textContent?.trim() || "",
+        kosul: kosul.map((k) => k.textContent.trim()),
+        open: parts.every((e) => shown(e) && !hiddenBehind(e)) && kosul.length === 3 && kosul.every((k) => shown(k) && !hiddenBehind(k)),
+        teklif: teklif ? { text: teklif.textContent.trim(), href: teklif.getAttribute("href"), urun: teklif.dataset.urun || "" } : null,
+        src: src ? { href: src.getAttribute("href"), size: parseFloat(getComputedStyle(src).fontSize), text: src.textContent.trim() } : null,
+      };
+    });
+    const links = [...sec.querySelectorAll("a")].map((a) => a.getAttribute("href") || "");
+    const plan = sec.querySelector("[data-alim-plani]") || document.querySelector("[data-alim-plani]");
+    const planLinks = plan ? [...plan.querySelectorAll("a")].map((a) => a.textContent.trim() + ">" + a.getAttribute("href")) : [];
+    const small = [...sec.querySelectorAll("*")].filter((e) => e.childNodes.length && [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && shown(e) && parseFloat(getComputedStyle(e).fontSize) < 14)
+      .map((e) => e.textContent.trim().slice(0, 20));
+    const r = sec.getBoundingClientRect();
+    const follows = (a, b) => !!a && !!b && !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    return {
+      inMain: !!sec.closest("main"),
+      order: follows(dizin, sec) && follows(sec, footer),
+      title: (sec.querySelector("h2") || {}).textContent?.replace(/\s+/g, " ").trim() || "",
+      needFirst: !!need && shown(need) && follows(need, list),
+      items,
+      links,
+      targetsOk: links.every((href) => /^https:\/\/\S+$/.test(href) || (/^#[\w-]+$/.test(href) && !!document.getElementById(href.slice(1)))),
+      text: sec.innerText,
+      plan: plan ? {
+        title: (plan.querySelector("h3") || {}).textContent?.trim() || "",
+        desc: (plan.querySelector("[data-alim-aciklama]") || {}).textContent?.trim() || "",
+        checks: [...plan.querySelectorAll("[data-alim-kontrol] > li")].filter(shown).map((li) => li.textContent.trim()),
+        links: planLinks,
+        text: plan.innerText,
+      } : null,
+      small,
+      overflow: Math.round(Math.max(r.right - innerWidth, document.documentElement.scrollWidth - innerWidth)),
+      boxed: [...sec.querySelectorAll("[data-bolge]")].filter((li) => { const s = getComputedStyle(li); return parseFloat(s.borderTopLeftRadius) > 0 && s.borderLeftWidth !== "0px" && s.borderLeftColor !== s.borderTopColor; }).length,
+    };
+  });
+  check(engine, size, "bölgesel tedarik bölümü dizinden sonra ve footer'dan önce gelir", !!m && m.inMain && m.order, JSON.stringify(m && { inMain: m.inMain, order: m.order }));
+  if (!m) return;
+  check(engine, size, "bölge başlığı faydayı söyler", m.title.endsWith("Alımınıza uygun ticaret merkezini bulun."), m.title);
+  check(engine, size, "bölgelerden önce işletmenin ihtiyacı yazar", m.needFirst, String(m.needFirst));
+  const ids = m.items.map((i) => i.id).join(" ");
+  check(engine, size, "bölümde verideki bütün yerler var", ids === data.yerler.map((y) => y.kimlik).join(" ") && m.items.length === data.yerler.length, ids);
+  const badLabel = m.items.filter((i) => { const y = data.yerler.find((x) => x.kimlik === i.id); return !y || i.yer !== yerEtiketi(y); }).map((i) => `${i.id}: ${i.yer}`);
+  check(engine, size, "yerin ilçe ya da semt olduğu yazıyla görünür", badLabel.length === 0, badLabel.join(" | "));
+  const closed = m.items.filter((i) => !i.open).map((i) => i.id);
+  check(engine, size, "yerin nedeni ve 3 teklif koşulu hep açık görünür", closed.length === 0, closed.join(", "));
+  // Her yerin metni o yere özgüdür. Yer adı çıkarılınca aynı kalan cümle şablon metindir.
+  const strip = (i, t) => t.replace(new RegExp(data.yerler.find((y) => y.kimlik === i.id)?.ad || "@@", "g"), "").trim();
+  const same = (key) => new Set(m.items.map((i) => strip(i, Array.isArray(i[key]) ? i[key].join("|") : i[key]))).size === m.items.length;
+  check(engine, size, "her yerin ihtiyacı, nedeni ve koşulları kendine özgü", same("ihtiyac") && same("neden") && same("kosul"), "");
+  // Olgu kaynaklıdır, ihtiyaç ve koşullar editoryal öneridir. İkisi veride ayrı durur.
+  const dataSame = m.items.every((i) => { const y = data.yerler.find((x) => x.kimlik === i.id); return y && y.fact && y.editorial && i.ihtiyac === y.editorial.ihtiyac && i.neden === y.fact.metin && i.kosul.join("|") === y.editorial.kosullar.join("|") && i.teklif?.urun === y.editorial.teklif_urun; });
+  check(engine, size, "bölge metni tek veri kaynağıyla aynı", dataSame, "");
+  const badFact = data.yerler.filter((y) => !y.fact || !(y.fact.source_url || []).length || !y.fact.source_url.every((u) => /^https:\/\//.test(u)) || !(/^\d{4}-\d{2}-\d{2}$/.test(y.checked_at || "") && !Number.isNaN(Date.parse(y.checked_at)))).map((y) => y.kimlik);
+  check(engine, size, "her olgunun kaynağı ve denetim tarihi var", data.yerler.length >= 1 && badFact.length === 0, badFact.join(", "));
+  const srcSame = m.items.every((i) => { const y = data.yerler.find((x) => x.kimlik === i.id); return y && y.fact && y.fact.source_url.includes(i.src?.href); });
+  check(engine, size, "kaynak bağlantısı verideki kaynağa gider", srcSame, m.items.map((i) => i.src && i.src.href).join(" "));
+  check(engine, size, "bölüm satıcı bulunduğu anlamına gelmediğini söyler", /Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez\./.test(m.text) && !/Planlanan|Yakında/.test(m.text), "");
+  const badAction = m.items.filter((i) => !i.teklif || i.teklif.text !== "Teklif isteyin" || i.teklif.href !== "#teklif" || !i.teklif.urun).map((i) => i.id);
+  check(engine, size, "ana eylem teklif formuna gider", badAction.length === 0, badAction.join(", "));
+  const badSrc = m.items.filter((i) => !i.src || !/^https:\/\//.test(i.src.href) || i.src.size < 14 || !i.src.text).map((i) => i.id);
+  check(engine, size, "her yerin kaynak bağlantısı okunur", badSrc.length === 0, badSrc.join(", "));
+  check(engine, size, "bölüm bağlantıları boş ya da sahte hedefe gitmez", m.targetsOk && m.links.length <= m.items.length * 2 + 4, m.links.join(" "));
+  check(engine, size, "bölüm satıcı varlığı ya da doğrulama uydurmaz", !/doğrulan|onaylı satıcı|\d+\s*(satıcı|üretici)|satıcı bulunur|satıcılar var/i.test(m.text), (m.text.match(/.{0,30}(doğrulan|onaylı|satıcı).{0,30}/i) || [""])[0]);
+  check(engine, size, "bölge satırları vurgu kenarlı kutu değildir", m.boxed === 0, String(m.boxed));
+  check(engine, size, "bölümde 14 px altında metin yok", m.small.length === 0, m.small.slice(0, 4).join(" | "));
+  check(engine, size, "bölüm yatay taşmaz", m.overflow <= 0, `${m.overflow}px`);
+  // Alım planı: çok çeşit satan mağazalar için satın alma kontrol önerisi. Platform garantisi değildir.
+  const pl = m.plan;
+  check(engine, size, "alım planı bloğu çok çeşit satan mağazaya seslenir", !!pl && pl.title === "Ucuzluk mağazanızın alım listesini hazırlayın." && pl.desc === "Ev gereçleri, kırtasiye ve temizlik ürünleri satıyorsanız ürünlerin toplam maliyetini karşılaştırın.", JSON.stringify(pl && { title: pl.title, desc: pl.desc }));
+  if (pl) {
+    check(engine, size, "alım planı 4 kontrol önerisi verir", pl.checks.length === 4 && pl.checks.every((t) => /[.?]$/.test(t)), pl.checks.join(" | "));
+    check(engine, size, "alım planı garanti ya da anahtar kelime yığını değildir", !/garanti|tek kargo|karışık koli (gönder|sağla)|japon|kapatıyoruz/i.test(pl.text), (pl.text.match(/.{0,20}(garanti|tek kargo|japon|kapatıyoruz).{0,20}/i) || [""])[0]);
+    check(engine, size, "alım planı kategorilere ve teklif formuna gider", pl.links.join(" ") === "Ürün kategorilerini inceleyin>#kategoriler Teklif isteyin>#teklif", pl.links.join(" "));
+  }
+  // Arama: merkez adı, şehir ya da sektör yazılınca eşleşen merkezler kalır. Eşleşen merkez kapalı paneldeyse panel açılır.
+  // Gizlenen merkez odaklanamaz. Sonuç sayısı yazar ve duyurulur. Eşleşme yoksa durum cümlesi görünür. Arama temizlenince bütün merkezler geri gelir.
+  // Arama Türkçe büyük ve küçük harfe ve işaretlere duyarsızdır. Yerel seçim menüsü kullanılmaz.
+  const q = page.locator("#bolgesel-tedarik [data-bolge-q]");
+  if (await q.count()) {
+    const norm = trNorm;
+    const city = data.yerler[data.yerler.length - 1].il;
+    const want = data.yerler.filter((y) => [y.ad, y.il, y.sektor, y.yer_etiketi].some((t) => norm(t).includes(norm(city)))).map((y) => y.kimlik);
+    await q.scrollIntoViewIfNeeded();
+    await q.fill(city.toLocaleUpperCase("tr"));
+    const r = await page.evaluate(() => {
+      const sec = document.querySelector("#bolgesel-tedarik");
+      const rows = [...sec.querySelectorAll("[data-bolge]")];
+      const hidden = rows.filter((li) => li.hidden);
+      const focusable = hidden.some((li) => { const a = li.querySelector("a"); a.focus(); return document.activeElement === a; });
+      return {
+        shown: rows.filter((li) => !li.hidden && li.getClientRects().length > 0).map((li) => li.dataset.bolge),
+        // Arama sürerken panelin düğmesi ve eski sayısı gizlenir, panel açık durur. Eşleşen satır düğmesiz görünür.
+        open: (() => { const m = sec.querySelector("[data-bolge-more]"); return m ? { btn: m.querySelector("button").hidden, panel: m.querySelector(".faq__panel").dataset.open } : null; })(),
+        // Panelin erişilebilir adı: aria-labelledby ile gösterilen öğelerin metni. Arama sürerken eski "... daha görün" sayısını okumaz.
+        name: (() => { const p = sec.querySelector("[data-bolge-more] .faq__panel"); return p ? (p.getAttribute("aria-labelledby") || "").split(/\s+/).map((id) => (document.getElementById(id) || {}).textContent || "").join(" ").replace(/\s+/g, " ").trim() : ""; })(),
+        sonuc: (sec.querySelector("[data-bolge-sonuc]") || {}).textContent || "", durum: (document.querySelector("#durum") || {}).textContent || "",
+        focusable, select: sec.querySelectorAll("select").length,
+      };
+    });
+    const inMore = want.some((id) => data.yerler.findIndex((y) => y.kimlik === id) >= 6);
+    check(engine, size, "arama şehir, merkez ve sektörde eşleşenleri gösterir", r.shown.slice().sort().join() === want.slice().sort().join() && want.length > 0
+      && r.sonuc.includes(String(want.length)) && r.durum.includes(String(want.length)) && (!r.open || (r.open.btn === true && r.open.panel === "true")) && r.select === 0 && inMore !== null, JSON.stringify({ want, r }));
+    // ASCII yazım da eşleşir: "Istanbul" yazılınca İstanbul'daki merkezler bulunur.
+    await q.fill("Istanbul");
+    const ascii = await page.evaluate(() => [...document.querySelectorAll("#bolgesel-tedarik [data-bolge]")].filter((li) => !li.hidden).length);
+    const ist = data.yerler.filter((y) => [y.ad, y.il, y.sektor, y.yer_etiketi].some((t) => trNorm(t).includes("istanbul"))).length;
+    check(engine, size, "arama ASCII yazımı da eşleştirir", ist > 0 && ascii === ist, `${ascii}/${ist}`);
+    check(engine, size, "aramada gizlenen merkez odaklanamaz", r.focusable === false, "");
+    check(engine, size, "arama sürerken panelin erişilebilir adı eski sayıyı okumaz", !!r.name && !/daha görün/.test(r.name), r.name);
+    await q.fill("zzzz eşleşmeyen");
+    const z = await page.evaluate(() => { const sec = document.querySelector("#bolgesel-tedarik"); const e = sec.querySelector("[data-bolge-bos]"); return { bos: !!e && !e.hidden, shown: sec.querySelectorAll("[data-bolge]:not([hidden])").length }; });
+    check(engine, size, "aramada eşleşme yoksa durum cümlesi görünür", z.bos && z.shown === 0, JSON.stringify(z));
+    await q.fill("");
+    const back = await page.evaluate(() => { const sec = document.querySelector("#bolgesel-tedarik"); const m = sec.querySelector("[data-bolge-more]"); return { hidden: sec.querySelectorAll("[data-bolge][hidden]").length, bos: sec.querySelector("[data-bolge-bos]").hidden, btn: m ? m.querySelector("button").hidden : false, expanded: m ? m.querySelector("button").getAttribute("aria-expanded") : "", panel: m ? m.querySelector(".faq__panel").dataset.open : "" }; });
+    check(engine, size, "arama temizlenince bütün merkezler ve panelin önceki durumu geri gelir", back.hidden === 0 && back.bos === true && back.btn === false && back.expanded === back.panel, JSON.stringify(back));
+  } else check(engine, size, "arama şehir, merkez ve sektörde eşleşenleri gösterir", false, "arama alanı yok");
+  // Eylem: teklif formunu o yerin ürünüyle doldurur ve odağı ürün alanına taşır.
+  const first = m.items.find((i) => i.teklif);
+  if (first) {
+    await page.fill("#t-urun", "");
+    const link = page.locator(`[data-bolge="${first.id}"] a[data-bolge-teklif]`);
+    await link.scrollIntoViewIfNeeded();
+    await link.click();
+    await page.waitForTimeout(100);
+    const after = await page.evaluate(() => ({ value: document.querySelector("#t-urun").value, focus: document.activeElement && document.activeElement.id, hash: location.hash, sum: document.querySelector("[data-rfq-sum-t]").textContent }));
+    check(engine, size, "teklif bağlantısı formu o yerin ürünüyle doldurur", after.value === first.teklif.urun && after.focus === "t-urun" && after.hash === "#teklif" && after.sum.includes(first.teklif.urun), JSON.stringify(after));
+    // Odak ve özet tıklamayla aynı karede gelir. Gecikmeli odak yoktur.
+    await page.fill("#t-urun", "");
+    const tick = await page.evaluate((id) => {
+      document.querySelector(`[data-bolge="${id}"] a[data-bolge-teklif]`).click();
+      return { focus: document.activeElement && document.activeElement.id, value: document.querySelector("#t-urun").value, sum: document.querySelector("[data-rfq-sum-t]").textContent, hash: location.hash };
+    }, first.id);
+    check(engine, size, "teklif bağlantısı odağı ve özeti aynı anda verir", tick.focus === "t-urun" && tick.value === first.teklif.urun && tick.sum.includes(first.teklif.urun) && tick.hash === "#teklif", JSON.stringify(tick));
+    // Değiştirici tuşlu tıklama bağlantının doğal davranışına bırakılır: alan doldurulmaz.
+    await page.fill("#t-urun", "");
+    const mod = await page.evaluate((id) => {
+      const a = document.querySelector(`[data-bolge="${id}"] a[data-bolge-teklif]`);
+      let prevented = null;
+      const spy = (e) => { prevented = e.defaultPrevented; e.preventDefault(); };
+      document.addEventListener("click", spy);
+      a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true, metaKey: true }));
+      document.removeEventListener("click", spy);
+      return { prevented, value: document.querySelector("#t-urun").value };
+    }, first.id);
+    check(engine, size, "değiştirici tuşlu tıklamada bağlantı doğal davranır", mod.prevented === false && mod.value === "", JSON.stringify(mod));
+    // Kullanıcının yazdığı ürün silinmez. Alan doluysa öneri yazılmaz, odak yine alana gider.
+    await page.fill("#t-urun", "kendi ürünüm");
+    const other = page.locator(`[data-bolge="${m.items[1].id}"] a[data-bolge-teklif]`);
+    await other.scrollIntoViewIfNeeded();
+    await other.click();
+    await page.waitForTimeout(100);
+    const kept = await page.evaluate(() => ({ value: document.querySelector("#t-urun").value, focus: document.activeElement && document.activeElement.id }));
+    check(engine, size, "teklif bağlantısı yazılan ürünü silmez", kept.value === "kendi ürünüm" && kept.focus === "t-urun", JSON.stringify(kept));
+  }
+}
+
+// Hareketli sahneler (kullanıcı kararı 11 Kasım 2026, TypeScript hareket paketi).
+// Eski sözleşme (24 px kayan süs katmanı, data-surface ve data-axis) bu kararla değişti. Güvenlik şartları aynı kaldı:
+//   hareket azaltmada ve veri tasarrufunda paket indirilmez, içerik ve odak yerinde kalır, işaretçi yalnız ince işaretçide çalışır,
+//   ekran dışında ve gizli sekmede iş yapılmaz, kaydırma durunca kare istenmez.
+// Sözleşme: sahne kökü data-motion-scene ve data-axis taşır. Hareketli grup data-motion-layer taşır.
+// Denetleyici başlayınca kökte data-motion-ready="true" olur. Kaydırma ilerlemesi kökte --scene-progress (0..1) olarak yazar.
+// Sunum, ortak hareket sözleşmesine göre hedefe 520 ms ve merkezi eğriyle gider. --scene-progress anlık anlamsal değerdir.
+// Hareket sınırı tasarım kararıdır: katman en çok 160 CSS px (640 px altında 56 CSS px) kayar, ölçek 0,65 ile 1,08 arasında kalır.
+async function motion(browser, engine, w, h, prepare) {
+  const size = `${w}x${h} hareket`;
+  const ctx = await newCtx(browser, { viewport: { width: w, height: h } });
+  if (prepare) await prepare(ctx);
+  const loaded = [];
+  ctx.on("request", (r) => { const p = new URL(r.url()).pathname; if (/\/hareket\/[^/]+\.js$/.test(p)) loaded.push(p); });
+  // Kare isteklerini sayar. Sayaç testin kendisine aittir, sayfanın davranışını değiştirmez.
+  await ctx.addInitScript(() => {
+    const raf = window.requestAnimationFrame.bind(window);
+    window.__raf = 0;
+    window.requestAnimationFrame = (cb) => { window.__raf++; return raf(cb); };
+  });
+  const page = await newTab(ctx);
+  await open(page);
+  const ready = await page.waitForFunction(() => [...document.querySelectorAll("[data-motion-scene]")].every((e) => e.dataset.motionReady === "true"), null, { timeout: 8000 }).then(() => true, () => false);
+  const info = await page.evaluate(() => [...document.querySelectorAll("[data-motion-scene]")].map((e) => ({
+    name: e.dataset.motionScene, axis: e.dataset.axis || "", ready: e.dataset.motionReady || "", layers: e.querySelectorAll("[data-motion-layer]").length,
+    hidden: e.getAttribute("aria-hidden") === "true" && getComputedStyle(e).pointerEvents === "none",
+  })));
+  const plan = info.some((s) => s.name === "depth");
+  const want = ["flow", "grid", "route", "rise", "magnet", ...(plan ? ["depth"] : [])].sort().join(" ");
+  check(engine, size, "sahneler hazır, süstür ve tıklanmaz", ready && info.map((s) => s.name).sort().join(" ") === want && info.every((s) => s.hidden && s.layers >= 2), JSON.stringify(info));
+  check(engine, size, "üç hareket ekseni var", new Set(info.map((s) => s.axis)).size === 3, info.map((s) => s.axis).join(" "));
+  check(engine, size, "hareket paketi önyükleyiciden sonra dinamik yüklenir", loaded[0] === "/hareket/baslat.js" && loaded.includes("/hareket/sahne.js"), loaded.join(" "));
+  // Bir sahnenin ölçümü: ilerleme, katmanların dönüşümü ve başlığın sahneye göre yeri.
+  const read = (sel) => page.evaluate((q) => {
+    const sec = document.querySelector(q);
+    const s = sec && sec.querySelector("[data-motion-scene]");
+    if (!s) return null;
+    const sr = s.getBoundingClientRect();
+    const head = sec.querySelector("h1, h2");
+    const hr = head ? head.getBoundingClientRect() : sr;
+    // SVG katmanının matris değeri görünüm kutusu birimidir. CSS px için SVG ölçeğiyle (unit) çarpılır. DOM katmanında unit 1'dir.
+    const svg = s.querySelector("svg");
+    const box = svg ? svg.getBoundingClientRect() : null;
+    const unit = box ? Math.max(box.width / 1200, box.height / 640) : 1;
+    const layers = [...s.querySelectorAll("[data-motion-layer]")].map((l) => {
+      const m = new DOMMatrix(getComputedStyle(l).transform === "none" ? undefined : getComputedStyle(l).transform);
+      const k = l instanceof SVGElement ? unit : 1;
+      return { x: m.m41 * k, y: m.m42 * k, s: Math.hypot(m.m11, m.m12), r: Math.atan2(m.m12, m.m11) * 180 / Math.PI };
+    });
+    return { p: s.style.getPropertyValue("--scene-progress"), layers, head: [Math.round(hr.left - sr.left), Math.round(hr.top - sr.top), Math.round(hr.width)].join(","), narrow: innerWidth < 640 };
+  }, sel);
+  // Bölümün başlığındaki beliriş geçişi doğal olarak biter, sonra ölçülür. Yalnız süren ya da bekleyen geçiş beklenir.
+  const settled = (sel) => page.waitForFunction((q) => {
+    const sec = document.querySelector(q);
+    // Bölümün içindeki bütün CSS geçişleri ve canlandırmaları beklenir, ekranın hemen altındaki başlık da dahil.
+    // Beliriş geçişi ekran dışında başlayabilir. Yalnız ekrandaki öğeyi beklemek bu geçişi kaçırıyordu (1440 px'te 160,008 px ölçümü).
+    return !sec || sec.getAnimations({ subtree: true }).every((an) => an.playState !== "running" && !an.pending);
+  }, sel, { timeout: 5000 });
+  // Katman dönüşümü hedefe 520 ms (--dur-3) geçişle gider. Ölçüm geçiş bittikten sonra yapılır.
+  const scroll = async (sel, dy) => { await page.evaluate((d) => scrollBy(0, d), dy); await page.waitForTimeout(700); await settled(sel); return read(sel); };
+  const bring = async (sel, frac) => { await page.evaluate(([q, f]) => { const e = document.querySelector(q); if (e) scrollBy(0, e.getBoundingClientRect().top - innerHeight * f); }, [sel, frac]); await page.waitForTimeout(700); await settled(sel); return read(sel); };
+  const num = (x) => (x && x.p !== "" ? Number(x.p) : NaN);
+  for (const sel of ["#bolgesel-tedarik", "#ureticiler"]) {
+    const a = await bring(sel, 0.85);
+    const b = await scroll(sel, 260);
+    const c = await scroll(sel, -140);
+    check(engine, size, `${sel} ilerlemesi kaydırma yönünü izler`, num(b) > num(a) && num(c) < num(b) && [a, b, c].every((x) => num(x) >= 0 && num(x) <= 1), JSON.stringify([a, b, c].map((x) => x && x.p)));
+    const d = (k) => a && b && c ? { ab: [b.layers[k].x - a.layers[k].x, b.layers[k].y - a.layers[k].y], bc: [c.layers[k].x - b.layers[k].x, c.layers[k].y - b.layers[k].y] } : null;
+    const moves = a ? a.layers.map((_l, k) => d(k)) : [];
+    const mag = (v) => Math.hypot(v[0], v[1]);
+    const moved = moves.filter((m) => m && mag(m.ab) >= 4);
+    // Ters yön: aşağı kaydırmadaki kayma ile yukarı kaydırmadaki kayma zıt işaretlidir.
+    const back = moved.every((m) => m.ab[0] * m.bc[0] + m.ab[1] * m.bc[1] < 0);
+    check(engine, size, `${sel} katmanları kaydırmayla taşınır ve geri döner`, moved.length >= 2 && back, JSON.stringify(moves.slice(0, 4)));
+    const speeds = moved.map((m) => mag(m.ab)).sort((x, y) => x - y);
+    check(engine, size, `${sel} katmanları farklı hızda kayar`, speeds.length >= 2 && speeds[speeds.length - 1] >= speeds[0] * 1.25, JSON.stringify(speeds.map((x) => Math.round(x))));
+    const limit = a && a.narrow ? 56 : 160;
+    const out = [a, b, c].flatMap((x) => (x ? x.layers : [])).filter((l) => Math.abs(l.x) > limit + 0.5 || Math.abs(l.y) > limit + 0.5 || l.s < 0.649 || l.s > 1.081);
+    check(engine, size, `${sel} kayma ve ölçek sınırda kalır`, out.length === 0, JSON.stringify(out.slice(0, 3)));
+    check(engine, size, `${sel} kaydırmada içerik yerinde kalır`, !!a && a.head === b.head && b.head === c.head, JSON.stringify([a && a.head, b && b.head, c && c.head]));
+  }
+  // Ekran dışındaki sahne için iş yapılmaz.
+  const off0 = await read(".band--hero");
+  await page.evaluate(() => scrollBy(0, 150));
+  await page.waitForTimeout(250);
+  const off1 = await read(".band--hero");
+  check(engine, size, "ekran dışındaki sahne güncellenmez", !!off0 && off0.p === off1.p && JSON.stringify(off0.layers) === JSON.stringify(off1.layers), JSON.stringify([off0 && off0.p, off1 && off1.p]));
+  // Gizli sekmede hesap yapılmaz. Sekme görünür olunca ekrandaki sahne güncellenir. hidden ve visibilityState birlikte değişir.
+  const v0 = await read("#ureticiler");
+  await page.evaluate(() => { for (const [k, v] of [["hidden", true], ["visibilityState", "hidden"]]) Object.defineProperty(document, k, { configurable: true, get: () => v }); scrollBy(0, -160); });
+  await page.waitForTimeout(250);
+  const v1 = await read("#ureticiler");
+  await page.evaluate(() => { for (const [k, v] of [["hidden", false], ["visibilityState", "visible"]]) Object.defineProperty(document, k, { configurable: true, get: () => v }); document.dispatchEvent(new Event("visibilitychange")); });
+  await page.waitForTimeout(250);
+  const v2 = await read("#ureticiler");
+  check(engine, size, "gizli sekmede sahne güncellenmez, görünür olunca güncellenir", !!v0 && v0.p === v1.p && v2.p !== v1.p, JSON.stringify([v0 && v0.p, v1 && v1.p, v2 && v2.p]));
+  // Kaydırma durunca kare istenmez. Karşılamadaki örnek arama önce durdurulur, o hareket ayrı bir sözleşmedir.
+  await page.evaluate(() => { const q = document.querySelector("#q-ana"); if (q) q.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
+  await page.waitForTimeout(900);
+  await page.evaluate(() => { window.__raf = 0; });
+  await page.waitForTimeout(1200);
+  const idle = await page.evaluate(() => window.__raf);
+  check(engine, size, "kaydırma durunca kare istenmez", idle === 0, String(idle));
+  // İnce işaretçi: sahne en çok 8 px eğilir. İşaretçi sahneden çıkınca ya da sayfadan ayrılınca eğim sıfıra döner.
+  if (w >= 1024) {
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.waitForTimeout(300);
+    await settled(".band--hero");
+    const box = await page.evaluate(() => { const r = document.querySelector(".band--hero").getBoundingClientRect(); const top = Math.max(0, r.top); const bottom = Math.min(innerHeight, r.bottom); return { x: r.left, y: top, w: r.width, h: bottom - top }; });
+    const tilt = () => page.evaluate(() => { const s = document.querySelector(".band--hero [data-motion-scene]"); return { tx: s.style.getPropertyValue("--tx"), ty: s.style.getPropertyValue("--ty") }; });
+    const headBefore = await read(".band--hero");
+    await page.mouse.move(box.x + box.w * 0.5, box.y + box.h * 0.5);
+    await page.mouse.move(box.x + box.w * 0.9, box.y + box.h * 0.85);
+    await page.waitForTimeout(150);
+    const t1 = await tilt();
+    const headIn = await read(".band--hero");
+    const px = (v) => Math.abs(parseFloat(v) || 0);
+    check(engine, size, "işaretçi sahneyi sınırlı eğer, içerik yerinde kalır", (px(t1.tx) > 0 || px(t1.ty) > 0) && px(t1.tx) <= 8 && px(t1.ty) <= 8 && headBefore.head === headIn.head, JSON.stringify({ t1, headBefore: headBefore.head, headIn: headIn.head }));
+    await page.mouse.move(box.x + 10, Math.max(2, box.y - 40));
+    await page.waitForTimeout(150);
+    const t2 = await tilt();
+    await page.mouse.move(box.x + box.w * 0.8, box.y + box.h * 0.8);
+    await page.waitForTimeout(150);
+    await page.evaluate(() => document.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: null, pointerType: "mouse" })));
+    await page.waitForTimeout(150);
+    const t3 = await tilt();
+    const zero = (t) => px(t.tx) === 0 && px(t.ty) === 0;
+    check(engine, size, "işaretçi çıkınca eğim sıfıra döner", zero(t2) && zero(t3), JSON.stringify({ t2, t3 }));
+    const tr = await page.evaluate(() => { const l = document.querySelector(".band--hero .scene__tilt"); const s = l ? getComputedStyle(l) : null; return s ? { prop: s.transitionProperty, dur: s.transitionDuration, fn: s.transitionTimingFunction } : null; });
+    const parts = (v) => v.split(/,\s*(?![^()]*\))/);
+    const i = tr ? parts(tr.prop).indexOf("transform") : -1;
+    check(engine, size, "eğim iki yönde aynı süre ve eğriyle döner", i >= 0 && parts(tr.dur)[i] === "0.52s" && parts(tr.fn)[i] === "cubic-bezier(0.65, 0, 0.35, 1)", JSON.stringify(tr));
+  }
+  await ctx.close();
+  // Dokunmatik ekran: üzerine gelmeden, yalnız kaydırmayla sahne ilerler. Dokunma eğim yazmaz.
+  const tctx = await newCtx(browser, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  if (prepare) await prepare(tctx);
+  const tp = await newTab(tctx);
+  await open(tp);
+  await tp.waitForFunction(() => document.querySelector("[data-motion-scene]")?.dataset.motionReady === "true", null, { timeout: 8000 }).catch(() => {});
+  await tp.evaluate(() => { const e = document.querySelector("#ureticiler"); if (e) scrollBy(0, e.getBoundingClientRect().top - innerHeight * 0.8); });
+  await tp.waitForTimeout(250);
+  const tA = await tp.evaluate(() => document.querySelector("#ureticiler [data-motion-scene]")?.style.getPropertyValue("--scene-progress") || "");
+  await tp.evaluate(() => scrollBy(0, 200));
+  await tp.waitForTimeout(250);
+  const tB = await tp.evaluate(() => document.querySelector("#ureticiler [data-motion-scene]")?.style.getPropertyValue("--scene-progress") || "");
+  await tp.touchscreen.tap(195, 400).catch(() => {});
+  const tT = await tp.evaluate(() => document.querySelector("#ureticiler [data-motion-scene]")?.style.getPropertyValue("--tx") || "");
+  check(engine, "390x844 dokunmatik", "dokunmatik ekranda sahne kaydırmayla ilerler, dokunma eğim yazmaz", tA !== "" && Number(tB) > Number(tA) && tT === "", JSON.stringify([tA, tB, tT]));
+  await tctx.close();
+  // Hareket azaltma: hareket paketi indirilmez. Sahne durağandır ve görünür.
+  const rctx = await newCtx(browser, { viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  if (prepare) await prepare(rctx);
+  const rloaded = [];
+  rctx.on("request", (r) => { const p = new URL(r.url()).pathname; if (/\/hareket\/[^/]+\.js$/.test(p)) rloaded.push(p); });
+  const rp = await newTab(rctx);
+  await open(rp);
+  await rp.waitForTimeout(600);
+  await rp.evaluate(() => { const e = document.querySelector("#ureticiler"); if (e) scrollBy(0, e.getBoundingClientRect().top - innerHeight * 0.6); });
+  await rp.waitForTimeout(250);
+  await rp.evaluate(() => scrollBy(0, 200));
+  await rp.waitForTimeout(250);
+  const rs = await rp.evaluate(() => [...document.querySelectorAll("[data-motion-scene]")].map((s) => ({
+    p: s.style.getPropertyValue("--scene-progress"), ready: s.dataset.motionReady || "",
+    moved: [...s.querySelectorAll("[data-motion-layer]")].some((l) => l.style.transform !== ""),
+    shown: s.getBoundingClientRect().height > 0 && getComputedStyle(s).visibility === "visible",
+  })));
+  check(engine, "390x844 hareket azaltma", "hareket azaltmada paket indirilmez ve sahne durağandır", !rloaded.includes("/hareket/sahne.js") && rs.length >= 5 && rs.every((x) => x.p === "" && x.ready === "" && !x.moved && x.shown), JSON.stringify({ rloaded, rs: rs.slice(0, 3) }));
+  await rctx.close();
+  notRun.push(`${engine}: veri tasarrufu (Save-Data) tarayıcıda öykünülmedi. Kapı önyükleyicinin bu tercihi okuduğunu kaynakta denetler`);
+}
+
+// Kısa yatay ekranda teklif bağlantısı: odaklanan ürün alanı ekranda tam görünür.
+// Sabit üst çubuk ve alt çubuk alanı örtmez. Alan en az 44 px yüksekliktedir.
+async function prefillShort(page, engine) {
+  const size = "568x320";
+  await page.setViewportSize({ width: 568, height: 320 });
+  await open(page);
+  await page.waitForTimeout(300);
+  const link = page.locator("[data-bolge] a[data-bolge-teklif]").first();
+  await link.scrollIntoViewIfNeeded();
+  await page.fill("#t-urun", "");
+  await link.click();
+  await page.waitForTimeout(150);
+  const m = await page.evaluate(() => {
+    const el = document.activeElement;
+    const r = el.getBoundingClientRect();
+    const covers = [...document.querySelectorAll("header, .header, .bottomnav, .cartbar")].filter((b) => {
+      const s = getComputedStyle(b);
+      // Boş sepet çubuğu saydam, etkisiz (inert) ve tıklanmaz durur. O çubuk alanı örtmez. Görünen ve tıklanan çubuk sayılır.
+      return (s.position === "sticky" || s.position === "fixed") && b.getClientRects().length && s.visibility !== "hidden" && !b.inert && s.opacity !== "0" && s.pointerEvents !== "none";
+    }).map((b) => b.getBoundingClientRect()).filter((b) => b.bottom > r.top && b.top < r.bottom && b.right > r.left && b.left < r.right);
+    return { id: el.id, top: Math.round(r.top), bottom: Math.round(r.bottom), h: Math.round(r.height), vh: innerHeight, covered: covers.length };
+  });
+  check(engine, size, "kısa yatay ekranda odaklanan ürün alanı tam görünür", m.id === "t-urun" && m.top >= 0 && m.bottom <= m.vh && m.h >= 44 && m.covered === 0, JSON.stringify(m));
+}
+
+// Alıcı talep bölümü (kullanıcı kararı 11 Kasım 2026). Planlanan hizmettir: gerçek alıcı profili ya da yayımlanmış talep listesi değildir.
+// 24 bölge ve sektör alanı aynı HTML içindedir. İlk 6 alan açıktır, kalan 18 alan sayfanın açılır panelindedir (proje kuralı: details yok).
+// Betik olmadan panel açık durur, 24 alan okunur.
+// Grup süzgeci aria-pressed taşır, sonuç sayısını yazar ve duyurur. Eşleşmeyen alan gizlenir ve odak sırasından çıkar.
+async function alici(page, engine, w, h) {
+  const size = `${w}x${h}`;
+  await page.setViewportSize({ width: w, height: h });
+  await open(page);
+  await page.waitForTimeout(400);
+  check(engine, size, "alıcı verisi tek dosyada var ve tam 24 alan içerir", !!aliciData && Array.isArray(aliciData.yerler) && aliciData.yerler.length === 24, aliciFile);
+  const data = aliciData || { yerler: [] };
+  // Veri sözleşmesi: tek sektör, kanonik kod, geçerli grup, işletme türü, kaynaklı olgu ve 3 koşul.
+  const badRec = data.yerler.filter((y) => typeof y.sektor !== "string" || !y.sektor || typeof y.sektor_kodu !== "string" || !GRUPLAR.includes(y.grup) || !y.isletme
+    || !y.fact || !(y.fact.source_url || []).length || !(y.fact.source_url || []).every((u) => /^https:\/\//.test(u)) || !y.editorial || (y.editorial.kosullar || []).length !== 3).map((y) => y.kimlik);
+  check(engine, size, "alıcı kayıtları sözleşmeye uyar", data.yerler.length === 24 && badRec.length === 0 && new Set(data.yerler.map((y) => y.kimlik)).size === 24, badRec.join(", "));
+  // Yer başına en çok 2 farklı sektör: tedarik ve alıcı verisinin birleşimi.
+  const perPlace = {};
+  for (const y of [...((bolgeData || {}).yerler || []), ...data.yerler]) (perPlace[yerAnahtari(y)] ||= new Set()).add(y.sektor_kodu);
+  const crowded = Object.entries(perPlace).filter(([, set]) => set.size > 2).map(([k, set]) => `${k}: ${[...set].join("/")}`);
+  check(engine, size, "bir yerde en çok 2 farklı sektör var", crowded.length === 0 && Object.keys(perPlace).length > 0, crowded.join(" | "));
+  const m = await page.evaluate(() => {
+    const sec = document.querySelector("#alici-talepleri");
+    if (!sec) return null;
+    const follows = (a, b) => !!a && !!b && !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const more = sec.querySelector("[data-talep-more]");
+    const items = [...sec.querySelectorAll("[data-talep]")].map((li) => ({
+      id: li.dataset.talep, grup: li.dataset.grup, inMore: !!more && more.contains(li),
+      sektor: (li.querySelector("[data-talep-sektor]") || {}).textContent?.trim() || "",
+      isletme: (li.querySelector("[data-talep-isletme]") || {}).textContent?.trim() || "",
+      neden: (li.querySelector("[data-talep-neden]") || {}).textContent?.trim() || "",
+      kosul: li.querySelectorAll("[data-talep-kosul] > li").length,
+      src: (() => { const a = li.querySelector("a[data-talep-kaynak]"); return a ? { href: a.getAttribute("href"), size: parseFloat(getComputedStyle(a).fontSize) } : null; })(),
+      teklif: (() => { const a = li.querySelector("a[data-bolge-teklif]"); return a ? { href: a.getAttribute("href"), urun: a.dataset.urun || "", text: a.textContent.trim() } : null; })(),
+      ask: (li.querySelector(".bolge__ask-t") || {}).textContent?.trim() || "",
+    }));
+    const help = sec.querySelector("[data-talep-nasil]");
+    return {
+      order: follows(document.querySelector("#bolgesel-tedarik"), sec) && follows(sec, document.querySelector("footer")) && !!sec.closest("main"),
+      plan: sec.hasAttribute("data-plan") && /Planlanan hizmet/.test((sec.querySelector(".plan-tag") || {}).textContent || ""),
+      title: (sec.querySelector("h2") || {}).textContent?.replace(/\s+/g, " ").trim() || "",
+      giris: (sec.querySelector("[data-talep-giris]") || {}).textContent?.trim() || "",
+      not: (sec.querySelector("[data-talep-not]") || {}).textContent?.trim() || "",
+      satici: (sec.querySelector("[data-talep-satici]") || {}).textContent?.trim() || "",
+      items, moreOpen: more ? more.querySelector("button").getAttribute("aria-expanded") === "true" : null,
+      help: help ? { open: help.querySelector("button").getAttribute("aria-expanded") === "true", summary: help.querySelector("button").textContent.trim(), text: help.textContent, inputs: help.querySelectorAll("input, textarea, select").length } : null,
+      text: sec.innerText, imgs: sec.querySelectorAll("img").length,
+      overflow: Math.round(document.documentElement.scrollWidth - innerWidth),
+    };
+  });
+  check(engine, size, "alıcı talep bölümü tedarik bölümünden sonra ve footer'dan önce gelir", !!m && m.order, JSON.stringify(m && m.order));
+  if (!m) return;
+  check(engine, size, "alıcı talep bölümü planlanan hizmet etiketini taşır", m.plan, "");
+  check(engine, size, "alıcı talep bölümünün başlığı ve açıklaması doğru", m.title.endsWith("İhtiyacınızı yazın. Uygun satıcılar sizi bulsun.")
+    && m.giris === "İşletmenizin bulunduğu bölgeyi ve alacağınız ürünü seçin. Talebiniz için gereken bilgileri hazırlayın."
+    && m.not === "Bu bölüm planlanan alım alanlarını gösterir. Yayımlanmış alıcı veya talep listesi değildir."
+    && m.satici === "Satıcıysanız, ürünlerinize ihtiyaç duyabilecek işletme türlerini inceleyin.", JSON.stringify({ t: m.title, g: m.giris, n: m.not, s: m.satici }));
+  const ids = m.items.map((i) => i.id).join(" ");
+  check(engine, size, "24 alanın hepsi HTML içinde ve veriyle aynı sırada", ids === data.yerler.map((y) => y.kimlik).join(" ") && m.items.length === 24, ids);
+  check(engine, size, "ilk 6 alan açık, kalan 18 alan kapalı panelde", m.items.slice(0, 6).every((i) => !i.inMore) && m.items.slice(6).every((i) => i.inMore) && m.moreOpen === false, JSON.stringify(m.items.map((i) => i.inMore ? 1 : 0).join("")));
+  const badItem = m.items.filter((i) => { const y = data.yerler.find((x) => x.kimlik === i.id); return !y || i.sektor !== y.sektor || i.isletme !== y.isletme || i.neden !== y.fact.metin || i.kosul !== 3 || i.grup !== y.grup
+    || !i.src || !y.fact.source_url.includes(i.src.href) || i.src.size < 14 || !i.teklif || i.teklif.href !== "#teklif" || i.teklif.urun !== y.editorial.teklif_urun; }).map((i) => i.id);
+  check(engine, size, "her alan sektörü, işletme türünü, kaynağı, 3 koşulu ve teklif eylemini gösterir", badItem.length === 0, badItem.join(", "));
+  // Alıcı eylemi gerçek gönderim yapmaz: düğme talebi hazırlamaya çağırır. Koşul başlığı hazırlığı söyler.
+  check(engine, size, "alıcı düğmesi talebi hazırlamaya çağırır", m.items.length > 0 && m.items.every((i) => i.teklif && i.teklif.text === "Talebinizi hazırlayın" && i.ask === "Teklif için hazırlanın"), JSON.stringify(m.items[0] && { t: m.items[0].teklif, a: m.items[0].ask }));
+  // Seçilen alım alanı formun yanında yazar. Ürün alanı boşsa öneri yazılır, doluysa yazılan ürün korunur. Satır teslimat adresi gibi yazmaz.
+  if (m.items[0]) {
+    const y0 = data.yerler.find((x) => x.kimlik === m.items[0].id);
+    await page.fill("#t-urun", "");
+    const link = page.locator(`[data-talep="${m.items[0].id}"] a[data-bolge-teklif]`);
+    await link.scrollIntoViewIfNeeded();
+    await link.click();
+    await page.waitForTimeout(100);
+    const sel = await page.evaluate(() => { const e = document.querySelector("[data-rfq-alan]"); return { shown: !!e && !e.hidden && e.getBoundingClientRect().height > 0, text: e ? e.textContent.trim() : "", inForm: !!e && !!e.closest("#teklif"), value: document.querySelector("#t-urun").value }; });
+    check(engine, size, "seçilen alım alanı formun yanında yazar", sel.shown && sel.inForm && y0 && sel.text === `Seçtiğiniz alım alanı: ${y0.isletme}, ${y0.ad}.` && !/adres|teslimat/i.test(sel.text) && sel.value === y0.editorial.teklif_urun, JSON.stringify(sel));
+    // Tedarik bölümündeki bağlantı alım alanı seçmez: satır gizlenir.
+    const sup = page.locator("[data-bolge] a[data-bolge-teklif]").first();
+    await sup.scrollIntoViewIfNeeded();
+    await sup.click();
+    await page.waitForTimeout(100);
+    const gone = await page.evaluate(() => { const e = document.querySelector("[data-rfq-alan]"); return !!e && e.hidden; });
+    check(engine, size, "tedarik bağlantısı seçili alım alanını kaldırır", gone, String(gone));
+    await page.fill("#t-urun", "");
+  }
+  check(engine, size, "alıcı bölümü gerçek profil ya da talep varmış gibi yazmaz", !/\d+\s*(alıcı|talep|işletme)\s*(var|bekliyor|listelendi)|talepler yayında|aktif talep|doğrulanmış alıcı/i.test(m.text) && m.imgs === 0, (m.text.match(/.{0,30}(aktif talep|talepler yayında|alıcı var).{0,30}/i) || [""])[0]);
+  check(engine, size, "işletme listeleme yardımı kapalı panelde bilgi olarak durur, sahte kayıt yoktur", !!m.help && m.help.open === false && m.help.summary === "İşletmenizi nasıl listelersiniz?" && m.help.inputs === 0
+    && ["Şirket adı", "Bölge", "Faaliyet", "Alım ihtiyacı"].every((k) => m.help.text.includes(k)), JSON.stringify(m.help && { s: m.help.summary, i: m.help.inputs }));
+  check(engine, size, "alıcı bölümü yatay taşmaz", m.overflow <= 0, `${m.overflow}px`);
+  // Grup süzgeci: tıklama anında süzer, sayıyı yazar ve duyurur. Eşleşmeyen alan gizlenir, odaklanamaz. Eşleşen alan kapalı paneldeyse panel açılır.
+  const counts = Object.fromEntries(GRUPLAR.map((g) => [g, data.yerler.filter((y) => y.grup === g).length]));
+  const target = GRUPLAR.find((g) => counts[g] > 0 && data.yerler.slice(6).some((y) => y.grup === g)) || GRUPLAR[0];
+  const btn = page.locator(`#alici-talepleri [data-talep-grup="${target}"]`);
+  if (await btn.count()) {
+    await btn.scrollIntoViewIfNeeded();
+    await btn.click();
+    const f = await page.evaluate((g) => {
+      const sec = document.querySelector("#alici-talepleri");
+      const items = [...sec.querySelectorAll("[data-talep]")];
+      const shown = items.filter((li) => !li.hidden && li.getClientRects().length > 0);
+      const hiddenFocusable = items.filter((li) => li.hidden).some((li) => { const a = li.querySelector("a"); a.focus(); return document.activeElement === a; });
+      return {
+        pressed: [...sec.querySelectorAll("[data-talep-grup]")].map((b) => `${b.dataset.talepGrup}:${b.getAttribute("aria-pressed")}`),
+        shown: shown.map((li) => li.dataset.grup), all: items.length,
+        // Süzgeç sürerken panelin düğmesi ve eski sayısı gizlenir, panel açık durur.
+        open: sec.querySelector("[data-talep-more] button").hidden === true && sec.querySelector("[data-talep-more] .faq__panel").dataset.open === "true",
+        name: (() => { const p = sec.querySelector("[data-talep-more] .faq__panel"); return (p.getAttribute("aria-labelledby") || "").split(/\s+/).map((id) => (document.getElementById(id) || {}).textContent || "").join(" ").replace(/\s+/g, " ").trim(); })(),
+        sonuc: (sec.querySelector("[data-talep-sonuc]") || {}).textContent || "", durum: (document.querySelector("#durum") || {}).textContent || "", hiddenFocusable,
+      };
+    }, target);
+    const n = counts[target];
+    check(engine, size, "grup süzgeci eşleşen alanları gösterir ve sayıyı yazar", f.shown.length === n && f.shown.every((g) => g === target) && f.open === true && f.sonuc.includes(String(n)) && f.durum.includes(String(n))
+      && f.pressed.filter((x) => x.endsWith(":true")).join() === `${target}:true`, JSON.stringify(f));
+    check(engine, size, "gizlenen alan odaklanamaz", f.hiddenFocusable === false, "");
+    check(engine, size, "süzgeç sürerken panelin erişilebilir adı eski sayıyı okumaz", !!f.name && !/daha görün/.test(f.name), f.name);
+    await page.locator('#alici-talepleri [data-talep-grup=""]').click();
+    const back = await page.evaluate(() => { const sec = document.querySelector("#alici-talepleri"); const b = sec.querySelector("[data-talep-more] button"); return { hidden: sec.querySelectorAll("[data-talep][hidden]").length, sonuc: sec.querySelector("[data-talep-sonuc]").textContent, btn: b.hidden }; });
+    check(engine, size, "tüm gruplar seçilince 24 alan ve panelin düğmesi geri gelir", back.hidden === 0 && back.sonuc.includes("24") && back.btn === false, JSON.stringify(back));
+    const empty = GRUPLAR.find((g) => counts[g] === 0);
+    if (empty) {
+      await page.locator(`#alici-talepleri [data-talep-grup="${empty}"]`).click();
+      const z = await page.evaluate(() => { const sec = document.querySelector("#alici-talepleri"); const e = sec.querySelector("[data-talep-bos]"); return { bos: !!e && !e.hidden, shown: sec.querySelectorAll("[data-talep]:not([hidden])").length }; });
+      check(engine, size, "boş grupta durum cümlesi görünür", z.bos && z.shown === 0, JSON.stringify(z));
+      await page.locator('#alici-talepleri [data-talep-grup=""]').click();
+    }
+  } else check(engine, size, "grup süzgeci eşleşen alanları gösterir ve sayıyı yazar", false, "süzgeç düğmesi yok");
+}
+
+// Yeni bölüm ve hareket denetimleri. --bolge seçeneği yalnız bunları ve betiksiz denetimi çalıştırır.
+async function newChecks(browser, page, engine) {
+  await guarded(engine, "568x320", "kısa ekranda teklif", () => prefillShort(page, engine));
+  await guarded(engine, "320x568", "bölge", () => bolge(page, engine, 320, 568));
+  await guarded(engine, "1440x900", "bölge", () => bolge(page, engine, 1440, 900));
+  await guarded(engine, "320x568", "alıcı", () => alici(page, engine, 320, 568));
+  await guarded(engine, "1440x900", "alıcı", () => alici(page, engine, 1440, 900));
+  await guarded(engine, "390x844 hareket", "hareket", () => motion(browser, engine, 390, 844));
+  await guarded(engine, "1440x900 hareket", "hareket", () => motion(browser, engine, 1440, 900));
+}
+const onlyBolge = process.argv.includes("--bolge");
+// --motor=chromium ya da --motor=webkit yalnız o motoru çalıştırır. Varsayılan ikisidir.
+const motorArg = (process.argv.find((a) => a.startsWith("--motor=")) || "").split("=")[1] || "";
+const ENGINES = [["chromium", chromium], ["webkit", webkit]].filter(([n]) => !motorArg || n === motorArg);
+if (motorArg && !ENGINES.length) throw new Error(`Bilinmeyen motor: ${motorArg}. Seçenekler: chromium, webkit`);
+// Her motor bitince o motorun sonucu hemen yazılır. Böylece bir motor takılırsa öteki motorun sonucu kaybolmaz.
+function report(engine) {
+  const mine = results.filter((r) => r.engine === engine);
+  for (const r of mine.filter((x) => !x.ok)) console.log(`FAIL ${r.engine} ${r.size} ${r.name}${r.detail ? ": " + r.detail : ""}`);
+  for (const n of notRun.filter((x) => x.startsWith(engine))) console.log(`NOT_RUN ${n}`);
+  console.log(`[${engine}] bitti ${new Date().toISOString()}: ${mine.filter((r) => r.ok).length} pass, ${mine.filter((r) => !r.ok).length} fail, ${loadIssues.filter((x) => x.startsWith(engine)).length} yükleme sorunu`);
+}
+
 async function all() {
-  for (const [engine, type] of [["chromium", chromium], ["webkit", webkit]]) {
-    const browser = await type.launch();
+  for (const [engine, type] of ENGINES) {
+    console.log(`[${engine}] başladı ${new Date().toISOString()}`);
+    // Tarayıcı ve ilk sekme sınırlı süre beklenir. Açılamazsa bu motor YÜKLEME olarak NOT_RUN yazılır ve koşu takılmaz.
+    let browser;
+    let page;
+    try {
+      browser = await bounded(type.launch(), 30000, "tarayıcı açma");
+      page = await bounded(browser.newPage(), 30000, "ilk sekme açma");
+    } catch (e) {
+      loadIssues.push(`${engine} başlangıç`);
+      notRun.push(`${engine}: YÜKLEME ${String(e.message || e).split("\n")[0]}`);
+      if (browser) await bounded(browser.close(), 15000, "tarayıcı kapatma").catch(() => {});
+      report(engine);
+      continue;
+    }
     const errors = [];
-    const page = await browser.newPage();
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+    if (onlyBolge) {
+      await newChecks(browser, page, engine);
+      await guarded(engine, "390x844 betiksiz", "betiksiz", () => noScript(browser, engine));
+      check(engine, "tümü", "konsol hatası yok", errors.length === 0, errors.slice(0, 3).join(" | "));
+      await bounded(browser.close(), 15000, "tarayıcı kapatma").catch((e) => notRun.push(`${engine}: YÜKLEME ${e.message}`));
+      report(engine);
+      continue;
+    }
     for (const [w, h] of sizes) await layout(page, engine, w, h);
     // Davranış en dar ekranda da sınanır: 320 px önce gelir.
     await behavior(page, engine, 320, 568);
     await behavior(page, engine, 390, 844);
     await behavior(page, engine, 1440, 900);
+    await planned(page, engine, 320, 568);
+    await planned(page, engine, 1440, 900);
+    await newChecks(browser, page, engine);
     // Yatay telefon: sabit çubuklar. En küçük yatay ekran da sınanır.
     await landscape(page, engine, 844, 390);
     await landscape(page, engine, 568, 320);
@@ -1605,6 +2425,15 @@ async function all() {
       drawn: getComputedStyle(document.querySelector(".reasons .picto .s")).strokeDashoffset,
     }));
     check(engine, "390x844", "hareket azaltmada içerik hemen görünür", rm.shown && rm.drawn === "0px", JSON.stringify(rm));
+    // Hareket azaltmada yüzeyler çizilmiş haliyle durur, geçiş yoktur.
+    const rs = await reduced.evaluate(() => {
+      const path = document.querySelector("[data-surface] path");
+      return {
+        on: [...document.querySelectorAll("[data-motion-scene]")].every((e) => e.dataset.motionReady !== "true"),
+        offset: getComputedStyle(path).strokeDashoffset, dur: getComputedStyle(path).transitionDuration,
+      };
+    });
+    check(engine, "390x844", "hareket azaltmada yüzeyler durağan ve çizili", rs.on && rs.offset === "0px" && /^0s/.test(rs.dur), JSON.stringify(rs));
     await noScript(browser, engine);
     // Büyütülmüş yazı ve zorlanmış renkler yalnız Chromium'da öykünülür.
     if (engine === "chromium") {
@@ -1615,15 +2444,16 @@ async function all() {
     }
     check(engine, "tümü", "konsol hatası yok", errors.length === 0, errors.slice(0, 3).join(" | "));
     await browser.close();
+    report(engine);
   }
+  // Özet: her motorun satırları motor bitince yazıldı. Burada yalnız sayılar tekrarlanır.
   const failed = results.filter((r) => !r.ok);
-  for (const r of failed) console.log(`FAIL ${r.engine} ${r.size} ${r.name}${r.detail ? ": " + r.detail : ""}`);
-  for (const n of notRun) console.log(`NOT_RUN ${n}`);
-  for (const engine of ["chromium", "webkit"]) {
+  for (const [engine] of ENGINES) {
     const mine = results.filter((r) => r.engine === engine);
     console.log(`${engine}: ${mine.filter((r) => r.ok).length} pass, ${mine.filter((r) => !r.ok).length} fail`);
   }
-  return failed.length ? 1 : 0;
+  if (loadIssues.length) console.log(`NOT_RUN yükleme sorunu: ${loadIssues.join(", ")}`);
+  return failed.length || loadIssues.length ? 1 : 0;
 }
 
 // Sınama kipi: testin kendisi sınanır. Her bozulma, sunucudan gelen kaynağa yolda uygulanır (dosyalar değişmez).
@@ -1632,6 +2462,13 @@ async function all() {
 const swap = (from, to) => (text) => text.replace(from, to);
 const add = (css) => (text) => text + "\n" + css;
 const BREAKS = [
+  // Bölgesel tedarik ve yönlü yüzeyler (11 Kasım 2026). En değerli üç bozulma.
+  { name: "teklif bağlantısı yazılan ürünü eziyor", file: "app.js", run: "bolge:1440x900", expect: "teklif bağlantısı yazılan ürünü silmez",
+    apply: swap("        if (!product.value.trim()) {\n          product.value = a.dataset.urun;", "        if (true) {\n          product.value = a.dataset.urun;") },
+  { name: "hareket azaltmada hareket paketi yükleniyor", file: "index.html", run: "motion:390x844", expect: "hareket azaltmada paket indirilmez ve sahne durağandır",
+    apply: swap('<script type="module" src="hareket/baslat.js"></script>', '<script type="module">import("./hareket/sahne.js").then((m) => m.start());</script>') },
+  { name: "bölgede satıcı uyarısı kayboldu", file: "index.html", run: "bolge:320x568", expect: "bölüm satıcı bulunduğu anlamına gelmediğini söyler",
+    apply: swap("Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez.", "") },
   // Beşinci incelemenin bulguları. Her bozulma, düzeltilen bir kusuru geri getirir.
   { name: "seçenek adı seçim işaretinin altına giriyor", file: "styles.css", run: "layout:320x568", expect: "seçenek adı seçim işaretine değmez",
     apply: add(".pref { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 12px; } .pref__mark { grid-column: 1; } .pref__t { grid-column: 2; grid-row: 1; } .pref__on { grid-column: 3; }") },
@@ -1741,7 +2578,7 @@ const BREAKS = [
   { name: "Safari'de üst arama düğmesinin tıklaması yutuluyor", file: "app.js", run: "behavior:390x844", engine: "webkit", expect: "üst arama düğmesinin tıklaması yutulmaz",
     apply: swap("var on = past || pressing || slot.contains(document.activeElement);", "var on = past || slot.contains(document.activeElement);") },
   { name: "sepet örnek olduğunu söylemiyor", file: "index.html", run: "behavior:1440x900", expect: "sepet örnek olduğunu söyler",
-    apply: swap('<small class="cartbar__note">Bu sepet bir örnektir. Ürünler canlı sepete eklenmez.</small>', "") },
+    apply: swap('<small class="cartbar__note">Bu sepet bir örnektir. Ürünler istoc.com sepetine eklenmez.</small>', "") },
   // Sayaç yalnız sayılar ekrandayken başlar. Bu yüzden sayıların ilk ekranda göründüğü boyutta sınanır.
   { name: "sayaç kare gelmeyince yarıda kalıyor", file: "app.js", run: "layout:1440x900", expect: "sayaç gerçek değerde durur",
     apply: (t) => t.replace("window.setTimeout(finish, ms + 250);", "").replace('"use strict";', '"use strict"; window.requestAnimationFrame = function () { return 0; };') },
@@ -1778,6 +2615,16 @@ const BREAKS = [
     apply: swap('c.addEventListener("click", function () { openCat(c, !wide.matches); });', 'c.addEventListener("click", function () { setTimeout(function () { openCat(c, !wide.matches); }, 400); });') },
 ];
 
+// Altıncı sürümün bozulmaları: yeni davranışların testi bunları yakalamalıdır.
+BREAKS.push(
+  { name: "teklif özeti adetle güncellenmiyor", file: "app.js", run: "planned:390x844", expect: "teklif özeti ürün ve adet yazılınca anında güncellenir",
+    apply: swap('qty.addEventListener("input", summary);', "") },
+  { name: "araç ayrıntısı açılmıyor", file: "app.js", run: "planned:390x844", expect: "araç ayrıntısı tıklama anında açılır",
+    apply: swap('$$(".faq, .tool, .libq, .talep__acil")', '$$(".faq, .libq, .talep__acil")') },
+  { name: "yüzey tıklamayı tutuyor", file: "styles.css", run: "planned:390x844", expect: "yüzeyler gizli ve tıklanmaz",
+    apply: add(".surface { pointer-events: auto; }") },
+);
+
 async function selfCheck() {
   // Bozulmalar varsayılan olarak Chromium'da denenir. Yalnız Safari ailesinde görülen bozulma WebKit'te denenir.
   const engines = { chromium, webkit };
@@ -1788,7 +2635,8 @@ async function selfCheck() {
   for (const f of Object.keys(files)) source[f] = await (await fetch(new URL(f, url))).text();
   const lines = [];
   let caught = 0;
-  const chosen = BREAKS.filter((b) => b.name.includes(selfOnly));
+  // --motor verilirse sınama da yalnız o motorda çalışır. Öteki motorun bozulmaları bu koşuda denenmez.
+  const chosen = BREAKS.filter((b) => b.name.includes(selfOnly) && (!motorArg || (b.engine || "chromium") === motorArg));
   const runs = [...new Set(chosen.map((b) => `${b.engine || "chromium"}|${b.run}`))];
   for (const key of runs) {
     const [engine, run] = key.split("|");
@@ -1810,6 +2658,7 @@ async function selfCheck() {
     try {
       const [kind, dims, extra] = run.split(":");
       if (kind === "touch") await touch(browser, engine, prepare);
+      else if (kind === "motion") await motion(browser, engine, ...dims.split("x").map(Number), prepare);
       else if (kind === "noscript") await noScript(browser, engine, prepare);
       else if (kind === "forced") await forcedColors(browser, engine, prepare);
       else if (kind === "scale") await textScale(engine, Number(dims), ...extra.split("x").map(Number), prepare);
@@ -1821,6 +2670,9 @@ async function selfCheck() {
         if (kind === "layout") await layout(page, engine, w, h);
         else if (kind === "landscape") await landscape(page, engine, w, h);
         else if (kind === "focus") await focusTour(page, engine, w, h);
+        else if (kind === "planned") await planned(page, engine, w, h);
+        else if (kind === "bolge") await bolge(page, engine, w, h);
+        else if (kind === "alici") await alici(page, engine, w, h);
         else await behavior(page, engine, w, h);
         await ctx.close();
       }

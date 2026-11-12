@@ -15,11 +15,13 @@ from decimal import ROUND_HALF_UP, Decimal
 from urllib.parse import parse_qsl, quote, unquote, urlencode, urlsplit
 
 from piktogram import icon, picto
-from metin import classify, hidden_known, hidden_texts, norm, norm_hidden, squeeze
+import sahne
+from metin import classify, hidden_known, hidden_texts, norm, norm_hidden, split, squeeze, walk_texts
 from secim import (
-    ALT_KISI, ALT_PLAN, ALT_TUR, BETIK_METNI, DILLER, DIZIN, DIZIN_EN_AZ, DIZIN_OGE, ETIKETLER, GORSELLER, GRUPLAR, IDDIALAR, ODEME_YONTEMLERI,
+    ALT_KISI, ALT_TUR, BETIK_METNI, DILLER, DIZIN, DIZIN_EN_AZ, DIZIN_OGE, ETIKETLER, GORSELLER, GRUPLAR, IDDIALAR, ODEME_YONTEMLERI,
     ONIZLEME_ETIKET, ONIZLEME_OZNITELIK, ONIZLEME_TASARIM, ORNEK_SIPARIS, ORNEK_URUN, OZNITELIK_METNI, PARA, PARA_VARSAYILAN, SOSYAL,
     TASARIM_METNI, URETICILER, URUNLER, VERI_METNI,
+    ARACLAR, DEGER_BOLUMLERI, KUTUPHANE, ODEME_FAYDA, ODEME_PLAN, PLAN_ETIKET, PLAN_METNI,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -150,6 +152,48 @@ def head(no, kicker, hid, title, lead="", link="", split=True):
         '<p class="mh__top" aria-hidden="true"><b class="mh__no">%s</b><span class="mh__kicker">%s</span><span class="mh__bar"></span></p>'
         '<h2 id="%s"><span class="sr-only">%s: </span>%s</h2>%s</header>' % (" mh--split" if split else "", no, kicker, hid, kicker, title, side)
     )
+
+
+# Bölüm sırası. Planlanan bölümler yalnız önizleme derlemesinde vardır.
+# Numara derlemeye göre sırayla verilir. Böylece yayın derlemesinde numara atlanmaz.
+SIRA = ["alici", "kat", "urun", "uretici", "surec", "odeme_plan", "sss", "satici", "yeni-musteri", "yeniden-siparis", "araclar", "dizin", "bolge", "talep"]
+PLANLI = {"odeme_plan", "yeni-musteri", "yeniden-siparis", "araclar", "talep"}
+NO = {k: "%02d" % i for i, k in enumerate([k for k in SIRA if not (YAYIN and k in PLANLI)], 1)}
+
+
+# --- Durağan yüzeyler -------------------------------------------------------------
+# Hareketli sahnesi olmayan bölümlerin arkasında durağan bir yüzey durur: ticaret ağı, nokta alanı ya da sipariş rotası.
+# Yüzey süstür. Okuyucudan gizlidir, tıklanmaz ve hareket etmez. Hareketli sahneler sahne.py dosyasındadır.
+AG_DUGUM = [(80, 120), (230, 60), (360, 190), (520, 90), (660, 210), (820, 70), (980, 170), (1130, 90), (140, 330), (300, 420),
+            (470, 330), (640, 450), (790, 340), (950, 440), (1100, 330), (210, 560), (420, 600), (700, 580), (900, 590), (1150, 540)]
+
+
+def _ag(seed):
+    """Ticaret ağı: düğümler ve her düğümü en yakın iki komşusuna bağlayan çizgiler. seed ağı yansıtır."""
+    nodes = [((1200 - x) if seed % 2 else x, y) for x, y in AG_DUGUM]
+    edges = set()
+    for i, (x, y) in enumerate(nodes):
+        near = sorted((j for j in range(len(nodes)) if j != i), key=lambda j: (nodes[j][0] - x) ** 2 + (nodes[j][1] - y) ** 2)[:2]
+        edges |= {tuple(sorted((i, j))) for j in near}
+    lines = "".join('<path d="M%d %dL%d %d"/>' % (nodes[a] + nodes[b]) for a, b in sorted(edges))
+    dots = "".join('<circle cx="%d" cy="%d" r="3"/>' % (x, y) for x, y in nodes)
+    return lines + dots
+
+
+def _rota(seed):
+    """Sipariş rotası: yüzeyi boydan boya geçen bir yol ve yol üstündeki duraklar."""
+    path = "M-20 %d C 220 %d, 380 %d, 600 %d S 980 %d, 1220 %d" % ((420, 300, 520, 380, 250, 330) if seed % 2 else (200, 330, 120, 260, 420, 300))
+    stops = [(150, 300), (420, 420), (600, 380), (860, 290), (1080, 320)] if seed % 2 else [(150, 260), (400, 190), (600, 260), (850, 360), (1080, 310)]
+    return '<path d="%s"/>' % path + "".join('<circle cx="%d" cy="%d" r="5"/>' % (x, y) for x, y in stops)
+
+
+def surface(kind, seed=0):
+    """Durağan bir bölüm yüzeyi: ticaret ağı, sipariş rotası ya da nokta alanı. Süstür ve hareket etmez.
+    Hareketli sahneler sahne.py dosyasındadır (kullanıcı kararı 11 Kasım 2026)."""
+    if kind == "nokta":
+        return '<span class="surface surface--nokta" aria-hidden="true" data-surface></span>'
+    body = {"ag": _ag, "rota": _rota}[kind](seed)
+    return '<span class="surface surface--%s" aria-hidden="true" data-surface><svg viewBox="0 0 1200 640" preserveAspectRatio="xMidYMid slice" focusable="false">%s</svg></span>' % (kind, body)
 
 
 # --- Para: her tutar dört para biriminde hesaplanır ---------------------------
@@ -541,14 +585,299 @@ OP_IMG = dict((s, img) for s, img, _c in URUNLER)[ORNEK_SIPARIS]
 ONERI_NOTU = (
     '<aside class="demo" aria-label="Öneri notu"><div class="wrap demo__in">'
     "<p>Bu sayfa bir tasarım önerisidir.</p>"
-    '<a class="lnk" href="%s/"><span>Canlı siteye gidin</span>%s</a>'
+    '<a class="lnk" href="%s/"><span>istoc.com\'a gidin</span>%s</a>'
     "</div></aside>"
 ) % (U, OK18)
-# Planlanan içerik türleri: canlı sitede karşılığı olmayan öneriler. Bağlantı değildir ve yalnız önizlemede görünür.
-PLANLANAN = (
-    '<div class="plan"><p class="plan__t">Planlanan içerik türleri</p><ul>%s</ul>'
-    '<p class="plan__note">Bu türler öneridir. Canlı sitede henüz yoktur.</p></div>'
-) % "".join("<li>%s</li>" % esc(x) for x in ALT_PLAN)
+# --- Planlanan hizmetler ve içerik (yalnız önizleme) -------------------------------
+# Bu bölgeler data-plan taşır ve "Planlanan hizmet" ya da "Planlanan içerik" etiketini gösterir.
+# Metinleri plan sınıfındadır. Aşağıdaki denetim her plan metninin bu bölgelerde durduğunu sınar.
+def plan_tag(kind):
+    return '<p class="plan-tag">%s<span>%s</span></p>' % (icon("bilgi", 18), PLAN_ETIKET[kind])
+
+
+def degerler_html():
+    """Değer bölümleri: yeni müşteri ve yeniden sipariş. Her kart alıcının ve satıcının faydasını ayrı yazar.
+    Bantlar sırayla açık ve tonludur. Böylece komşu bantlar zemin rengiyle ayrılır."""
+    out = []
+    for n, (sid, kicker, title, items) in enumerate(DEGER_BOLUMLERI):
+        cards = "".join(
+            '<li class="val" data-reveal style="--i:%d">%s<div><h3>%s</h3><p class="val__side"><b>Alıcı</b>%s</p><p class="val__side"><b>Satıcı</b>%s</p></div></li>'
+            % (i % 3, picto(p), esc(t), esc(a), esc(b)) for i, (p, t, a, b) in enumerate(items)
+        )
+        out.append(
+            '<section class="mod band%s" id="%s" aria-labelledby="%s-baslik" data-plan>%s<div class="wrap">%s%s'
+            '<ul class="vals" role="list">%s</ul><p class="plan-note">Hizmetlerin koşulları henüz belirlenmedi.</p></div></section>'
+            % (" band--tint" if n % 2 else "", sid, sid, surface("nokta" if n % 2 else "ag", 1),
+               head(NO[sid], kicker, sid + "-baslik", title, "Bu hizmetler öneridir. Bu hizmetler istoc.com'da henüz yoktur."), plan_tag("hizmet"), cards)
+        )
+    return "\n".join(out)
+
+
+def odeme_plan_html():
+    steps = "".join(
+        '<li data-reveal style="--i:%d"><span class="pp__who">%s<b>%s</b></span><p>%s</p></li>' % (i % 4, picto(p, "sm"), esc(who), esc(t))
+        for i, (p, who, t) in enumerate(ODEME_PLAN)
+    )
+    gains = "".join('<div class="pp__gain" data-reveal><h3>%s</h3><p>%s</p></div>' % (esc(h), esc(t)) for h, t in ODEME_FAYDA)
+    return (
+        '<section class="mod band band--tint" id="guvenli-odeme" aria-labelledby="gp-baslik" data-plan>%s<div class="wrap">%s%s'
+        '<div class="pp"><p class="pp__now" data-reveal>%s<span>Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.</span></p>'
+        '<ol class="pp__flow" role="list">%s</ol><div class="pp__gains">%s</div>'
+        '<p class="plan-note">Bu model henüz yoktur. Süreler ve ücretler henüz belirlenmedi. Koşulları ödeme kuruluşuyla yapılacak sözleşme belirler.</p></div></div></section>'
+    ) % (surface("rota", 1), head(NO["odeme_plan"], "Güvenli ödeme", "gp-baslik", "Güvenli ödeme modeli", "Planlanan modelde ödeme, lisanslı bir ödeme kuruluşunda bekler."),
+         plan_tag("hizmet"), icon("bilgi", 18), steps, gains)
+
+
+def araclar_html():
+    """Hesaplama araçları: üç grup, her grupta dört araç. Her araç kısa faydasını yazar.
+    "Neyi hesaplar?" düğmesi aracın girişini, çıktısını ve sınırını sayfa içinde açar. Betik yoksa açıklama açık durur."""
+    groups = []
+    for g, (name, tools) in enumerate(ARACLAR, 1):
+        items = []
+        for k, (t, who, gain, inp, outp, limit) in enumerate(tools, 1):
+            tid = "arac-%d-%d" % (g, k)
+            detail = "".join("<p>%s</p>" % esc(x) for x in [inp, outp, limit, "Bu öneride araç henüz hesaplama yapmaz."] if x)
+            items.append(
+                '<li class="tool"><h4 id="%s-ad">%s</h4><p class="tool__who">%s</p><p class="tool__gain">%s</p>'
+                '<button class="tool__btn" type="button" id="%s-b" aria-expanded="false" aria-controls="%s" aria-describedby="%s-ad"><span>Neyi hesaplar?</span>%s</button>'
+                '<div class="faq__panel tool__panel" id="%s" role="region" aria-labelledby="%s-b %s-ad" data-open="false"><div>%s</div></div></li>'
+                % (tid, esc(t), esc(who), esc(gain), tid, tid, tid, icon("asagi", 18, "chev"), tid, tid, tid, detail)
+            )
+        groups.append('<div class="tgroup" data-reveal style="--i:%d"><h3>%s</h3><ul class="tools" role="list">%s</ul></div>' % (g - 1, esc(name), "".join(items)))
+    return (
+        '<section class="mod band band--ink on-ink" id="araclar" aria-labelledby="arac-baslik" data-plan>%s<div class="wrap">%s%s'
+        '<div class="tgroups">%s</div><div class="band__cta">%s</div></div></section>'
+    ) % (sahne.depth(), head(NO["araclar"], "Araçlar", "arac-baslik", "Maliyetinizi, kârınızı ve stok ihtiyacınızı hesaplayın.", "Bu araçlar öneridir. Bu araçlar istoc.com'da henüz yoktur."),
+         plan_tag("hizmet"), "".join(groups), lnk("İçerik kütüphanesini görün", "#kutuphane"))
+
+
+# --- Bölgesel tedarik -------------------------------------------------------------
+# Tek veri kaynağı data/bolgeler.json. Olgu (fact) kaynağında okunan cümledir ve "dis" sınıfındadır.
+# İşletme ihtiyacı, yorum ve teklifte sorulacak koşullar bu sayfanın önerisidir (editorial). Bunlar tasarım metnidir.
+# Bölüm satıcı varlığı ya da doğrulama yazmaz. Ana eylem aynı sayfadaki teklif formunu o yerin ürünüyle doldurur.
+BOLGE = load("bolgeler.json")
+# Yer listesi veriden gelir. Kimlikler tekildir. Türü ve etiketi birbirini tutar. En az sayıyı kapı ve tarayıcı testi denetler.
+# Geçerli türler: ilçe, semt, ticaret merkezi ve sanayi bölgesi. İlçenin etiketi "ilçesi" ile biter.
+#  Öteki türlerin etiketi türün adını taşır ve "ilçe" sözcüğünü kullanmaz. Etiket ilçenin adını yer olarak yazabilir. Örnek: "İstanbul, Bağcılar'da ticaret merkezi".
+BOLGE_TURLERI = ("ilçe", "semt", "ticaret merkezi", "sanayi bölgesi")
+assert len({y["kimlik"] for y in BOLGE["yerler"]}) == len(BOLGE["yerler"]), "Bölge kimlikleri tekil olmalıdır."
+
+
+def etiket_uyar(y):
+    label = y["yer_etiketi"]
+    return label.endswith("ilçesi") if y["tur"] == "ilçe" else (y["tur"] in label and "ilçe" not in label)
+
+
+def yer_dogrula(yerler, kaynak):
+    """Tedarik ve alıcı verisi aynı kurallarla doğrulanır: tür ve etiket, denetim günü, kaynak, 3 koşul."""
+    for y in yerler:
+        assert y["tur"] in BOLGE_TURLERI and y["checked_at"] == kaynak["checked_at"], "Yerin türü ya da denetim günü eksik: %s" % y["kimlik"]
+        assert etiket_uyar(y), "Yer etiketi türüyle uyuşmuyor: %s" % y["kimlik"]
+        assert y["fact"]["source_url"] and all(u.startswith("https://") for u in y["fact"]["source_url"]) and y["fact"]["bagi"] in y["fact"]["source_url"], "Olgunun kaynağı eksik: %s" % y["kimlik"]
+        assert len(y["editorial"]["kosullar"]) == 3, "Her yerde teklif için 3 koşul yazar: %s" % y["kimlik"]
+
+
+for _y in BOLGE["yerler"]:
+    assert _y["tur"] in BOLGE_TURLERI and _y["checked_at"] == BOLGE["checked_at"], "Yerin türü ya da denetim günü eksik: %s" % _y["kimlik"]
+    assert etiket_uyar(_y), "Yer etiketi türüyle uyuşmuyor: %s" % _y["kimlik"]
+    assert _y["fact"]["source_url"] and all(u.startswith("https://") for u in _y["fact"]["source_url"]) and _y["fact"]["bagi"] in _y["fact"]["source_url"], "Olgunun kaynağı eksik: %s" % _y["kimlik"]
+    assert len(_y["editorial"]["kosullar"]) == 3, "Her yerde teklif için 3 koşul yazar: %s" % _y["kimlik"]
+# Kaynak bağlantıları: tedarik merkezleri ve (önizlemede) alıcı talep alanları.
+BOLGE_KAYNAK = {y["fact"]["bagi"] for y in BOLGE["yerler"]} | ({y["fact"]["bagi"] for y in json.load(open(os.path.join(HERE, "data", "alicilar.json"), encoding="utf-8"))["yerler"]}
+                                                              if not YAYIN and os.path.exists(os.path.join(HERE, "data", "alicilar.json")) else set())
+BOLGE_GIRIS = "Alacağınız ürüne göre ticaret merkezlerini karşılaştırın. Her merkezde hangi koşulları soracağınızı aşağıda bulabilirsiniz."
+BOLGE_NOT = "Bu merkezlerdeki satıcıların iStoc'ta bulunduğu anlamına gelmez."
+BOLGE_KOSUL = "Teklif isterken sorun"
+BOLGE_TARIH = "Kaynaklar %s günü okundu." % tr_date(BOLGE["checked_at"])
+# Uzun liste tek akış olmaz: ilk 6 merkez açıktır, kalanlar sayfanın açılır panelindedir. Betik yoksa panel açık durur.
+BOLGE_ACIK = 6
+BOLGE_DAHA = "%d merkezi daha görün"
+# Arama: merkez adı, şehir ya da sektör yazılır. Arama yalnız betikle çalışır, betik yoksa alan görünmez ve bütün merkezler okunur.
+BOLGE_ARA = "Merkez, şehir ya da sektör arayın"
+BOLGE_ARA_ORNEK = "Örnek: İstanbul ya da mobilya"
+BOLGE_SAYI = "%d merkez listeleniyor."
+BOLGE_BOS = "Aramanıza uyan merkez yok. Başka bir şehir ya da sektör yazın."
+
+
+def yer_meta(y, mark=""):
+    """Şehir ve sektör hücreleri. Her değerin yanında ne olduğunu söyleyen etiket durur (dt). Değerler veriden gelir."""
+    return ('<dl class="yer__meta"><div><dt>Şehir</dt><dd>%s</dd></div><div><dt>Sektör</dt><dd%s>%s</dd></div></dl>'
+            % (esc(y["il"]), mark, esc(y["sektor"])))
+
+
+def bolge_html():
+    rows = []
+    for i, y in enumerate(BOLGE["yerler"]):
+        f, e = y["fact"], y["editorial"]
+        yorum = '<p class="bolge__yorum">%s</p>' % esc(e["yorum"]) if e.get("yorum") else ""
+        rows.append(
+            '<li class="bolge" data-bolge="%s" data-reveal style="--i:%d">'
+            '<div class="bolge__who"><p class="bolge__need" data-bolge-ihtiyac>%s</p>'
+            '<h3 class="bolge__yer" data-bolge-yer><span class="bolge__ad">%s</span> <span class="bolge__tur">%s</span></h3>%s</div>'
+            '<div class="bolge__why"><p class="bolge__fact" data-bolge-neden>%s</p>%s'
+            '<a class="bolge__src" href="%s" data-bolge-kaynak>%s</a></div>'
+            '<div class="bolge__ask"><p class="bolge__ask-t">%s</p><ul class="bolge__kosul" role="list" data-bolge-kosul>%s</ul>'
+            '<a class="btn btn--ink btn--sm bolge__cta" href="#teklif" data-bolge-teklif data-urun="%s">Teklif isteyin%s</a></div></li>'
+            % (esc(y["kimlik"]), i % 4, esc(e["ihtiyac"]), esc(y["ad"]), esc(y["yer_etiketi"]), yer_meta(y), esc(f["metin"]), yorum, esc(f["bagi"]), esc(f["bag_metni"]),
+               BOLGE_KOSUL, "".join("<li>%s%s</li>" % (icon("onay", 18), esc(k)) for k in e["kosullar"]), esc(e["teklif_urun"]), OK18)
+        )
+    a = BOLGE["alim_plani"]
+    plan = (
+        '<div class="alim" data-alim-plani data-reveal><div class="alim__head"><p class="alim__ust">%s</p><h3>%s</h3>'
+        '<p class="alim__d" data-alim-aciklama>%s</p></div><div class="alim__body"><p class="alim__t">%s</p>'
+        '<ol class="alim__list" role="list" data-alim-kontrol>%s</ol><p class="alim__not">%s</p>'
+        '<div class="alim__cta">%s%s</div></div></div>'
+    ) % (esc(a["ust"]), esc(a["baslik"]), esc(a["aciklama"]), esc(a["kontrol_basligi"]), "".join("<li>%s</li>" % esc(k) for k in a["kontroller"]), esc(a["not"]),
+         lnk("Ürün kategorilerini inceleyin", "#kategoriler"), lnk("Teklif isteyin", "#teklif"))
+    return (
+        '<section class="mod band band--tint" id="bolgesel-tedarik" aria-labelledby="bolge-baslik">%s<div class="wrap">%s'
+        '<div class="bolge__intro"><p data-bolge-giris>%s</p><p class="bolge__not">%s</p></div>'
+        '<div class="bolge__ara js-only" role="search" data-bolge-ara><label for="bolge-q">%s</label>'
+        '<div class="field"><input id="bolge-q" type="search" placeholder="%s" autocomplete="off" enterkeyhint="search" data-bolge-q></div>'
+        '<p class="bolge__sonuc" data-bolge-sonuc>%s</p><p class="bolge__bos" data-bolge-bos hidden>%s</p></div>'
+        '<ol class="bolgeler" role="list" data-bolgeler>%s</ol>%s<p class="bolge__tarih">%s</p>%s</div></section>'
+    ) % (sahne.magnet(), head(NO["bolge"], "Bölgesel tedarik", "bolge-baslik", "Alımınıza uygun ticaret merkezini bulun.", split=False),
+         BOLGE_GIRIS, BOLGE_NOT, BOLGE_ARA, BOLGE_ARA_ORNEK, BOLGE_SAYI % len(rows), BOLGE_BOS, "".join(rows[:BOLGE_ACIK]),
+         panel("bolge-more", "data-bolge-more", BOLGE_DAHA % (len(rows) - BOLGE_ACIK), '<ol class="bolgeler" role="list">%s</ol>' % "".join(rows[BOLGE_ACIK:])) if len(rows) > BOLGE_ACIK else "",
+         BOLGE_TARIH, plan)
+
+
+# Bölgesel tedarik bölümünün metin sınıfları. Olgu cümleleri "dis" sınıfındadır, gerisi tasarım ve etikettir.
+BOLGE_DIS = sorted({x for y in BOLGE["yerler"] for x in split(y["fact"]["metin"])})
+BOLGE_TASARIM = sorted(set(
+    split(BOLGE_GIRIS) + split(BOLGE_NOT) + [BOLGE_TARIH, "Alımınıza uygun ticaret merkezini bulun."]
+    + ([BOLGE_DAHA % (len(BOLGE["yerler"]) - BOLGE_ACIK)] if len(BOLGE["yerler"]) > BOLGE_ACIK else [])
+    + [BOLGE_SAYI % len(BOLGE["yerler"])] + split(BOLGE_BOS)
+    # Editoryal metin birden çok cümle olabilir. Sayfa metni cümle cümle sınıflanır, bu yüzden her metin cümlelere bölünür.
+    # İhtiyaç satırı nokta taşımayan kısa bir başlıktır, olduğu gibi alınır.
+    + [y["editorial"]["ihtiyac"] for y in BOLGE["yerler"]]
+    + [x for y in BOLGE["yerler"] for t in [y["editorial"].get("yorum", "")] + y["editorial"]["kosullar"] for x in split(t)]
+    + [x for k in ("baslik", "aciklama", "kontrol_basligi", "not") for x in split(BOLGE["alim_plani"][k])]
+    + [x for t in BOLGE["alim_plani"]["kontroller"] for x in split(t)]
+))
+# Yerin adı da etikettir. Çok kelimeli ad (örneğin bir merkezin tam adı) sayfada metin olarak sınıflanır. Ad veriden gelir.
+BOLGE_ETIKET = sorted(set([t for y in BOLGE["yerler"] for t in (y["ad"], y["sektor"]) if len(t.split()) > 1] + [y["yer_etiketi"] for y in BOLGE["yerler"]] + [y["fact"]["bag_metni"] for y in BOLGE["yerler"]]
+                          + [BOLGE_KOSUL, BOLGE["alim_plani"]["ust"], "Ürün kategorilerini inceleyin", "Bölgesel tedarik", BOLGE_ARA]))
+
+
+# --- Alıcı talep alanları (planlanan hizmet, yalnız önizleme) ------------------------
+# Tek veri kaynağı data/alicilar.json (24 bölge ve sektör alanı). Bu bir prototiptir: gerçek alıcı profili ya da yayımlanmış talep listesi değildir.
+# Her alan bir işletme türünü, bölgeyi, kaynaklı olguyu, editoryal öneriyi ve teklif için 3 koşulu gösterir.
+# İlk 6 alan açıktır, kalan alanlar açılır paneldedir. Panel sayfanın mevcut açılır panel kalıbıdır (.faq__panel):
+# düğme aria-expanded taşır, betik yoksa panel açık durur. Proje kuralı gereği details öğesi kullanılmaz.
+# Böylece betik olmadan da 24 alan okunur. Grup süzgeci betikle çalışır.
+ALICI_DOSYA = os.path.join(HERE, "data", "alicilar.json")
+ALICI = None if YAYIN or not os.path.exists(ALICI_DOSYA) else load("alicilar.json")
+if ALICI:
+    assert len({y["kimlik"] for y in ALICI["yerler"]}) == len(ALICI["yerler"]), "Alıcı kimlikleri tekil olmalıdır."
+    yer_dogrula(ALICI["yerler"], ALICI)
+ALICI_ACIK = 6
+ALICI_GRUP = [("", "Tüm gruplar"), ("gida", "Gıda"), ("tekstil", "Tekstil"), ("konaklama", "Konaklama"), ("imalat", "İmalat")]
+ALICI_BASLIK = "İhtiyacınızı yazın. Uygun satıcılar sizi bulsun."
+ALICI_GIRIS = "İşletmenizin bulunduğu bölgeyi ve alacağınız ürünü seçin. Talebiniz için gereken bilgileri hazırlayın."
+ALICI_NOT = "Bu bölüm planlanan alım alanlarını gösterir. Yayımlanmış alıcı veya talep listesi değildir."
+ALICI_SATICI = "Satıcıysanız, ürünlerinize ihtiyaç duyabilecek işletme türlerini inceleyin."
+ALICI_KOSUL = "Teklif için hazırlanın"
+ALICI_DUGME = "Talebinizi hazırlayın"
+ALICI_BOS = "Bu grupta gösterilecek alan yok."
+ALICI_NASIL = "İşletmenizi nasıl listelersiniz?"
+# Listeleme yardımı: hangi bilginin neden istendiğini anlatır. Form ya da örnek kayıt yoktur.
+ALICI_ALANLAR = [
+    ("Şirket adı", "Satıcı talebin hangi işletmeden geldiğini görür."),
+    ("Bölge", "Satıcı teslimat ve ziyaret koşullarını buna göre hesaplar."),
+    ("Faaliyet alanı", "Satıcı ürününün işinize uyup uymadığını anlar."),
+    ("Alım ihtiyacı", "Ürünü, adedi ve teslim zamanını yazarsınız. Satıcı teklifini buna göre hazırlar."),
+]
+ALICI_NASIL_GIRIS = "Bu hizmet henüz yoktur. Hizmet açılınca işletmenizi şu bilgilerle listelersiniz:"
+
+
+def panel(pid, mark, label, body):
+    """Açılır panel: sayfanın mevcut kalıbı. Düğme aria-expanded ve aria-controls taşır. Betik yoksa panel açıktır."""
+    return (
+        '<div class="talep__acil" %s><button class="talep__btn" type="button" id="%s-b" aria-expanded="false" aria-controls="%s"><span>%s</span>%s</button>'
+        '<div class="faq__panel" id="%s" role="region" aria-labelledby="%s-b" data-open="false"><div>%s</div></div></div>'
+    ) % (mark, pid, pid, esc(label), icon("asagi", 18, "chev"), pid, pid, body)
+
+
+def alici_html():
+    if not ALICI:
+        return ""
+    def row(y):
+        e, f = y["editorial"], y["fact"]
+        yorum = '<p class="bolge__yorum">%s</p>' % esc(e["yorum"]) if e.get("yorum") else ""
+        return (
+            '<li class="bolge talep" data-talep="%s" data-grup="%s">'
+            '<div class="bolge__who"><p class="talep__isletme" data-talep-isletme>%s</p><p class="bolge__need">%s</p>'
+            '<h3 class="bolge__yer" data-talep-yer><span class="bolge__ad">%s</span> <span class="bolge__tur">%s</span></h3>'
+            '%s</div>'
+            '<div class="bolge__why"><p class="bolge__fact" data-talep-neden>%s</p>%s<a class="bolge__src" href="%s" data-talep-kaynak>%s</a></div>'
+            '<div class="bolge__ask"><p class="bolge__ask-t">%s</p><ul class="bolge__kosul" role="list" data-talep-kosul>%s</ul>'
+            '<a class="btn btn--ink btn--sm bolge__cta" href="#teklif" data-bolge-teklif data-urun="%s" data-alan="%s">%s%s</a></div></li>'
+        ) % (esc(y["kimlik"]), esc(y["grup"]), esc(y["isletme"]), esc(e["ihtiyac"]), esc(y["ad"]), esc(y["yer_etiketi"]), yer_meta(y, " data-talep-sektor"),
+             esc(f["metin"]), yorum, esc(f["bagi"]), esc(f["bag_metni"]), ALICI_KOSUL,
+             "".join("<li>%s%s</li>" % (icon("onay", 18), esc(k)) for k in e["kosullar"]), esc(e["teklif_urun"]),
+             esc("%s, %s." % (y["isletme"], y["ad"])), ALICI_DUGME, OK18)
+    yerler = ALICI["yerler"]
+    first = "".join(row(y) for y in yerler[:ALICI_ACIK])
+    rest = "".join(row(y) for y in yerler[ALICI_ACIK:])
+    more = len(yerler) - ALICI_ACIK
+    buttons = "".join('<button class="filter" type="button" data-talep-grup="%s" aria-pressed="%s">%s</button>' % (k, "true" if not k else "false", esc(n)) for k, n in ALICI_GRUP)
+    nasil = "".join("<li><b>%s</b> %s</li>" % (esc(k), esc(v)) for k, v in ALICI_ALANLAR)
+    return (
+        '<section class="mod band" id="alici-talepleri" aria-labelledby="talep-baslik" data-plan>%s<div class="wrap">%s%s'
+        '<div class="bolge__intro"><p data-talep-giris>%s</p><p class="bolge__not" data-talep-not>%s</p><p data-talep-satici>%s</p></div>'
+        '<div class="talep__filtre js-only" role="group" aria-label="Sektör grubuna göre süzün" data-talep-filtre>%s</div>'
+        '<p class="talep__sonuc js-only" data-talep-sonuc>Tüm gruplarda %d alan var.</p><p class="talep__bos" data-talep-bos hidden>%s</p>'
+        '<ol class="bolgeler" role="list">%s</ol>'
+        '%s%s</div></section>'
+    ) % (surface("ag", 3), head(NO["talep"], "Alım alanları", "talep-baslik", ALICI_BASLIK, split=False), plan_tag("hizmet"),
+         ALICI_GIRIS, ALICI_NOT, ALICI_SATICI, buttons, len(yerler), ALICI_BOS, first,
+         panel("talep-more", "data-talep-more", "%d alanı daha görün" % more, '<ol class="bolgeler" role="list">%s</ol>' % rest),
+         panel("talep-nasil", "data-talep-nasil", ALICI_NASIL, '<p>%s</p><ul role="list">%s</ul>' % (ALICI_NASIL_GIRIS, nasil)))
+
+
+# Alıcı bölümünün metin sınıfları. Olgu "dis", editoryal öneri tasarım, ad ve etiket etiket sınıfındadır.
+# Bölümün kendi çerçeve metni (başlık, giriş, not, süzgeç, listeleme yardımı) planlanan hizmetin metnidir, plan sınıfındadır.
+_AY = ALICI["yerler"] if ALICI else []
+ALICI_DIS = sorted({x for y in _AY for x in split(y["fact"]["metin"])})
+ALICI_TASARIM = sorted(set([y["editorial"]["ihtiyac"] for y in _AY] + [x for y in _AY for t in [y["editorial"].get("yorum", "")] + y["editorial"]["kosullar"] for x in split(t)]))
+ALICI_ETIKET = sorted({t for y in _AY for t in [y["ad"], y["yer_etiketi"], y["fact"]["bag_metni"], y["sektor"], y["isletme"]] if len(t.split()) > 1})
+ALICI_PLAN = [] if not ALICI else sorted(set(
+    [x for t in (ALICI_BASLIK, ALICI_GIRIS, ALICI_SATICI, ALICI_BOS, ALICI_NASIL, ALICI_NASIL_GIRIS, ALICI_NOT) for x in split(t)]
+    + [ALICI_KOSUL, ALICI_DUGME, "Alım alanları", "Tüm gruplar", "Tüm gruplarda %d alan var." % len(_AY), "%d alanı daha görün" % (len(_AY) - ALICI_ACIK)] + [x for k, v in ALICI_ALANLAR for x in [k] + split(v)]
+))
+
+
+def kutuphane_html():
+    types = []
+    for n, (p, name, desc, items) in enumerate(KUTUPHANE, 1):
+        rows = "".join(
+            '<li class="libq"><h4><button type="button" id="lib-b%d-%d" aria-expanded="false" aria-controls="lib-%d-%d">%s%s</button></h4>'
+            '<div class="faq__panel libq__panel" id="lib-%d-%d" role="region" aria-labelledby="lib-b%d-%d" data-open="false"><div><p>%s</p></div></div></li>'
+            % (n, k, n, k, esc(t), icon("asagi", 18, "chev"), n, k, n, k, esc(d)) for k, (t, d) in enumerate(items, 1)
+        )
+        extra = lnk("Hesaplama araçlarını görün", "#araclar") if name == "Hesaplayıcılar" else ""
+        types.append('<div class="lib__type">%s<h3>%s</h3><p class="lib__d">%s</p><ul class="lib__list" role="list">%s</ul>%s</div>' % (picto(p, "sm"), esc(name), esc(desc), rows, extra))
+    return (
+        '<section class="lib" id="kutuphane" aria-labelledby="lib-baslik" data-plan><div class="lib__head">%s<h2 id="lib-baslik">İçerik kütüphanesi</h2>'
+        '<p class="lib__note">Bu içerikler öneridir. Bu içerikler istoc.com\'da henüz yoktur. Her içeriğin kısa açıklaması burada açılır.</p></div><div class="lib__grid">%s</div></section>'
+    ) % (plan_tag("icerik"), "".join(types))
+
+
+# Planlanan bölümlerin metinleri: sabit liste, etiketler ve yapılardaki cümleler.
+PLAN = [] if YAYIN else sorted(set(
+    PLAN_METNI + list(PLAN_ETIKET.values())
+    + [x for _s, k, h, items in DEGER_BOLUMLERI for x in [k, h] + [y for _p, t, a, b in items for y in [t] + split(a) + split(b)]]
+    + [x for _p, who, t in ODEME_PLAN for x in [who] + split(t)] + [x for h, t in ODEME_FAYDA for x in [h] + split(t)]
+    + [x for _p, n, d, items in KUTUPHANE for x in [n] + split(d) + [y for t, e in items for y in [t] + split(e)]]
+    + [x for g, tools in ARACLAR for x in [g] + [y for tool in tools for z in tool for y in ([z] if z in tool[:2] else split(z))]]
+))
+# Alıcı talep bölümünün çerçeve metni de planlanan hizmetin metnidir.
+PLAN = sorted(set(PLAN + ALICI_PLAN))
+# Dış kaynaklı olgular: tedarik merkezleri ve alıcı talep alanları.
+DIS = sorted(set(BOLGE_DIS + ALICI_DIS))
+# Gezinmede planlanan bölümlere giden bağlantılar
+NAV_PLAN = "" if YAYIN else '<a href="#araclar">Araçlar</a><a href="#kutuphane">İçerik kütüphanesi</a>'
 
 DIZIN_HTML = dizin_html()
 TL_LABELS = [label for _p, _t, _d, tags in TL for _i, label in tags]
@@ -556,9 +885,22 @@ TL_LABELS = [label for _p, _t, _d, tags in TL for _i, label in tags]
 CTX = {
     "u": U,
     "oneri_notu": "" if YAYIN else ONERI_NOTU,
-    "planlanan": "" if YAYIN else PLANLANAN,
+    "kutuphane": "" if YAYIN else kutuphane_html(),
+    "b_degerler": "" if YAYIN else degerler_html(),
+    "b_odeme_plan": "" if YAYIN else odeme_plan_html(),
+    "b_araclar": "" if YAYIN else araclar_html(),
+    "b_bolge": bolge_html(),
+    "b_talep": alici_html(),
+    "nav_plan": NAV_PLAN,
+    # Alıcının ve satıcının bölümünden araçlara giden kısa yol. Yalnız önizlemede.
+    "arac_alici": "" if YAYIN else lnk("Hesaplama araçlarını görün", "#araclar"),
+    "arac_satici": "" if YAYIN else lnk("Hesaplama araçlarını görün", "#araclar"),
+    # Hareketli yüzeyler
+    "s_ag2": surface("ag", 2), "s_nokta": surface("nokta"),
+    # Hareketli sahneler: karşılama, üreticiler, süreç ve satıcılar. Araçlar ve bölgesel tedarik kendi bölüm işlevinde yazılır.
+    "sc_flow": sahne.flow(), "sc_grid": sahne.grid(), "sc_route": sahne.route(), "sc_rise": sahne.rise(),
     "title": "iStoc: Üreticiden toptan alım | B2B toptan pazaryeri",
-    "description": "Doğrulanmış üreticilerin birim fiyatını, en az sipariş adedini ve hazırlık süresini karşılaştırın. Teklif isteyin, toptan alımı yerinizden yapın.",
+    "description": "Doğrulanmış üreticilerin birim fiyatlarını karşılaştırın. En az sipariş adedini ve hazırlık süresini görün. Teklif isteyin ve bulunduğunuz yerden alın.",
     "canonical": U + "/",
     # Paylaşım görseli canlı sitedeki görseldir. veri.py açıldığını denetler.
     "og_image": U + GORSELLER["paylasim"],
@@ -584,22 +926,22 @@ CTX = {
     # Piktogramlar
     "p_teklif": picto("teklif"), "p_ekran": picto("ekran-carsi"), "p_isletme": picto("isletme"), "p_fiyat": picto("fiyat"), "p_kayit": picto("kayit"),
     "p_fatura": picto("fatura"), "p_uretici": picto("uretici"), "p_sure": picto("sure"), "p_kalkan": picto("kalkan"),
-    "p_odeme": picto("banka"), "p_destek": picto("destek"),
+    "p_odeme": picto("banka"), "p_destek": picto("destek"), "p_sepet": picto("sepet", "sm"), "p_magaza": picto("magaza", "sm"),
     # Bölüm başlıkları
-    "h_alici": head("01", "Alıcılar için", "alici-baslik", "Söze değil, kayda güvenin.", "İşletmenizin toptan alımını yerinizden yaparsınız. Altı nedeni var."),
-    "h_kat": head("02", "Kategoriler", "kat-baslik", "Sektörünüzü seçin. Üreticiyi bulun.",
+    "h_alici": head(NO["alici"], "Alıcılar için", "alici-baslik", "Sipariş koşullarınızı kayıtta tutun.", "İşletmenizin toptan alımını bulunduğunuz yerden yaparsınız. Buradan almanın altı faydası aşağıda yazıyor."),
+    "h_kat": head(NO["kat"], "Kategoriler", "kat-baslik", "Ürün kategorinizi seçin. O kategorideki ürünleri ve üreticileri bulun.",
                   "%d üst kategori ve %s alt kategori var. Ürünü en çok olan kategoriler önde durur." % (len(CATS), tr_num(N_CHILD)), lnk("%d kategorinin tümü" % len(CATS), U + "/kategoriler")),
-    "h_urun": head("03", "Ürünler", "urun-baslik", "Fiyatı sormayın. Kartta yazıyor.",
+    "h_urun": head(NO["urun"], "Ürünler", "urun-baslik", "Fiyatları ve sipariş şartlarını birlikte görün.",
                    # Para birimi yalnız betikle değişir. Betik yoksa bu cümle görünmez.
-                   'Büyük yazan fiyata KDV dahildir. <span class="js-only">Para birimini sayfanın altından değiştirirsiniz.</span>', lnk("%s ürünün tümü" % tr_num(FACTS["urun_toplami"]), U + "/urunler")),
-    "h_uretici": head("04", "Üreticiler", "uretici-baslik", "Kiminle çalıştığınızı bilin.",
+                   'Fiyat sormanıza gerek yok çünkü ürünlerin fiyatları aşağıda yazıyor. Büyük yazan fiyata KDV dahildir. <span class="js-only">Para birimini sayfanın altından değiştirirsiniz.</span>', lnk("%s ürünün tümü" % tr_num(FACTS["urun_toplami"]), U + "/urunler")),
+    "h_uretici": head(NO["uretici"], "Üreticiler", "uretici-baslik", "Çalışacağınız üreticiyi önceden tanıyın.",
                       "iStoc'ta %d mağaza var. %d mağazanın işletme doğrulaması tamamlandı." % (FACTS["magaza_toplami"], FACTS["dogrulanmis_magaza"]), lnk("Tüm üreticiler", U + "/ureticiler")),
-    "h_surec": head("05", "Sipariş süreci", "surec-baslik", "Her sipariş kayıt altında.",
+    "h_surec": head(NO["surec"], "Sipariş süreci", "surec-baslik", "Her sipariş kayıt altında.",
                     "Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez. Sipariş koşullarınızı iStoc saklar ve siparişinizi teslimata kadar izler.", split=False),
-    "h_sss": head("06", "Sık sorulanlar", "sss-baslik", "Sormadan sipariş vermeyin.", link=lnk("Yardım Merkezi", U + "/yardim-merkezi"), split=False),
-    "h_satici": head("07", "Satıcılar için", "satici-baslik", "Aracıya pay bırakmayın.", "iStoc sizi toptan alıcıyla doğrudan buluşturur. Şu an satışlardan komisyon alınmaz."),
-    "h_dizin": head("08", "Dizin", "dizin-baslik", "Aradığınıza kısa yoldan gidin.",
-                    "Ürünleri %d ayrı yoldan bulursunuz. Bağlantının yanındaki sayı, canlı sitedeki sonuç sayısıdır." % len(DIZIN)),
+    "h_sss": head(NO["sss"], "Sık sorulanlar", "sss-baslik", "Sipariş vermeden önce sorularınıza yanıt bulun.", link=lnk("Yardım Merkezi", U + "/yardim-merkezi"), split=False),
+    "h_satici": head(NO["satici"], "Satıcılar için", "satici-baslik", "Ürünlerinizi doğrudan alıcılara sunun.", "iStoc sizi toptan alıcıyla doğrudan buluşturur. Şu an satışlardan komisyon alınmaz."),
+    "h_dizin": head(NO["dizin"], "Dizin", "dizin-baslik", "Ürünü aradığınız özelliğe göre bulun.",
+                    "Ürünleri %d farklı ölçüte göre bulursunuz. Bağlantının yanındaki sayı, istoc.com'da kaç sonuç çıktığını gösterir." % len(DIZIN)),
     # İçerik
     "kyb_sayi": "%d mağazanın %d tanesi doğrulandı." % (FACTS["magaza_toplami"], FACTS["dogrulanmis_magaza"]),
     "quick": "".join('<li><a class="chip" href="%s">%s%s</a></li>' % (esc(search_url(w)), icon("ara", 18), esc(w)) for w in ORNEK_URUN),
@@ -652,24 +994,34 @@ assert not absent, "Kanıt defterinde olup sayfada geçmeyen cümle: %s" % absen
 # Şablona eklenen yeni bir metin sınıflandırılmadan sayfaya giremez.
 DATA_COPY = VERI_METNI + ["Sayılar %s günü istoc.com verisinden alındı." % CTX["veri_tarihi"]]
 # Dizin ve alt bölüm öğelerinin etiketleri, örnek aramalar ve adım işaretleri secim.py listelerinden gelir.
-DESIGN = TASARIM_METNI + ([] if YAYIN else ONIZLEME_TASARIM)
-LABELS = sorted(set(ETIKETLER + AUTO_LABELS + ORNEK_URUN + TL_LABELS + ([] if YAYIN else ONIZLEME_ETIKET)))
-clash = sorted(set(LABELS) & (set(SOURCED) | set(DESIGN)))
+DESIGN = sorted(set(TASARIM_METNI + BOLGE_TASARIM + ALICI_TASARIM)) + ([] if YAYIN else ONIZLEME_TASARIM)
+LABELS = sorted(set(ETIKETLER + AUTO_LABELS + ORNEK_URUN + TL_LABELS + BOLGE_ETIKET + ALICI_ETIKET + ([] if YAYIN else ONIZLEME_ETIKET)))
+clash = sorted((set(LABELS) & (set(SOURCED) | set(DESIGN) | set(PLAN) | set(DIS))) | (set(PLAN) & (set(SOURCED) | set(DESIGN) | set(DIS)))
+               | (set(DIS) & (set(SOURCED) | set(DESIGN))))
 assert not clash, "Aynı metin iki sınıfta: %s" % clash
-ROWS = classify(out, SOURCED, DATA_COPY, DESIGN, LABELS)
+ROWS = classify(out, SOURCED, DATA_COPY, DESIGN, LABELS, PLAN, DIS)
 unknown = [s for s, c in ROWS if c == "yok"]
-assert not unknown, "Sınıfı bilinmeyen metin. secim.py içinde IDDIALAR, VERI_METNI, TASARIM_METNI ya da ETIKETLER listesine ekleyin:\n  " + "\n  ".join(unknown)
+assert not unknown, "Sınıfı bilinmeyen metin. secim.py içinde IDDIALAR, VERI_METNI, TASARIM_METNI, PLAN_METNI ya da ETIKETLER listesine ekleyin:\n  " + "\n  ".join(unknown)
 # Listelerde olup sayfada geçmeyen metin de hatadır. Böylece listeler eskimez.
 # Tek kelimelik etiket sayfadan metin olarak çıkarılmaz. O etiketin sayfada geçtiği düz metinde aranır.
 present = {s for s, _c in ROWS}
 folded = {norm(s) for s in present}
-stale = [x for x in DESIGN + LABELS if (squeeze(x) not in present if len(x.split()) > 1 else x not in plain)] + [x for x in VERI_METNI if norm(x) not in folded]
+stale = [x for x in DESIGN + LABELS + PLAN + DIS if (squeeze(x) not in present if len(x.split()) > 1 else x not in plain)] + [x for x in VERI_METNI if norm(x) not in folded]
 assert not stale, "Listede olup sayfada geçmeyen metin. secim.py içinden çıkarın:\n  " + "\n  ".join(stale)
+
+# 2a. Planlanan hizmet ve içerik canlı olgu değildir. Plan metni yalnız data-plan bölgesinde durur.
+#     Her bölge görünür etiketini taşır. Yayın derlemesinde planlanan bölge yoktur.
+WALK, REGIONS = walk_texts(out)
+outside = sorted({t for t, inside in WALK if t in set(PLAN) and not inside})
+assert not outside, "Planlanan metin işaretli bölgenin dışında:\n  " + "\n  ".join(outside)
+untagged = [r["id"] for r in REGIONS if not r["tagged"]]
+assert not untagged, "Planlanan bölgenin görünür etiketi yok: %s" % untagged
+assert not (YAYIN and REGIONS), "Yayın derlemesinde planlanan bölge var."
 
 # 2b. Görünmeyen metinler: sayfa başlığı, öznitelik metinleri ve yalnız ekran okuyucuya okunan metinler.
 #     En az iki kelimeli her biri kayıtlı olmalıdır (secim.py, OZNITELIK_METNI). Görünen bir etiketin yinelemesi etiket sayılır.
-HIDDEN = OZNITELIK_METNI + ([] if YAYIN else ONIZLEME_OZNITELIK) + ["iStoc %s hesabı" % n for n, _u, _p in SOSYAL]
-HID_EXACT = sorted({norm_hidden(x) for x in HIDDEN} | {norm_hidden(x) for x in LABELS})
+HIDDEN = OZNITELIK_METNI + ([] if YAYIN else ONIZLEME_OZNITELIK) + (["Sektör grubuna göre süzün"] if ALICI else []) + [BOLGE_ARA_ORNEK] + ["iStoc %s hesabı" % n for n, _u, _p in SOSYAL]
+HID_EXACT = sorted({norm_hidden(x) for x in HIDDEN} | {norm_hidden(x) for x in LABELS + PLAN})
 HID_ROWS = hidden_texts(out)
 unknown_hidden = [t for t in HID_ROWS if not hidden_known(t, set(HID_EXACT))]
 assert not unknown_hidden, "Kayıtsız görünmeyen metin. secim.py içindeki OZNITELIK_METNI listesine ekleyin:\n  " + "\n  ".join(unknown_hidden)
@@ -713,6 +1065,9 @@ def link_ok(address):
     if u.scheme != "https":
         return False
     if u.netloc != "istoc.com":
+        # Bölgesel tedarik bölümünün kaynak bağlantıları data/bolgeler.json dosyasındaki adreslerdir.
+        if address in BOLGE_KAYNAK:
+            return True
         return address in OUTSIDE or any(address == lib or address.startswith(lib + "/") for lib in LIBRARIES)
     path = unquote(u.path)
     bare = path.rstrip("/")
@@ -745,8 +1100,10 @@ json.dump(
     {
         "kaynak": sorted({squeeze(m[0]) for m in IDDIALAR}),
         "veri": sorted({norm(x) for x in DATA_COPY}),
+        "dis": sorted({squeeze(x) for x in DIS}),
         "tasarim": sorted({squeeze(x) for x in DESIGN}),
         "etiket": sorted({squeeze(x) for x in LABELS}),
+        "plan": sorted({squeeze(x) for x in PLAN}),
         "betik": sorted({squeeze(x) for x in BETIK_METNI}),
         # Görünmeyen metinler: kayıtlı metinler ve görünen etiketler.
         "gizli": HID_EXACT,
@@ -763,4 +1120,4 @@ print("adres: %d ayrı adres denetlendi (%d istoc.com), %d sayfa içi hedef var"
 print("görünmeyen metin: %d, hepsi kayıtlı" % len(HID_ROWS))
 # Bazı yolların altında her adres açılır (uygulama kabuğu). O yoldaki bağlantının denetimi yalnız sunucunun yanıt verdiğini gösterir.
 print("uygulama kabuğu olan yol: %s" % (", ".join(DZ["kabuk"]) or "yok"))
-print("sayfadaki metin: %d (kaynak %d, veri %d, tasarım %d, etiket %d)" % (len(ROWS), sum(c == "kaynak" for _s, c in ROWS), sum(c == "veri" for _s, c in ROWS), sum(c == "tasarim" for _s, c in ROWS), sum(c == "etiket" for _s, c in ROWS)))
+print("sayfadaki metin: %d (kaynak %d, dış kaynak %d, veri %d, tasarım %d, etiket %d, plan %d)" % (len(ROWS), *(sum(c == k for _s, c in ROWS) for k in ("kaynak", "dis", "veri", "tasarim", "etiket", "plan"))))

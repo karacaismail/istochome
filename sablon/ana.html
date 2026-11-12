@@ -7,11 +7,17 @@
   <!-- Karşılama: değer önerisi, arama ve hızlı teklif isteği. İki dönüşüm yolu ilk ekrandadır. -->
   <div class="band band--ink band--hero on-ink" data-spot>
     <span class="spot" aria-hidden="true"><i></i></span>
+    {{sc_flow}}
     <div class="wrap">
       <div class="row--hero">
         <section class="mod hero" aria-labelledby="hero-baslik">
-          <h1 id="hero-baslik"><span class="eyebrow" data-intro style="--i:0">Global B2B toptan pazaryeri</span> <span class="line"><span style="--i:1">Çarşıya gitmeyin.</span></span> <span class="line"><span style="--i:3"><em class="hl">Çarşı ekranınızda.</em></span></span></h1>
-          <p class="hero__lead" data-intro style="--i:5">Toptan alım için İstanbul'a, Ankara'ya, Antep'e gitmeniz gerekmez. Fiyatı, en az sipariş adedini ve hazırlık süresini ekranınızda görürsünüz. Siparişiniz teslimata kadar kayıt altında kalır.</p>
+          <h1 id="hero-baslik"><span class="eyebrow" data-intro style="--i:0">Global B2B toptan pazaryeri</span> <span class="line"><span style="--i:1">Toptan alın.</span></span> <span class="line"><span style="--i:3"><em class="hl">Yeni müşterilere satın.</em></span></span></h1>
+          <p class="hero__lead" data-intro style="--i:5">Çarşıda yüz yüze anlaştığınız satıcıyla da siparişi buradan verirsiniz. Siparişiniz teslimata kadar kayıt altında kalır.</p>
+          <!-- İki yol: alıcı ve satıcı amacını ayrı ayrı seçer. Yol, sayfadaki ilgili bölüme gider. -->
+          <ul class="paths" data-intro style="--i:6" role="list">
+            <li><a class="path" href="#urunler">{{p_sepet}}<span class="path__t"><b>Toptan alıyorum</b><small>Ürünü, fiyatı ve en az sipariş adedini görün.</small></span>{{i_go}}</a></li>
+            <li><a class="path" href="#saticilar">{{p_magaza}}<span class="path__t"><b>Toptan satıyorum</b><small>Ürününüzü yeni alıcılara gösterin.</small></span>{{i_go}}</a></li>
+          </ul>
           <div class="console" data-intro style="--i:7" data-console>
             <div class="seg" role="tablist" aria-label="Arama türü">
               <button type="button" role="tab" id="mod-urun" aria-selected="true" aria-controls="konsol" data-mode="urun">Ürün</button>
@@ -39,6 +45,7 @@
         <section class="mod rfqbox on-paper" id="teklif" aria-labelledby="teklif-baslik" data-intro style="--i:6">
           <div class="rfqbox__top">{{p_teklif}}<div><p class="mh__kicker" aria-hidden="true">Teklif isteği</p><h2 id="teklif-baslik"><span class="sr-only">Teklif isteği: </span>Bir istek, birden fazla teklif</h2></div></div>
           <p class="rfqbox__lead">Aradığınız ürünü yazın. Üreticiler size teklif göndersin.</p>
+          <p class="rfqbox__why">Bu formla aradığınız ürünü üreticilere tek seferde anlatırsınız.</p>
           <!-- Alanların name özniteliği yoktur, bu yüzden form hiçbir veri göndermez.
                JavaScript yoksa düğme canlı sitedeki teklif isteği sayfasını açar. -->
           <form class="form" action="{{u}}/pages/dashboard/rfq.html" method="get" data-rfq novalidate>
@@ -51,20 +58,26 @@
               <label for="t-adet">Kaç adet?</label>
               <div class="field"><input id="t-adet" type="text" inputmode="numeric" placeholder="Örnek: 500" autocomplete="off"></div>
             </div>
+            <!-- Seçilen alım alanı: alıcı talep alanından gelinince betik yazar. Teslimat adresi değildir, yalnız hangi alanın seçildiğini söyler. -->
+            <p class="rfqbox__alan" data-rfq-alan hidden></p>
+            <!-- Özet: ürün ve adet yazıldıkça anında güncellenir. Canlı bölge değildir, her tuşta okunmaz. Gönderim sonucunu #durum okur. -->
+            <p class="rfqbox__sum" id="teklif-ozeti" data-rfq-sum>{{i_belge}}<span data-rfq-sum-t>İstek özeti, ürünü ve adedi yazınca burada görünür.</span></p>
             <div class="secure">
               <button class="btn btn--brand btn--block" type="submit">Teklif isteği oluşturun{{i_go}}</button>
-              <p class="secure__note" data-rfq-note>{{i_bilgi}}<span>Bu sayfa bir tasarım önerisidir. Form bir yere veri göndermez.</span></p>
+              <p class="secure__note" data-rfq-note>{{i_bilgi}}<span>Bu sayfa bir tasarım önerisidir. Düğme isteğinizi kimseye göndermez. Gerçek isteği istoc.com'da gönderirsiniz.</span></p>
               <!-- Gönderme sonrası durum. Sahte başarı gösterilmez, isteğin gönderilmediği açıkça yazılır. -->
               <div class="form__done" data-rfq-done hidden>
-                <p><strong>İsteğiniz gönderilmedi.</strong> Bu sayfa bir tasarım önerisidir.</p>
-                <a class="lnk" href="{{u}}/pages/dashboard/rfq.html"><span>Canlı sitede teklif isteği oluşturun</span>{{i_ok18}}</a>
+                <p><strong>İsteğiniz gönderilmedi.</strong> Bu sayfa bir tasarım önerisidir. Gerçek isteği istoc.com'da gönderirsiniz.</p>
+                <a class="lnk" href="{{u}}/pages/dashboard/rfq.html"><span>istoc.com'da teklif isteği oluşturun</span>{{i_ok18}}</a>
               </div>
             </div>
           </form>
-          <ol class="rfqbox__steps" role="list">
+          <p class="rfqbox__next" id="teklif-sonra">Teklif almak için ne yaparsınız?</p>
+          <ol class="rfqbox__steps" role="list" aria-labelledby="teklif-sonra">
             <li>Ürünü ve adedi yazın.</li>
-            <li>Üreticilerden teklif alın.</li>
-            <li>Teklifleri karşılaştırın ve seçin.</li>
+            <li>İsteği istoc.com'da gönderin.</li>
+            <li>Üreticilerin size gönderdiği teklifleri bekleyin.</li>
+            <li>Teklifleri karşılaştırın ve uygun olanı seçin.</li>
           </ol>
         </section>
       </div>
@@ -83,28 +96,30 @@
     </div>
   </div>
 
-  <!-- 01 Alıcılar için: altı gerekçe. Her gerekçe "çünkü" sorusuna yanıt verir ve kanıtını taşır.
+  <!-- Alıcılar için: altı gerekçe. Her gerekçe bir değeri ve kanıtını taşır.
        Başlıklar sonuç vaat etmez, alıcının ne göreceğini ve ne yapacağını söyler. Kartlar tıklanmaz. -->
   <section class="mod band" id="neden" aria-labelledby="alici-baslik">
     <div class="wrap">
       {{h_alici}}
       <ul class="reasons">
-        <li class="reason" data-reveal style="--i:0">{{p_ekran}}<div><p class="reason__why">Çünkü</p><h3>Yola çıkmazsınız</h3><p>Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırsınız.</p></div></li>
-        <li class="reason" data-reveal style="--i:1">{{p_isletme}}<div><p class="reason__why">Çünkü</p><h3>Kimin doğrulandığını görürsünüz</h3><p>Rozetli mağazanın kimlik ve işletme doğrulamasını iStoc yapar. {{kyb_sayi}}</p><ul class="tags"><li>{{i_isletme18}}İşletme doğrulaması (KYB)</li></ul></div></li>
-        <li class="reason" data-reveal style="--i:2">{{p_fiyat}}<div><p class="reason__why">Çünkü</p><h3>Koşulu önceden görürsünüz</h3><p>Ürün kartında birim fiyat, KDV hariç fiyat, en az sipariş adedi ve hazırlık süresi yazar.</p></div></li>
-        <li class="reason" data-reveal style="--i:0">{{p_odeme}}<div><p class="reason__why">Çünkü</p><h3>Hangi hesaba ödeyeceğinizi bilirsiniz</h3><p>Yalnız sipariş sayfanızda gösterilen hesaba ödeme yaparsınız. Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.</p></div></li>
-        <li class="reason" data-reveal style="--i:1">{{p_kayit}}<div><p class="reason__why">Çünkü</p><h3>Siparişiniz kayıt altındadır</h3><p>iStoc kabul ettiğiniz koşulları saklar. Sipariş durumunu teslimata kadar iStoc izler.</p></div></li>
-        <li class="reason" data-reveal style="--i:2">{{p_destek}}<div><p class="reason__why">Çünkü</p><h3>Sorun çıkarsa muhatabınız vardır</h3><p>Koşullar karşılanmazsa talep açarsınız. Sorunu, kabul ettiğiniz koşullara göre çözmenize iStoc yardım eder.</p></div></li>
+        <li class="reason" data-reveal style="--i:0">{{p_ekran}}<div><h3>Bulunduğunuz yerden sipariş verirsiniz</h3><p>Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırsınız.</p></div></li>
+        <li class="reason" data-reveal style="--i:1">{{p_isletme}}<div><h3>Hangi mağazanın doğrulandığını görürsünüz</h3><p>Rozetli mağazanın kimlik ve işletme doğrulamasını iStoc yapar. {{kyb_sayi}}</p><ul class="tags"><li>{{i_isletme18}}İşletme doğrulaması (KYB)</li></ul></div></li>
+        <li class="reason" data-reveal style="--i:2">{{p_fiyat}}<div><h3>Fiyatı ve sipariş şartlarını önceden görürsünüz</h3><p>Ürün kartında birim fiyat, KDV hariç fiyat, en az sipariş adedi ve hazırlık süresi yazar.</p></div></li>
+        <li class="reason" data-reveal style="--i:0">{{p_odeme}}<div><h3>Hangi hesaba ödeyeceğinizi bilirsiniz</h3><p>Yalnız sipariş sayfanızda gösterilen hesaba ödeme yaparsınız. Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.</p></div></li>
+        <li class="reason" data-reveal style="--i:1">{{p_kayit}}<div><h3>Siparişiniz kayıt altındadır</h3><p>iStoc kabul ettiğiniz koşulları saklar. Sipariş durumunu teslimata kadar iStoc izler.</p></div></li>
+        <li class="reason" data-reveal style="--i:2">{{p_destek}}<div><h3>Sorun çıkarsa talep açarsınız</h3><p>Koşullar karşılanmazsa talep açarsınız. Sorunu, kabul ettiğiniz koşullara göre çözmenize iStoc yardım eder.</p></div></li>
       </ul>
       <div class="band__cta" data-reveal>
         <a class="btn btn--ink" href="#urunler">Ürünleri inceleyin{{i_go}}</a>
         <a class="lnk" href="{{u}}/ticaret-guvencesi"><span>Ticaret güvencesini inceleyin</span>{{i_ok18}}</a>
+        {{arac_alici}}
       </div>
     </div>
   </section>
 
-  <!-- 02 Kategoriler -->
+  <!-- Kategoriler -->
   <section class="mod band band--tint" id="kategoriler" aria-labelledby="kat-baslik">
+    {{s_nokta}}
     <div class="wrap">
       {{h_kat}}
       <ul class="dir">
@@ -113,7 +128,7 @@
     </div>
   </section>
 
-  <!-- 03 Ürünler. Bölümün sonunda, aradığını bulamayan alıcı teklif isteğine yönlenir. -->
+  <!-- Ürünler. Bölümün sonunda, aradığını bulamayan alıcı teklif isteğine yönlenir. -->
   <section class="mod band" id="urunler" aria-labelledby="urun-baslik">
     <div class="wrap">
       {{h_urun}}
@@ -130,14 +145,15 @@
       {{rail_ctl}}
       <div class="nudge" data-reveal>
         {{p_teklif}}
-        <div><p class="nudge__q">Aradığınız ürün burada yok mu?</p><p>Üreticiler size teklif göndersin.</p></div>
+        <div><p class="nudge__q">Aradığınız ürün burada yok mu?</p><p>Aradığınız ürünü yazın. Üreticiler size teklif göndersin.</p></div>
         <a class="btn btn--ink" href="#teklif">Teklif isteyin{{i_go}}</a>
       </div>
     </div>
   </section>
 
-  <!-- 04 Üreticiler -->
+  <!-- Üreticiler -->
   <section class="mod band band--tint" id="ureticiler" aria-labelledby="uretici-baslik">
+    {{sc_grid}}
     <div class="wrap">
       {{h_uretici}}
       <ul class="crail sgrid" data-reveal-rail data-scroller>
@@ -147,9 +163,10 @@
     </div>
   </section>
 
-  <!-- 05 Sipariş süreci: adımlar, ödeme yöntemleri ve örnek sipariş. -->
+  <!-- Sipariş süreci: adımlar, ödeme yöntemleri ve örnek sipariş. -->
   <section class="mod band band--ink flow on-ink" id="surec" aria-labelledby="surec-baslik" data-spot>
     <span class="spot" aria-hidden="true"><i></i></span>
+    {{sc_route}}
     <div class="wrap">
       <div class="flow__grid">
         <div>
@@ -205,7 +222,10 @@
     </div>
   </section>
 
-  <!-- 06 Sık sorulanlar -->
+  <!-- Planlanan güvenli ödeme modeli. Ayrı ve etiketli bölgedir. Canlı iStoc ödemeyi tutmaz. Yalnız önizlemede. -->
+  {{b_odeme_plan}}
+
+  <!-- Sık sorulanlar -->
   <section class="mod band" id="sss" aria-labelledby="sss-baslik">
     <div class="wrap">
       <div class="faqs">
@@ -220,11 +240,12 @@
   <!-- Kapanış çağrısı: alıcının yolu burada biter. -->
   <section class="mod band band--ink band--cta on-ink" aria-labelledby="kapanis-baslik" data-spot>
     <span class="spot" aria-hidden="true"><i></i></span>
+    {{s_ag2}}
     <div class="wrap">
       <div class="cta" data-reveal>
-        <h2 id="kapanis-baslik">Rakibiniz yoldayken siz siparişi verin.</h2>
+        <h2 id="kapanis-baslik">Ücretsiz hesap açın ve toptan alıma başlayın.</h2>
         <div>
-          <p>Hesap açmak ücretsizdir. Arayın, üreticiye yazın, teklif isteyin.</p>
+          <p>Hesap açmak ücretsizdir. Hesabınızla üreticiye mesaj yazar ve teklif istersiniz.</p>
           <div class="cta__btns">
             <a class="btn btn--brand" href="{{u}}/pages/auth/register.html">Ücretsiz kaydolun{{i_go}}</a>
             <a class="btn btn--light" href="#teklif">Teklif isteyin</a>
@@ -234,16 +255,17 @@
     </div>
   </section>
 
-  <!-- 07 Satıcılar için: ikinci kişinin yolu. Gerekçeler solda, başvuru yolu sağda durur. -->
+  <!-- Satıcılar için: ikinci kişinin yolu. Gerekçeler solda, başvuru yolu sağda durur. -->
   <section class="mod band band--tint" id="saticilar" aria-labelledby="satici-baslik">
+    {{sc_rise}}
     <div class="wrap">
       {{h_satici}}
       <div class="sell">
         <ul class="sell__list">
-          <li class="reason" data-reveal style="--i:0">{{p_fatura}}<div><p class="reason__why">Çünkü</p><h3>Şu an satış komisyonu yok</h3><p>Ücretler Satıcı Hizmet Sözleşmesi'ndeki ücret tablosuna göredir.</p></div></li>
-          <li class="reason" data-reveal style="--i:1">{{p_uretici}}<div><p class="reason__why">Çünkü</p><h3>Alıcıya aracısız ulaşırsınız</h3><p>iStoc üreticiyi alıcıyla aracısız buluşturur.</p></div></li>
-          <li class="reason" data-reveal style="--i:0">{{p_sure}}<div><p class="reason__why">Çünkü</p><h3>Başvuru 4 dakika sürer</h3><p>Vergi numaranızı, üretim kategorinizi ve bir iletişim bilginizi yazarsınız.</p></div></li>
-          <li class="reason" data-reveal style="--i:1">{{p_kalkan}}<div><p class="reason__why">Çünkü</p><h3>Doğrulanan mağaza rozet taşır</h3><p>İşletme doğrulaması rozeti bütün paketlerde vardır.</p></div></li>
+          <li class="reason" data-reveal style="--i:0">{{p_fatura}}<div><h3>Şu an satış komisyonu yok</h3><p>Ücretler Satıcı Hizmet Sözleşmesi'ndeki ücret tablosuna göredir.</p></div></li>
+          <li class="reason" data-reveal style="--i:1">{{p_uretici}}<div><h3>Alıcıya aracısız ulaşırsınız</h3><p>iStoc üreticiyi alıcıyla aracısız buluşturur.</p></div></li>
+          <li class="reason" data-reveal style="--i:0">{{p_sure}}<div><h3>Başvuru 4 dakika sürer</h3><p>Vergi numaranızı, üretim kategorinizi ve bir iletişim bilginizi yazarsınız.</p></div></li>
+          <li class="reason" data-reveal style="--i:1">{{p_kalkan}}<div><h3>Doğrulanan mağaza rozet taşır</h3><p>İşletme doğrulaması rozeti bütün paketlerde vardır.</p></div></li>
         </ul>
         <div class="sell__panel on-ink" data-reveal style="--i:2">
           <p class="label">Satıcı yolu</p>
@@ -255,13 +277,18 @@
           <div class="sell__cta">
             <a class="btn btn--brand btn--block" href="{{u}}/satici-ol">Satıcı başvurusu yapın{{i_go}}</a>
             <a class="lnk" href="{{u}}/satici-ol#paketler"><span>Paketleri ve ücretleri görün</span>{{i_ok18}}</a>
+            {{arac_satici}}
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 08 Dizin: programatik arama motoru stratejileri. Her grup ayrı bir veri boyutudur.
+  <!-- Planlanan değerler (yeni müşteri, yeniden sipariş) ve hesaplama araçlarının yeri. Yalnız önizlemede. -->
+  {{b_degerler}}
+  {{b_araclar}}
+
+  <!-- Dizin: programatik arama motoru stratejileri. Her grup ayrı bir veri boyutudur.
        Öğeler menü öğesidir ve canlı sitede çalışan adreslere gider. Konuma bağlı grup yoktur. -->
   <section class="mod band" id="dizin" aria-labelledby="dizin-baslik">
     <div class="wrap">
@@ -272,4 +299,11 @@
       <p class="dizin__src">Sayılar {{veri_tarihi}} günü istoc.com verisinden alındı.</p>
     </div>
   </section>
+
+  <!-- Bölgesel tedarik: işletme ihtiyacı, yerin üretim alanı, teklifte sorulacak koşullar ve teklif isteği.
+       Veri data/bolgeler.json dosyasındadır. Bölüm ayrı sayfa üretmez ve satıcı varlığı yazmaz. -->
+  {{b_bolge}}
+
+  <!-- Alıcı talep alanları: planlanan hizmet, yalnız önizlemede. Veri data/alicilar.json dosyasındadır. -->
+  {{b_talep}}
 </main>
