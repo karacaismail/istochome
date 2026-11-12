@@ -27,16 +27,17 @@
               </form>
             </div>
           </div>
-          <!-- Kısa yol: yazmadan tek dokunuşla sonuç sayfası. Her kelimenin sonuç verdiğini veri.py denetler. -->
+          <!-- Kısa yol: yazmadan tek dokunuşla sonuç sayfası. Kelimeleri biz seçtik, bu yüzden adı "Örnek aramalar"dır.
+               Her kelimenin sonuç verdiğini veri.py denetler. -->
           <div class="quick" data-intro style="--i:8">
-            <p class="quick__label" id="sik-arananlar">Sık arananlar</p>
-            <ul class="quick__list" aria-labelledby="sik-arananlar">{{quick}}</ul>
+            <p class="quick__label" id="ornek-aramalar">Örnek aramalar</p>
+            <ul class="quick__list" aria-labelledby="ornek-aramalar">{{quick}}</ul>
           </div>
           <p class="hero__alt" data-intro style="--i:9">Hesabınız yok mu?<a class="lnk" href="{{u}}/pages/auth/register.html"><span>Ücretsiz kaydolun</span>{{i_ok18}}</a></p>
         </section>
 
         <section class="mod rfqbox on-paper" id="teklif" aria-labelledby="teklif-baslik" data-intro style="--i:6">
-          <div class="rfqbox__top">{{p_teklif}}<div><p class="mh__kicker">Teklif isteği</p><h2 id="teklif-baslik">Bir istek, birden fazla teklif</h2></div></div>
+          <div class="rfqbox__top">{{p_teklif}}<div><p class="mh__kicker" aria-hidden="true">Teklif isteği</p><h2 id="teklif-baslik"><span class="sr-only">Teklif isteği: </span>Bir istek, birden fazla teklif</h2></div></div>
           <p class="rfqbox__lead">Aradığınız ürünü yazın. Üreticiler size teklif göndersin.</p>
           <!-- Alanların name özniteliği yoktur, bu yüzden form hiçbir veri göndermez.
                JavaScript yoksa düğme canlı sitedeki teklif isteği sayfasını açar. -->
@@ -60,7 +61,7 @@
               </div>
             </div>
           </form>
-          <ol class="rfqbox__steps">
+          <ol class="rfqbox__steps" role="list">
             <li>Ürünü ve adedi yazın.</li>
             <li>Üreticilerden teklif alın.</li>
             <li>Teklifleri karşılaştırın ve seçin.</li>
@@ -82,17 +83,18 @@
     </div>
   </div>
 
-  <!-- 01 Alıcılar için: altı gerekçe. Her gerekçe "çünkü" sorusuna yanıt verir ve kanıtını taşır. -->
+  <!-- 01 Alıcılar için: altı gerekçe. Her gerekçe "çünkü" sorusuna yanıt verir ve kanıtını taşır.
+       Başlıklar sonuç vaat etmez, alıcının ne göreceğini ve ne yapacağını söyler. Kartlar tıklanmaz. -->
   <section class="mod band" id="neden" aria-labelledby="alici-baslik">
     <div class="wrap">
       {{h_alici}}
       <ul class="reasons">
-        <li class="reason" data-glow data-reveal style="--i:0">{{p_ekran}}<div><p class="reason__why">Çünkü</p><h3>Yola çıkmazsınız</h3><p>Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırsınız.</p></div></li>
-        <li class="reason" data-glow data-reveal style="--i:1">{{p_isletme}}<div><p class="reason__why">Çünkü</p><h3>Karşınızdaki doğrulanmıştır</h3><p>Rozetli satıcının kimlik ve işletme doğrulamasını iStoc yapar. {{kyb_sayi}}</p><ul class="tags"><li>{{i_isletme18}}İşletme doğrulaması (KYB)</li></ul></div></li>
-        <li class="reason" data-glow data-reveal style="--i:2">{{p_fiyat}}<div><p class="reason__why">Çünkü</p><h3>Koşulu önceden görürsünüz</h3><p>Ürün kartında birim fiyat, KDV hariç fiyat, en az sipariş adedi ve hazırlık süresi yazar.</p></div></li>
-        <li class="reason" data-glow data-reveal style="--i:0">{{p_odeme}}<div><p class="reason__why">Çünkü</p><h3>Ödemeniz doğru hesaba gider</h3><p>Yalnız sipariş sayfanızda gösterilen hesaba ödeme yaparsınız. Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.</p></div></li>
-        <li class="reason" data-glow data-reveal style="--i:1">{{p_kayit}}<div><p class="reason__why">Çünkü</p><h3>Siparişiniz kayıt altındadır</h3><p>iStoc kabul ettiğiniz koşulları saklar. Sipariş durumunu teslimata kadar iStoc izler.</p></div></li>
-        <li class="reason" data-glow data-reveal style="--i:2">{{p_destek}}<div><p class="reason__why">Çünkü</p><h3>Sorun çıkarsa muhatabınız vardır</h3><p>Koşullar karşılanmazsa talep açarsınız. Sorunu, kabul ettiğiniz koşullara göre çözmenize iStoc yardım eder.</p></div></li>
+        <li class="reason" data-reveal style="--i:0">{{p_ekran}}<div><p class="reason__why">Çünkü</p><h3>Yola çıkmazsınız</h3><p>Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırsınız.</p></div></li>
+        <li class="reason" data-reveal style="--i:1">{{p_isletme}}<div><p class="reason__why">Çünkü</p><h3>Kimin doğrulandığını görürsünüz</h3><p>Rozetli mağazanın kimlik ve işletme doğrulamasını iStoc yapar. {{kyb_sayi}}</p><ul class="tags"><li>{{i_isletme18}}İşletme doğrulaması (KYB)</li></ul></div></li>
+        <li class="reason" data-reveal style="--i:2">{{p_fiyat}}<div><p class="reason__why">Çünkü</p><h3>Koşulu önceden görürsünüz</h3><p>Ürün kartında birim fiyat, KDV hariç fiyat, en az sipariş adedi ve hazırlık süresi yazar.</p></div></li>
+        <li class="reason" data-reveal style="--i:0">{{p_odeme}}<div><p class="reason__why">Çünkü</p><h3>Hangi hesaba ödeyeceğinizi bilirsiniz</h3><p>Yalnız sipariş sayfanızda gösterilen hesaba ödeme yaparsınız. Ödemeyi iStoc tutmaz ve ödemeye aracılık etmez.</p></div></li>
+        <li class="reason" data-reveal style="--i:1">{{p_kayit}}<div><p class="reason__why">Çünkü</p><h3>Siparişiniz kayıt altındadır</h3><p>iStoc kabul ettiğiniz koşulları saklar. Sipariş durumunu teslimata kadar iStoc izler.</p></div></li>
+        <li class="reason" data-reveal style="--i:2">{{p_destek}}<div><p class="reason__why">Çünkü</p><h3>Sorun çıkarsa muhatabınız vardır</h3><p>Koşullar karşılanmazsa talep açarsınız. Sorunu, kabul ettiğiniz koşullara göre çözmenize iStoc yardım eder.</p></div></li>
       </ul>
       <div class="band__cta" data-reveal>
         <a class="btn btn--ink" href="#urunler">Ürünleri inceleyin{{i_go}}</a>
@@ -154,11 +156,12 @@
           {{h_surec}}
           <div class="tlw" data-tl>
             <span class="tl__rail" aria-hidden="true"><span class="tl__fill"></span><span class="tl__dot"></span></span>
-            <ol class="tl">
+            <ol class="tl" role="list">
               {{tl}}
             </ol>
           </div>
-          <!-- Ödeme yöntemleri: her yöntem piktogramı ve adıyla durur. Marka logosu kullanılmaz. -->
+          <!-- Ödeme yöntemleri: her yöntem piktogramı ve adıyla durur. Marka logosu kullanılmaz.
+               Yöntemler tıklanmaz. Bu yüzden kutu içinde durmaz, düz satırdır. -->
           <div class="pay" data-reveal>
             <p class="label" id="odeme-etiket">Ödeme yöntemleri</p>
             <ul class="ptiles" aria-labelledby="odeme-etiket">{{odeme_tiles}}</ul>
@@ -237,14 +240,14 @@
       {{h_satici}}
       <div class="sell">
         <ul class="sell__list">
-          <li class="reason" data-glow data-reveal style="--i:0">{{p_fatura}}<div><p class="reason__why">Çünkü</p><h3>Şu an satış komisyonu yok</h3><p>Ücretler Satıcı Hizmet Sözleşmesi'ndeki ücret tablosuna göredir.</p></div></li>
-          <li class="reason" data-glow data-reveal style="--i:1">{{p_uretici}}<div><p class="reason__why">Çünkü</p><h3>Alıcıya aracısız ulaşırsınız</h3><p>iStoc üreticiyi alıcıyla aracısız buluşturur.</p></div></li>
-          <li class="reason" data-glow data-reveal style="--i:0">{{p_sure}}<div><p class="reason__why">Çünkü</p><h3>Başvuru 4 dakika sürer</h3><p>Vergi numaranızı, üretim kategorinizi ve bir iletişim bilginizi yazarsınız.</p></div></li>
-          <li class="reason" data-glow data-reveal style="--i:1">{{p_kalkan}}<div><p class="reason__why">Çünkü</p><h3>Doğrulanan mağaza rozet taşır</h3><p>İşletme doğrulaması rozeti bütün paketlerde vardır.</p></div></li>
+          <li class="reason" data-reveal style="--i:0">{{p_fatura}}<div><p class="reason__why">Çünkü</p><h3>Şu an satış komisyonu yok</h3><p>Ücretler Satıcı Hizmet Sözleşmesi'ndeki ücret tablosuna göredir.</p></div></li>
+          <li class="reason" data-reveal style="--i:1">{{p_uretici}}<div><p class="reason__why">Çünkü</p><h3>Alıcıya aracısız ulaşırsınız</h3><p>iStoc üreticiyi alıcıyla aracısız buluşturur.</p></div></li>
+          <li class="reason" data-reveal style="--i:0">{{p_sure}}<div><p class="reason__why">Çünkü</p><h3>Başvuru 4 dakika sürer</h3><p>Vergi numaranızı, üretim kategorinizi ve bir iletişim bilginizi yazarsınız.</p></div></li>
+          <li class="reason" data-reveal style="--i:1">{{p_kalkan}}<div><p class="reason__why">Çünkü</p><h3>Doğrulanan mağaza rozet taşır</h3><p>İşletme doğrulaması rozeti bütün paketlerde vardır.</p></div></li>
         </ul>
         <div class="sell__panel on-ink" data-reveal style="--i:2">
           <p class="label">Satıcı yolu</p>
-          <ol class="steps">
+          <ol class="steps" role="list">
             <li><b>Başvuruyu yaparsınız.</b><span>Başvuru ücretsizdir.</span></li>
             <li><b>Onayı beklersiniz.</b><span>Onay ortalama 2 iş günü sürer.</span></li>
             <li><b>Mağazanızı açarsınız.</b><span>Rozet, mağazanın işletme doğrulamasının tamamlandığını gösterir.</span></li>

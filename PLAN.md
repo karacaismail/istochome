@@ -18,9 +18,9 @@ Sayfanın iki okuyucusu var. Her biri "bu platformu kullanırım, çünkü" cüm
 | "iStoc'tan alırım, çünkü" | Sayfadaki kanıtı |
 |---|---|
 | Yola çıkmam. | Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırım. |
-| Karşımdaki doğrulanmıştır. | Rozetli satıcının kimlik ve işletme doğrulamasını iStoc yapar. 19 mağazanın 18 tanesi doğrulandı. |
+| Kimin doğrulandığını görürüm. | Rozetli mağazanın kimlik ve işletme doğrulamasını iStoc yapar. 19 mağazanın 18 tanesi doğrulandı. |
 | Koşulu önceden görürüm. | Ürün kartında birim fiyat, KDV hariç fiyat, en az sipariş adedi ve hazırlık süresi yazar. |
-| Ödemem doğru hesaba gider. | Yalnız sipariş sayfamda gösterilen hesaba ödeme yaparım. |
+| Hangi hesaba ödeyeceğimi bilirim. | Yalnız sipariş sayfamda gösterilen hesaba ödeme yaparım. |
 | Siparişim kayıt altındadır. | iStoc kabul ettiğim koşulları saklar ve siparişi teslimata kadar izler. |
 | Sorun çıkarsa muhatabım vardır. | Koşullar karşılanmazsa talep açarım. |
 
@@ -36,6 +36,8 @@ Sayfanın iki okuyucusu var. Her biri "bu platformu kullanırım, çünkü" cüm
 Sayfanın değer önerisi şudur: "Çarşıya gitmeyin. Çarşı ekranınızda."
 
 Dil iddialıdır, ama her iddianın dayanağı vardır. Slogan ve başlık sayfanın kendi sözüdür. Canlı site hakkındaki her cümle kanıt defterindedir. Ayrıntı 15. bölümdedir.
+
+Başlık sonuç vaat etmez, okurun ne göreceğini söyler. Örneğin "Karşınızdaki doğrulanmıştır" yazmaz, çünkü 19 mağazanın biri doğrulanmamıştır. Başlık "Kimin doğrulandığını görürsünüz" der.
 
 ## 3. Dönüşüm mimarisi: öğe, bileşen, bölüm, sayfa
 
@@ -59,7 +61,7 @@ Bir bileşen tek bir soruyu yanıtlar ve tek bir ana eylem taşır. İçinde dö
 
 | Bileşen | Vaat | Kanıt | Eylem | Güvence |
 |---|---|---|---|---|
-| Arama kutusu | Değer önerisi | Dört canlı sayı ve günü | "Arayın" | "Sık arananlar" kısa yolları |
+| Arama kutusu | Değer önerisi | Dört canlı sayı ve günü | "Arayın" | "Örnek aramalar" kısa yolları |
 | Teklif kutusu | "Bir istek, birden fazla teklif" | Üç adım | "Teklif isteği oluşturun" | Formun veri göndermediği notu |
 | Gerekçe kartı | "Çünkü" ile başlayan başlık | Kaynaklı cümle ve sayı | Bölüm sonu düğmesi | Doğrulama işareti |
 | Ürün kartı | Ürün adı ve fiyat | En az adet, en az tutar, hazırlık süresi, rozet | "12 adet ekleyin" | Sepetin örnek olduğu notu |
@@ -73,6 +75,7 @@ Bir bileşende en çok bir turuncu düğme durur. Böylece göz tek bir ana eyle
 Bir bölüm alıcının tek bir sorusunu yanıtlar. Üç parçası vardır: başlık vaadi söyler, gövde kanıtı gösterir, çıkış bir sonraki adıma götürür. Çıkışı olmayan bölüm huniyi keser.
 
 - Bölüm başlığı sıra numarası ve bölüm adıyla başlar. Okur sayfanın neresinde olduğunu bilir.
+- Ekran okuyucu bölüm adını başlığın içinde okur: "Ürünler: Fiyatı sormayın. Kartta yazıyor." Böylece bölümün adı yalnız bir slogan olmaz.
 - Çıkışın bağlayıcılığı, bölümün hunideki yerine uyar. Başta arama ve inceleme vardır. Sonda kayıt ve başvuru vardır.
 - Aradığını bulamayan okur huniden çıkmaz. Ürünler bölümünün sonunda ve kategori menüsünde teklif isteği kısa yolu durur.
 
@@ -298,6 +301,8 @@ Bu set kullanıcılarla sınanmadı. Ayrıntı `ARASTIRMA.md` dosyasının beşi
 - Menünün altında teklif isteği kısa yolu durur. Aradığını bulamayan okur huniden çıkmaz.
 - JavaScript kapalıysa düğmenin yerinde sayfadaki kategori bölümüne giden bir bağlantı görünür.
 
+**Üst arama** yalnız ürün arar. Etiketi de "Ürün arayın" der. Üretici araması karşılamadaki sekmededir.
+
 **Alt bölüm beş katmandır.**
 
 | Katman | İçerik |
@@ -311,13 +316,32 @@ Bu set kullanıcılarla sınanmadı. Ayrıntı `ARASTIRMA.md` dosyasının beşi
 - **Dil ve para birimi kutuları** görseldir. Her seçenek bir kutudur: kısaltma ya da simge, ad ve seçili işareti.
 - Her grup bir radyo grubudur. Ok tuşları seçimi ve odağı birlikte taşır.
 - Para birimi seçimi sayfadaki bütün fiyatları değiştirir. Tutarlar dört para biriminde hazır durur.
-- Dar ekranda bağlantı sütunları açılır kapanır gruplara döner.
+- Canlı sitede fiyat Türk lirasıdır. `build.py` diğer tutarları canlı sitenin kuruyla çevirir. Sayfa bunu yazar.
+- Toplam, yuvarlanmamış birim tutardan hesaplanır. Bu yüzden karttaki en az sipariş tutarı, sepetin toplamıyla aynıdır.
+- Kutu iki satırdır: üstte kısaltma ile seçili işareti, altta ad durur. Böylece 320 piksel genişlikte de ad işarete değmez.
+- Kutular JavaScript ile çalışır. JavaScript yoksa kutular görünmez. Yerine fiyatların ABD doları olarak gösterildiğini söyleyen cümle görünür.
+- Dar ekranda bağlantı sütunları katlanan gruplara döner. Katlanan grubun yapısı 11.2 bölümündedir.
 
 **İçerik türüne göre katman** günlük yazısı dışındaki içerik türlerini düzenler. Ayrıntı 11.3 bölümündedir.
 
 **Hedef boyutu.** Dokunma hedefi en az 44 pikseldir. Sıkı yoğunluk yalnız fareyle kullanılan geniş ekranda geçerlidir. Ölçüt ekran genişliği değil, işaretçidir.
 
 **Klavye odağı.** Çevreleyen halka yoktur. Odaklanan öğenin dolgusu ters döner ve metninin altı çizilir. Zaten dolgulu olan düğme kendi odak dolgusunu bildirir. Odak dolgusu, öğenin durağan dolgusundan en az 3:1 karşıtlıkla ayrılır. Metin alanında dolgu değişmez, yazının altında düz bir çizgi belirir. JavaScript yoksa da odak görünür.
+
+**Görünen etiket erişilebilir adın içindedir.** Ekran okuyucunun okuduğu ad, ekranda yazan etiketle başlar. Örneğin sepet düğmesinin adı "12 adet ekleyin: Ürünün adı" olur. Sesle komut veren kullanıcı ekranda gördüğü etiketi söyler ve düğme bulunur. Tarayıcı testi bunu bütün adlandırılmış denetimlerde ölçer.
+
+Kendi kutusu olan simge odakta da kendi renklerini korur. Örneğin sık sorulanlardaki artı simgesi ve alt gezinmedeki teklif simgesi böyledir. Tarayıcı testi odaktaki simgenin zemininden en az 3:1 karşıtlıkla ayrıldığını ölçer.
+
+**Zorlanmış renkler.** Windows yüksek karşıtlık gibi modlarda tarayıcı sayfanın renklerini sistem renkleriyle değiştirir. Bu modda odak, klavye modunda çerçeveyle gösterilir. Çevreleyen çerçevenin izinli olduğu tek durum budur. Seçili süzgeç, seçili sekme ve seçili seçenek sistemin seçim rengini alır. Yalnız dolgudan oluşan çubuklar da bu renkle çizilir.
+
+Tarayıcı bu modda her yazının arkasına sayfa zemini renginde bir levha çizer. Seçili öğede o levha yazıyı örterdi. Bu yüzden seçili öğenin renklerini tarayıcı değil sayfa belirler. Sayfa bunu yalnız sistem renkleriyle yapar, böylece kullanıcının renk düzeni korunur.
+
+**Büyütülen yazı.** Kullanıcı tarayıcıda yazıyı büyütebilir. O durumda gövde metni büyür. Bazı yerleşim sınırları yazı boyutuna bağlıdır (em birimi). Örneğin yazı büyüyünce kategori kutusunda piktogram üste geçer, ödeme yöntemleri tek sütuna iner.
+
+- **Alt gezinme.** Büyük yazıda beş etiket dar ekrana sığmaz. O zaman bulunulan sayfanın öğesi gizlenir, çünkü okur zaten o sayfadadır. Kalan dört etiket kullanıcının seçtiği boyutta durur. Çubuğun yan payı kalkar, böylece etiketler birbirine değmez. Tarayıcı testi etiketin küçülmediğini ve etiketler arasında boşluk kaldığını ölçer.
+- **Büyük başlıklar.** Büyük başlık ekran genişliğiyle de sınırlanır. Sınır olmasaydı uzun bir kelime dar ekranda satırdan taşardı. Başlık yine de gövde metninden küçük olmaz. Bu bir uzlaşmadır, karar 17. bölümdedir.
+
+**Yatay telefon.** Ekranın yüksekliği 480 pikselin altındaysa sabit çubuklar incelir. Alt gezinmede simge ile etiket yan yana durur. Sepet çubuğu tek satıra iner.
 
 ## 11. Dizin: programatik arama motoru stratejileri
 
@@ -341,11 +365,16 @@ Hiçbir strateji konuma bağlı değildir. Hiçbiri günlük yazısına dayanmaz
 
 ### 11.2 Kurallar
 
-- **Her öğenin yanında canlı sonuç sayısı yazar.** `veri.py` sayıyı canlı siteden alır.
+- **Sayısı olan öğenin yanında canlı sonuç sayısı yazar.** `veri.py` sayıyı canlı siteden alır. Hazır listelerin (çok satanlar, fırsatlar, yeni ürünler) sayısı yoktur. Onların yanında ok durur.
 - **Boş öğe sayfaya girmez.** Sonucu 5'in altında kalan öğe atılır. Bir grupta 3 öğe kalmazsa sayfa üretilmez.
 - **Çubuk yalnız orandır.** Çubuk, sayının gruptaki en büyük sayıya oranını gösterir. Sayı yazıyla da durur.
 - **Arama sonucu bulanıktır.** Canlı sitenin araması kelimeyi geniş eşler. Bu yüzden belirsiz kelimeler seçilmedi. Örneğin "cam" kelimesi cam sileceğini de getirir.
 - **Dar ekranda gruplar katlanır.** İlk grup açık başlar. Diğer gruplar başlığına dokununca açılır.
+- **Katlanan grubun başlığı dar ekranda ve kısa ekranda bir düğmedir.** Düğme grubun açık olup olmadığını bildirir. Grup açılırken yüksekliği yumuşak değişir. Yatay telefon kısa bir ekrandır. Bu yüzden telefon yatay çevrilince de gruplar katlanır kalır.
+- **Kapanan grubun içi hemen gizlenir.** Yükseklik bir süre daha azalarak kapanır, ama bölümün içine o sürede de odak giremez. Ekran okuyucu da kapalı bölümü okumaz.
+- **Başlığın metni sayfada bir kez yazılıdır.** Düğme metni betikle kopyalar. Böylece arama motoru ve okuma modu başlığı bir kez okur.
+- **Geniş ekranda başlık düz yazıdır.** Grup hep açıktır. Ekranda işe yaramayan bir düğme durmaz. Kâğıtta ve JavaScript yokken de grup açıktır.
+- **Açılan grup yerinde kalır.** Kullanıcının açtığı grup, ekran dönüp yeniden daralınca da açık kalır. Odak kaybolmaz. Örneğin odak düğmedeyken ekran genişlerse odak grubun ilk bağlantısına geçer.
 - **Gruplar bölüm başlığı taşır.** Her grubun adı bir başlıktır. Arama motoru grubu konusuyla birlikte okur.
 
 ### 11.3 Günlük yazısı dışındaki içerik türleri
@@ -388,7 +417,11 @@ Her üretilen sayfa üç koşulu sağlamalıdır. Sayfada gerçek ürün bulunma
 | Buna tıklanır mı? | Alt çizgi, düğme biçimi, ok, etiket | Altı çizili bağlantılar, altı çizili dizin öğeleri, etiketli simgeler |
 | Şu an hangi durumda? | Dolgu, işaret, soluk simge | Seçili süzgeç, seçili para birimi, sepetteki ürün |
 
-Ters yöndeki hata da aynı kuralın parçasıdır: tıklanamayan öğe tıklanabilir görünmemelidir. Ödeme yöntemi kutuları ve planlanan içerik türleri bu yüzden alt çizgisizdir.
+Ters yöndeki hata da aynı kuralın parçasıdır: tıklanamayan öğe tıklanabilir görünmemelidir.
+
+- Ödeme yöntemleri kutu içinde durmaz, düz satırdır. Koyu zeminde dolgulu kutu yalnız tıklanan öğededir.
+- Gerekçe kartları ve ödeme yöntemleri üzerine gelince değişmez. Tarayıcı testi bunu ölçer.
+- Planlanan içerik türleri alt çizgisizdir, çünkü bağlantı değildir.
 
 Gösterge gözle seçilmelidir. Liste bağlantısının alt çizgisi zemine karşı en az 3:1 karşıtlık taşır.
 
@@ -411,13 +444,18 @@ Hareketin üç kaynağı vardır: sayfanın açılışı, kaydırma ve işaretç
 | Kaydırma | Dolan adım çizgisi | Sipariş süreci | Kaydırdıkça ilerleme gösterir |
 | Kaydırma | Kayan ızgara | Koyu bantlar | Zemine derinlik verir |
 | İşaretçi | İşaretçi ışığı | Koyu bantlar, alt bölüm | Işık işaretçiyi izler ve altındaki ızgarayı aydınlatır |
-| İşaretçi | Kart ışığı | Kartlar | İşaretçinin hangi kartta olduğunu gösterir. Kart oynamaz. |
+| İşaretçi | Kart ışığı | Ürün, üretici ve kategori kartları | İşaretçinin hangi kartta olduğunu gösterir. Kart oynamaz. Tıklanmayan kartta ışık yoktur. |
 | Dokunuş | Kayan gösterge, açılan menü, kayan kartlar | Sekmeler, menü, süzgeç | Durumun değiştiğini gösterir |
-| Dokunuş | Akan toplam | Örnek sipariş, sipariş özeti | Adet ya da para birimi değişince toplam değişir |
+| Dokunuş | Akan toplam | Örnek sipariş, sipariş özeti | Adet değişince toplam akarak değişir. Para birimi değişince toplam geçişsiz yazılır. |
+| Dokunuş | Açılan grup | Dizin ve alt bölüm | Grubun yüksekliği yumuşak değişir |
 
 Durum (değer, ARIA, odak) her zaman anında güncellenir. Yalnız görsel sunum yumuşak geçer. Üzerine gelince hiçbir kutu yerinden oynamaz.
 
-Hareket azaltma tercihi açıksa geçişler kapanır ve ışık sabit durur. Dokunmatik ekranda ışık sabit durur. Kâğıtta hareket yoktur.
+**Işık ve ızgara sayfayı yormaz.** Işığın yeri bandın bütününe değil, ışık katmanına yazılır. Böylece her karede yalnız bu katman yeniden boyanır. Işık dönüşümle (transform) yer değiştirir ve yerleşimi etkilemez. Kaydırmaya bağlı bütün işler tek bir karede çalışır: önce hepsi ölçer, sonra hepsi yazar.
+
+**Işık metni soldurmaz.** Işığın saydamlığı en çok 0,24'tür. Bu değerde koyu bandın en soluk metni de 4,5:1 karşıtlığı korur. Tarayıcı testi karşıtlığı ışığın en parlak yerine göre ölçer. Sipariş adımlarının metni her zaman tam görünür. Önceki sürümde geçilmemiş adım soluk başlıyordu ve ışığın altında okunmuyordu.
+
+Hareket azaltma tercihi açıksa geçişler kapanır ve ışık sabit durur. Tercih sayfa açıkken değişirse ızgara da durur. Dokunmatik ekranda ışık sabit durur. Kâğıtta hareket yoktur.
 
 **Lottie kullanılmadı.** Hareketli çizimler SVG ve CSS ile yapıldı. Bunun üç nedeni var:
 
@@ -432,7 +470,8 @@ Lottie istenirse aynı sahneler Lottie biçimine aktarılabilir. O durumda oynat
 - Tek bir `h1` var. İçinde "Global B2B toptan pazaryeri" tanımı da durur.
 - Başlık düzeyleri sıralıdır. Dizin gruplarının adları da başlıktır.
 - Başlık, açıklama, kalıcı adres ve paylaşım etiketleri var.
-- Sayfada dört yapısal veri vardır: kuruluş, site içi arama, ürün listesi ve sık sorulanlar.
+- Sayfada dört yapısal veri vardır: kuruluş, site içi arama, ürün listesi ve sık sorulanlar. Yapısal verideki soru ve yanıtlar sayfadaki metnin aynısıdır. `build.py` bunu denetler.
+- Bölgenin adı başlığın içindedir. Örneğin ürünler bölümünün başlığı ekran okuyucuda "Ürünler: Fiyatı sormayın. Kartta yazıyor." diye okunur.
 - Kategori bağlantıları canlı sitenin site haritasındaki adresi kullanır: `/kategori/<adres>`.
 - Dizin 54, alt bölüm 36 canlı site bağlantısı taşır. Her birinin hedefi denetlenmiştir.
 - Dil bağlantısı canlı sitedeki gibi yalnız Türkçe için bildirilir.
@@ -447,7 +486,7 @@ Kural şudur: sayfadaki her sayı ve her olgu `data` klasöründen gelir. `build
 - `secim.py` seçimi ve metin sınıflarını tutar.
 - `build.py` bu iki kaynağı birleştirir. Ağa çıkmaz.
 
-10 Kasım 2026 günü alınan veri şunları söylüyor:
+12 Kasım 2026 günü alınan veri şunları söylüyor:
 
 - 2.412 ürün, 52 üst kategori ve 751 alt kategori var.
 - 19 mağaza var. 18 mağazanın işletme doğrulaması tamamlandı.
@@ -455,9 +494,15 @@ Kural şudur: sayfadaki her sayı ve her olgu `data` klasöründen gelir. `build
 - Seçilen 8 ürünün fiyatı, en az sipariş adedi, hazırlık süresi ve üreticisi ürün ayrıntısından geldi.
 - Dizindeki 45 aramanın sonuç sayısı canlı siteden alındı.
 
+**Veri dosyaları tek koşudan gelir.** `veri.py` dosyaları önce geçici adla yazar, sonra yerine koyar. En son koşunun özetini yazar (`data/kosu.json`). Özet her dosyanın parmak izini taşır. Bir dosya sonradan değiştiyse ya da yazma yarıda kaldıysa `build.py` sayfayı üretmez.
+
+**Fiyat varsayımı denetlenir.** Sayfa, ürün ayrıntısındaki fiyatı Türk lirası ve KDV hariç sayar. `veri.py` bunu her ürün için canlı sitenin liste kaydıyla karşılaştırır. Liste kaydındaki KDV dahil fiyat, KDV hariç fiyat ile KDV oranının çarpımına eşit olmalıdır. Eşit değilse betik durur.
+
+**Mağaza listesi eksiksiz alınır.** Liste tek sayfada istenir. Gelen mağaza sayısı toplamla aynı değilse betik durur. Böylece doğrulanmış mağaza sayısı eksik çıkmaz.
+
 ### 15.1 Kanıt defteri
 
-Canlı site hakkındaki her cümle `data/kaynaklar.json` dosyasındadır. Defterde 72 cümle var.
+Canlı site hakkındaki her cümle `data/kaynaklar.json` dosyasındadır. Defterde 77 cümle var.
 
 - Her cümlenin yanında kaynağın adresi, aranan ifade ve ifadenin bulunduğu yer yazar.
 - `veri.py` her ifadeyi kaynağında arar. Bir ifadeyi bulamazsa durur ve hiçbir dosyayı yazmaz.
@@ -469,17 +514,21 @@ Yeni kural şudur. Sayfanın kodu bir metnin anahtarını adıyla çağırıyors
 
 Bu kural dört cümleyi eledi. O cümlelerin kanıtı dil paketindeydi, ama hiçbir sayfa onları çağırmıyordu. Cümleler sayfadan çıkarıldı ya da başka bir kaynağa bağlandı.
 
+Kanıtın arandığı yerlerin sırası da kuraldır. Önce sayfanın çağırdığı dil anahtarına bakılır. Sonra sayfanın görünen metnine bakılır. En son sayfanın koduna bakılır. Kodda bulunan ifade ya yapısal veridir (`name:"Türkçe"` gibi) ya da en az üç kelimedir. Tek kelime kodda kanıt sayılmaz, çünkü o kelime bir denetim dalında da geçebilir. Örneğin "Bireysel" kelimesi artık kimlik sayfasının çağırdığı `kycUi.individual` anahtarında bulunur.
+
 Sunucunun gönderdiği sayfalarda yorum satırları artık kanıt sayılmaz. Yalnız görünen metin aranır.
+
+Tek kelimelik adlar da kaynaklıdır. Ödeme yöntemi, para birimi ve dil adlarının her biri kanıt defterindedir. `build.py` bunu ayrıca denetler, çünkü tek kelimelik metin metin sınıflarının dışında kalır.
 
 | Kaynak | Hangi cümleler? |
 |---|---|
-| Ticaret güvencesi sayfası | Ödeme yolu, sipariş kaydı, destek, iade, teslimat |
+| Ticaret güvencesi sayfası | Ödeme yolu, sipariş kaydı, destek, iade, teslimat, PayPal |
 | Ödeme seçenekleri sayfası | Hesap güvenliği, dekont, ödeme yöntemleri, para birimi adları |
 | Satıcı sayfası | Komisyon, başvuru süresi, onay süresi, aracısız buluşma |
 | Üreticiler sayfası | Teklif isteği sözü, ücretsiz kayıt, satıcı doğrulaması |
 | Kimlik doğrulama sayfası | Satın almadan önceki kimlik doğrulaması, belge yükleme, inceleme süresi |
 | Sepet sayfası | En az sipariş adedi uyarısı |
-| Ana sayfa | Diller, sitenin tanımı, şirket adı |
+| Ana sayfa | Diller, sitenin tanımı, şirket adı, alt bölümdeki bölüm adları (Canlı destek, Haftanın fırsatları, Alıcı Koruma Programı) |
 | Paket verisi (açık uç) | Hiçbir pakette komisyon yok. Doğrulama rozeti üç paketin üçünde var. |
 
 ### 15.2 Metin sınıfları
@@ -488,24 +537,34 @@ Sunucunun gönderdiği sayfalarda yorum satırları artık kanıt sayılmaz. Yal
 
 | Sınıf | Ne demek? | Sayfadaki sayısı |
 |---|---|---|
-| Kaynak | Canlı sitedeki bir sayfaya dayanan cümle. Kanıt defterinde durur. Eşleşme birebirdir. | 68 |
+| Kaynak | Canlı sitedeki bir sayfaya dayanan cümle. Kanıt defterinde durur. Eşleşme birebirdir. | 71 |
 | Veri | Sayısı ya da dayanağı `data` klasöründen gelen metin. | 34 |
-| Tasarım | Bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu. | 68 |
-| Etiket | Düğme, bağlantı, alan ve bölüm adı. Canlı sitedeki bir sayfanın adı da etikettir. | 137 |
+| Tasarım | Bu sayfanın kendi sözü: değer önerisi, başlık, soru, yönerge ve öneri notu. | 70 |
+| Etiket | Düğme, bağlantı, alan ve bölüm adı. | 134 |
+| Görünmeyen metin | Sayfa başlığı, ekran okuyucunun okuduğu adlar, alan içi örnekler ve yalnız ekran okuyucuya okunan metinler. | 31 |
 
 - Şablona yeni bir metin eklenirse ve sınıfı yazılmazsa `build.py` sayfayı üretmez.
 - Canlı site hakkında olgu bildiren cümle tasarım sınıfına yazılmaz.
 - Ürün, kategori ve mağaza adları veriden gelir. Sayfada işaretlenir ve sınıflandırılmaz.
 - `app.js` içindeki kullanıcı metinleri de kayıtlıdır.
+- Görünmeyen metinler `secim.py` içindeki `OZNITELIK_METNI` listesinde kayıtlıdır. Kayıtsız bir görünmeyen metin bulunursa sayfa üretilmez.
+- Canlı sitedeki bir bölümün adını taşıyan bağlantı etiketi kaynaklıdır. Örneğin "Alıcı Koruma Programı" kanıt defterindedir.
 
 ### 15.3 Bağlantı denetimi
 
-Sayfadaki her istoc.com adresi iki yoldan biriyle denetlenir.
+Sayfadaki her adres denetlenir: bağlantılar, form hedefleri, paylaşım görseli ve yapısal verideki adresler. Sunucu adı birebir karşılaştırılır. Örneğin "istoc.com.baska.site" adresi istoc.com sayılmaz.
 
 - **Sabit sayfa.** `veri.py` adresi açar. Sayfa açılmalı ve başka bir sayfaya yönlenmemelidir. 34 sayfa bu yolla denetlendi.
-- **Kayıt sayfası.** Kategori, ürün, mağaza ve marka adresleri veride var olan bir kayda gitmelidir.
+- **Karşı denetim.** Var olmayan bir adres açılmamalıdır. Açılsaydı "sayfa açıldı" denetimi hiçbir şey kanıtlamazdı.
+- **Kayıt sayfası.** Ürün, mağaza ve marka adresleri canlı sitenin site haritasında bulunmalıdır. Kategori adresleri canlı kategori ağacında bulunmalıdır. Mağaza adresi ayrıca işletmesi doğrulanmış bir mağazaya gitmelidir.
+- **Adres kalıbı.** Bağlantıdaki değişken adlarını canlı sayfanın kodu tanımalıdır. Bu adlar `q`, `min_order` ve `sort` değerleridir. Satıcı sayfasının kodu `#paketler` bölümünü de tanımalıdır.
+- **Dış adres.** Sosyal hesap adresleri canlı sitenin kodunda geçmelidir. Paylaşım görseli ve logo açılmalıdır.
 
-`build.py` denetlenmemiş bir adres bulursa sayfayı üretmez. `kapi.mjs` aynı denetimi üretilen sayfada yineler. Son derlemede 240 canlı adres denetlendi.
+`build.py` denetlenmemiş bir adres bulursa sayfayı üretmez. `kapi.mjs` aynı denetimi üretilen sayfada yineler. Son derlemede 252 ayrı adres denetlendi. Bunların 243'ü istoc.com adresidir.
+
+Bu denetim adresin var olduğunu gösterir. Giriş isteyen sayfanın girişten sonra ne gösterdiğini göstermez.
+
+**Uygulama kabuğu.** Bazı yolların altında var olmayan adres de açılır. Örneğin `/panel/` altındaki her adres satıcı panelinin kabuğunu açar. `veri.py` her alt yolu ayrı ayrı dener ve bu yolları kaydeder. Bu yoldaki bağlantının denetimi yalnız sunucunun yanıt verdiğini gösterir. Ürün, mağaza, marka ve kategori yolları da böyledir. Bu yüzden onların adresleri açılarak değil, site haritasıyla ve veriyle denetlenir.
 
 ### 15.4 Bilinen veri sorunları
 
@@ -534,20 +593,23 @@ Sayfadaki her istoc.com adresi iki yoldan biriyle denetlenir.
 | `goruntu.mjs` | Bölüm bölüm ekran görüntüsü alır |
 | `serve.mjs` | Önizleme sunucusu |
 
-### Doğrulama durumu (11 Kasım 2026, ara durum)
-
-Bu tablo bir ara durumdur. Bağımsız inceleme sürüyor.
+### Doğrulama durumu (12 Kasım 2026)
 
 | Denetim | Durum | Not |
 |---|---|---|
-| Kural kapısı | pass | 641 stil kuralı ve 1 sayfa denetlendi. |
-| Kapının kendini sınaması | pass | 81 ihlal örneğinin hepsi reddedildi. |
-| Chromium (Playwright) | pass | 492 denetimin hepsi geçti. |
-| WebKit (Playwright, Safari ailesi) | pass | 492 denetimin hepsi geçti. |
-| Testin kendini sınaması | pass | 45 bozulmanın hepsi yakalandı. Sonra iki küçük değişiklik yapıldı, sınama yinelenecek. |
-| Kaynak denetimi | pass | 72 kaynaklı cümlenin hepsi canlı sitede bulundu. |
-| Bağlantı denetimi | pass | 34 canlı sayfa açıldı. Sayfadaki 240 canlı adres denetlendi. |
-| Bağımsız inceleme | not_run | İnceleme sürüyor. |
+| Kural kapısı | pass | 663 stil kuralı ve 1 sayfa denetlendi. Önizleme ve yayın derlemesi ayrı ayrı denetlendi. |
+| Kapının kendini sınaması | pass | 93 ihlal örneğinin hepsi reddedildi. |
+| Chromium (Playwright) | pass | 596 denetimin hepsi geçti. |
+| WebKit (Playwright, Safari ailesi) | pass | 572 denetimin hepsi geçti. |
+| Büyütülmüş yazı | pass | Yalnız Chromium'da çalışır. Kök yazı boyutu 20 ve 24 piksel, genişlik 320 ve 390 piksel. |
+| Zorlanmış renkler | pass | Yalnız Chromium'da çalışır. Klavye çerçevesi, seçili durum ve seçili öğenin yazısı sınandı. |
+| Büyütülmüş yazı ve zorlanmış renkler, WebKit | not_run | WebKit bu iki ayarı öykünmez. |
+| Testin kendini sınaması | pass | 67 bozulmanın hepsi yakalandı. |
+| Kaynak denetimi | pass | 77 kaynaklı cümlenin hepsi canlı sitede bulundu. |
+| Bağlantı denetimi | pass | 34 canlı sayfa açıldı. Var olmayan adres açılmadı. Sayfadaki 252 ayrı adres denetlendi. |
+| Bağımsız inceleme, 1. tur | pass | 3 zorunlu ve 24 önerilen bulgu bildirdi. Hepsi düzeltildi. |
+| Bağımsız inceleme, 2. tur | pass | Düzeltmeleri denetledi. 1 zorunlu, 3 önerilen ve 10 küçük bulgu daha buldu. Hepsi düzeltildi ya da 17. bölümde karara bırakıldı. |
+| Son düzeltmelerin bağımsız incelemesi | not_run | İkinci turdan sonraki düzeltmeleri yalnız testler denetledi. |
 | Firefox | not_run | Kullanıcının kararıyla çalıştırılmaz. |
 | Gerçek Safari, iOS ve Android cihaz | not_run | Öykünme gerçek cihazın yerini tutmaz. |
 | Ekran okuyucu | not_run | Sesli okuma denenmedi. |
@@ -555,9 +617,11 @@ Bu tablo bir ara durumdur. Bağımsız inceleme sürüyor.
 | Piktogramların kullanıcıyla sınanması | not_run | Ayrıntı `ARASTIRMA.md` dosyasındadır. |
 | Metnin gerçek okurla denenmesi | not_run | Gerçek okurla denenmedi. |
 
-Yerleşim denetimleri dokuz ekran boyutunda çalışır. Dar boyutlar 320, 360, 375 ve 390 piksel genişliktedir. 320 piksel iki ayrı yükseklikte sınanır. Diğer boyutlar yatay telefon, tablet, dizüstü ve masaüstüdür. Dokunmatik geniş ekran ayrıca sınanır.
+Alt gezinmenin büyük yazıdaki boşluk düzeltmesi tam koşudan sonra yapıldı. Değişen dört büyük yazı denetimi ayrıca çalıştırıldı ve geçti. Son tam koşu sürüyor.
 
-Davranış denetimleri ve klavye turu 320, 390 ve 1440 piksel genişlikte çalışır. Tur, sayfayı Tab tuşuyla baştan sona dolaşır. JavaScript kapalı durum ayrıca sınanır.
+Yerleşim denetimleri dokuz ekran boyutunda çalışır. Dar boyutlar 320, 360, 375 ve 390 piksel genişliktedir. 320 piksel iki ayrı yükseklikte sınanır. Diğer boyutlar yatay telefon, tablet, dizüstü ve masaüstüdür. Dar ekranda kapalı başlayan gruplar açılır ve sayfa bir kez daha ölçülür.
+
+Davranış denetimleri ve klavye turu 320, 390 ve 1440 piksel genişlikte çalışır. Tur, sayfayı Tab tuşuyla baştan sona dolaşır. Yatay telefon 844 x 390 ve 568 x 320 boyutunda ayrıca sınanır. JavaScript kapalı durum ve dokunmatik geniş ekran da ayrıca sınanır.
 
 ## 17. Açık konular
 
@@ -573,3 +637,4 @@ Davranış denetimleri ve klavye turu 320, 390 ve 1440 piksel genişlikte çalı
 10. **Uygulama bağlantıları.** Canlı sitedeki App Store ve Google Play bağlantıları boştur. Bu yüzden alt bölüme konmadı.
 11. **Kategorisiz ürünler.** 1.765 ürün canlı sitede bir kategoriye bağlı değildir.
 12. **Planlanan içerik türleri.** Altı içerik türü öneridir. Canlı sitede karşılıkları yoktur.
+13. **Büyük başlık sınırı.** İki kural çatışır. Bir kural "metin sığmak için küçültülmez" der. Diğer kural "başlık kelime ortasından bölünmez" der. Kullanıcı yazıyı yüzde 150 büyütürse dar ekranda büyük başlık küçülür. Küçülmeseydi uzun kelime ekrandan taşardı. Başlık yine de gövde metninden küçük olmaz. Bu uzlaşmayı kullanıcı onaylamalıdır.

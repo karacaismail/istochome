@@ -1,5 +1,5 @@
 {
- "alindi": "2026-11-10",
+ "alindi": "2026-11-12",
  "paketler": {
   "sayi": 3,
   "komisyonlu": 0,
@@ -142,10 +142,10 @@
     "Başvuru ücretsiz"
    ],
    "yer": [
-    "kod"
+    "dil: sellPage.finalCtaNote"
    ],
    "baglam": [
-    "ame=\"description\" content=\"Ürünlerinizi binlerce B2B alıcısına satın. Başvuru ücretsiz: mağazanızı açın, toptan satışa bugün başlayın.\" /> <link rel=\"canoni"
+    "Başvuru ücretsiz. İptal koşulu yok."
    ],
    "bulundu": true
   },
@@ -192,7 +192,7 @@
    "bulundu": true
   },
   {
-   "metin": "Rozetli satıcının kimlik ve işletme doğrulamasını iStoc yapar.",
+   "metin": "Rozetli mağazanın kimlik ve işletme doğrulamasını iStoc yapar.",
    "kaynak": "https://istoc.com/ureticiler",
    "kanit": [
     "Bu satıcının kimlik ve işletme doğrulaması iStoc tarafından yapılmıştır"
@@ -241,11 +241,11 @@
     "Kurumsal"
    ],
    "yer": [
-    "kod",
+    "dil: kycUi.individual",
     "dil: kycUi.corporate"
    ],
    "baglam": [
-    "const i=u(n);return((a||\"TR\").trim().toUpperCase()||\"TR\")===\"TR\"?r===\"Bireysel\"?s(i):d(i)||s(i):y(i,r===\"Bireysel\"?5:4)}function E(r,n){if((n||\"\").t",
+    "Bireysel",
     "Kurumsal"
    ],
    "bulundu": true
@@ -423,6 +423,20 @@
    "bulundu": true
   },
   {
+   "metin": "PayPal",
+   "kaynak": "https://istoc.com/ticaret-guvencesi",
+   "kanit": [
+    "PayPal"
+   ],
+   "yer": [
+    "sayfa"
+   ],
+   "baglam": [
+    "ygun alıcılar için Kabul edilen ödeme yöntemleri VISA Mastercard AMEX PayPal EFT (Electronic Funds Transfer) Desteklenen para birimleri GBP £ USD"
+   ],
+   "bulundu": true
+  },
+  {
    "metin": "EFT ve anlık EFT",
    "kaynak": "https://istoc.com/odeme-secenekleri",
    "kanit": [
@@ -503,6 +517,20 @@
    ],
    "baglam": [
     "rklı para biriminde alım-satım iStoc üzerinde İngiliz Sterlini (GBP), ABD Doları (USD), Euro (EUR) ve Türk Lirası (TRY) ile ödeme yapabilir ve satış gerçekl"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Euro",
+   "kaynak": "https://istoc.com/odeme-secenekleri",
+   "kanit": [
+    "Euro (EUR)"
+   ],
+   "yer": [
+    "sayfa"
+   ],
+   "baglam": [
+    "e alım-satım iStoc üzerinde İngiliz Sterlini (GBP), ABD Doları (USD), Euro (EUR) ve Türk Lirası (TRY) ile ödeme yapabilir ve satış gerçekleştirebilirs"
    ],
    "bulundu": true
   },
@@ -880,6 +908,48 @@
    "bulundu": true
   },
   {
+   "metin": "Canlı destek",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Canlı Destek"
+   ],
+   "yer": [
+    "dil: footer.liveSupport"
+   ],
+   "baglam": [
+    "Canlı Destek"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Haftanın fırsatları",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Haftanın Fırsatları"
+   ],
+   "yer": [
+    "dil: footer.weeklyDeals"
+   ],
+   "baglam": [
+    "Haftanın Fırsatları"
+   ],
+   "bulundu": true
+  },
+  {
+   "metin": "Alıcı Koruma Programı",
+   "kaynak": "https://istoc.com/",
+   "kanit": [
+    "Alıcı Koruma Programı"
+   ],
+   "yer": [
+    "dil: footer.buyerProtection"
+   ],
+   "baglam": [
+    "Alıcı Koruma Programı"
+   ],
+   "bulundu": true
+  },
+  {
    "metin": "Türkçe",
    "kaynak": "https://istoc.com/",
    "kanit": [
@@ -889,7 +959,7 @@
     "kod"
    ],
    "baglam": [
-    "r\",\"ru\"],er=[\"ar\"],oe=\"i18nextLng\",se=\"th-lang-source\",je=[{code:\"tr\",name:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العر"
+    "r\",\"ru\"],or=[\"ar\"],ce=\"i18nextLng\",le=\"th-lang-source\",qe=[{code:\"tr\",name:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العر"
    ],
    "bulundu": true
   },
@@ -903,7 +973,7 @@
     "kod"
    ],
    "baglam": [
-    "e=\"th-lang-source\",je=[{code:\"tr\",name:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русс"
+    "e=\"th-lang-source\",qe=[{code:\"tr\",name:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русс"
    ],
    "bulundu": true
   },
@@ -917,7 +987,7 @@
     "kod"
    ],
    "baglam": [
-    "e:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русский\",flag:\"🇷🇺\"}];function Va(e){retur"
+    "e:\"Türkçe\",flag:\"🇹🇷\"},{code:\"en\",name:\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русский\",flag:\"🇷🇺\"}];function ei(e){retur"
    ],
    "bulundu": true
   },
@@ -931,7 +1001,7 @@
     "kod"
    ],
    "baglam": [
-    ":\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русский\",flag:\"🇷🇺\"}];function Va(e){return je.find(t=>t.code===e)?.name??e}fun"
+    ":\"English\",flag:\"🇬🇧\"},{code:\"ar\",name:\"العربية\",flag:\"🇸🇦\"},{code:\"ru\",name:\"Русский\",flag:\"🇷🇺\"}];function ei(e){return qe.find(t=>t.code===e)?.name??e}fun"
    ],
    "bulundu": true
   },
@@ -942,10 +1012,10 @@
     "Global B2B Toptan Satış ve Ticaret Pazaryeri"
    ],
    "yer": [
-    "kod"
+    "dil: pageTitle.home"
    ],
    "baglam": [
-    ":type\" content=\"website\" /> <title data-i18n=\"pageTitle.home\">iStoc | Global B2B Toptan Satış ve Ticaret Pazaryeri</title> <script>(function(){try{var B={\"en\":\"iStoc | Global B2B Whole"
+    "iStoc | Global B2B Toptan Satış ve Ticaret Pazaryeri"
    ],
    "bulundu": true
   },
@@ -956,10 +1026,10 @@
     "Global B2B Toptan Satış ve Ticaret Pazaryeri"
    ],
    "yer": [
-    "kod"
+    "dil: pageTitle.home"
    ],
    "baglam": [
-    ":type\" content=\"website\" /> <title data-i18n=\"pageTitle.home\">iStoc | Global B2B Toptan Satış ve Ticaret Pazaryeri</title> <script>(function(){try{var B={\"en\":\"iStoc | Global B2B Whole"
+    "iStoc | Global B2B Toptan Satış ve Ticaret Pazaryeri"
    ],
    "bulundu": true
   },

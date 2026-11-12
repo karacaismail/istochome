@@ -18,7 +18,8 @@ URUNLER = [
 # Süzgeç grupları: (anahtar, etiket). Sıra, süzgeç düğmelerinin sırasıdır.
 GRUPLAR = [("mutfak", "Mutfak"), ("saklama", "Saklama"), ("temizlik", "Temizlik"), ("aski", "Askı")]
 
-# Aramada dönen örnek kelimeler. Aynı kelimeler karşılamada kısa yol bağlantısı olarak da durur.
+# Aramada dönen örnek kelimeler. Aynı kelimeler karşılamada "Örnek aramalar" kısa yolu olarak da durur.
+# Kelimeleri biz seçtik. Ne kadar arandıkları bilinmez, bu yüzden sayfa "sık aranan" demez.
 # veri.py her kelimenin canlı sitede sonuç verdiğini denetler.
 ORNEK_URUN = ["saklama kabı", "çöp kovası", "elbise askısı", "temizlik fırçası", "baharatlık"]
 
@@ -74,7 +75,8 @@ DIZIN = [
 ]
 
 # --- Ödeme yöntemleri ---------------------------------------------------------
-# (piktogram, ad). Adların kaynağı kanıt defterindedir. Marka logosu kullanılmaz, piktogram yöntemin türünü gösterir.
+# (piktogram, ad). Her adın kaynağı kanıt defterindedir, build.py bunu denetler.
+# Marka logosu kullanılmaz, piktogram yöntemin türünü gösterir.
 ODEME_YONTEMLERI = [
     ("kart", "Banka ve kredi kartı"),
     ("cuzdan", "PayPal"),
@@ -114,6 +116,27 @@ ALT_TUR = [
 ]
 # Planlanan içerik türleri. Canlı sitede karşılığı yoktur. Yalnız önizleme derlemesinde, bağlantısız olarak gösterilir.
 ALT_PLAN = ["Sözlük", "Hesaplayıcılar", "Şablonlar", "Karşılaştırmalar", "Sektör verileri", "Kontrol listeleri"]
+
+# Sosyal hesaplar: (ad, adres, simge çizimi). Adresler canlı sitenin alt bölümündeki adreslerdir.
+# veri.py her adresin canlı sitenin kodunda geçtiğini denetler.
+SOSYAL = [
+    ("Instagram", "https://www.instagram.com/istoc_com", '<rect x="4" y="4" width="16" height="16" rx="4.5"/><circle cx="12" cy="12" r="3.5"/><circle cx="16.7" cy="7.3" r=".6"/>'),
+    ("Facebook", "https://www.facebook.com/istoccom", '<path d="M14 21v-7h2.5l.5-3H14V9.2c0-1 .4-1.7 1.8-1.7H17V4.8c-.5-.1-1.3-.2-2.2-.2C12.5 4.6 11 6 11 8.7V11H8.5v3H11v7"/>'),
+    ("X", "https://x.com/istoc_com", '<path d="M5 4.5 19 19.5M19 4.5 5 19.5"/>'),
+    ("LinkedIn", "https://www.linkedin.com/company/istoc-com", '<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 10.5V16M8 7.8v.1M11.5 16v-5.5M11.5 13c0-1.5 1-2.5 2.3-2.5S16 11.4 16 13v3"/>'),
+    ("YouTube", "https://youtube.com/@istoccom", '<rect x="3" y="6" width="18" height="12" rx="4"/><path d="m10.5 9.5 4 2.5-4 2.5z"/>'),
+]
+# Sayfanın başlığında adı geçen canlı görseller (paylaşım görseli ve logo). veri.py açıldıklarını denetler.
+GORSELLER = {"paylasim": "/images/og-default.jpg", "logo": "/images/istoc-logo.png"}
+
+# Adres kanıtı: sayfanın kullandığı adres kalıplarının canlı sitede gerçekten çalıştığını gösteren izler.
+# (canlı sayfa, o sayfanın kodunda bulunması gereken ifadeler). veri.py bir iz bulamazsa durur.
+# Sonuç sayıları açık uçtan gelir. Bu izler, bağlantıdaki değişken adlarının canlı sayfaca okunduğunu gösterir.
+ADRES_KANITI = [
+    ("/urunler", ['get("q")', 'get("min_order")', 'get("sort")', '"newest"', '"/kategori/:slug"', '"/urun/:slug"', '"/marka/:slug"', '"/magaza/:code"']),
+    ("/ureticiler", ['get("q")']),
+    ("/satici-ol", ['"#paketler"']),
+]
 
 # Sayfanın bağlantı verdiği canlı sayfalar. veri.py her adresin açıldığını denetler (HTTP 200, başka sayfaya yönlenmeden).
 # build.py, sayfadaki her istoc.com bağlantısının bu listede ya da veride olduğunu denetler. Böylece ölü bağlantı sayfaya giremez.
@@ -163,7 +186,7 @@ IDDIALAR = [
     ("Doğrulanan mağaza rozet taşır", "paketler", ["Üretici kimliğinizin doğrulandığını gösteren rozet"]),
     ("Rozet, mağazanın işletme doğrulamasının tamamlandığını gösterir.", "paketler", ["Üretici kimliğinizin doğrulandığını gösteren rozet"]),
     # Doğrulama: satıcının işletme doğrulaması (KYB) ve alıcının kimlik doğrulaması (KYC)
-    ("Rozetli satıcının kimlik ve işletme doğrulamasını iStoc yapar.", "uretici", ["Bu satıcının kimlik ve işletme doğrulaması iStoc tarafından yapılmıştır"]),
+    ("Rozetli mağazanın kimlik ve işletme doğrulamasını iStoc yapar.", "uretici", ["Bu satıcının kimlik ve işletme doğrulaması iStoc tarafından yapılmıştır"]),
     ("Hesabınızı açar, kimliğinizi doğrularsınız", "kyc", ["kimlik doğrulamanızı tamamlayın"]),
     ("Satın almak için kimlik doğrulamasını tamamlarsınız.", "kyc", ["Ürün satın alabilmek için kimlik doğrulamanızı tamamlayın"]),
     ("Bireysel ya da kurumsal hesap seçersiniz.", "kyc", ["Bireysel", "Kurumsal"]),
@@ -181,12 +204,14 @@ IDDIALAR = [
     ("Satıcı başka yöntemler de sunabilir.", "guvence", ["satıcının kabul ettiği diğer yöntemler"]),
     # Ödeme yöntemi ve para birimi adları
     ("Banka ve kredi kartı", "guvence", ["kredi/banka kartı", "VISA", "Mastercard", "AMEX"]),
+    ("PayPal", "guvence", ["PayPal"]),
     ("EFT ve anlık EFT", "odeme", ["Anlık EFT"]),
     ("Çek ve senet", "odeme", ["Çek / Senet"]),
     ("Elden taksit", "odeme", ["Elden Taksit"]),
     ("Thoptan.com ile tek ödeme", "odeme", ["Thoptan.com ile tek ödeme"]),
     ("İngiliz sterlini", "odeme", ["İngiliz Sterlini (GBP)"]),
     ("ABD doları", "odeme", ["ABD Doları (USD)"]),
+    ("Euro", "odeme", ["Euro (EUR)"]),
     ("Türk lirası", "odeme", ["Türk Lirası (TRY)"]),
     # Sipariş kaydı, destek ve iade
     ("Ürünü seçer, satıcıyla anlaşır ve siparişi ekrandan başlatırsınız.", "odeme", ["ürününüzü seçin, tedarikçiyle anlaşın ve siparişinizi başlatın"]),
@@ -215,6 +240,11 @@ IDDIALAR = [
     ("Ödemeyi, sipariş koşullarında anlaşınca yaparsınız.", "guvence", ["bir tedarikçiyle sipariş anlaşması yaptınız", "Satıcıya veya Thoptan.com'a ödeyin"]),
     ("Sipariş koşullarınız kaydedilir", "guvence", ["Siparişiniz ve sözleşmeniz kayıt altına alınır"]),
     ("Sorun çıkarsa destek alırsınız", "guvence", ["Sorun çıkarsa destek alın"]),
+    # Canlı sitedeki bir bölümün ya da programın adını taşıyan bağlantı etiketleri.
+    # Kanıt, canlı sitenin alt bölümünde aynı adın geçmesidir.
+    ("Canlı destek", "site", ["Canlı Destek"]),
+    ("Haftanın fırsatları", "site", ["Haftanın Fırsatları"]),
+    ("Alıcı Koruma Programı", "site", ["Alıcı Koruma Programı"]),
     # Site geneli
     # Dil adları tek kelimedir. Her biri sitenin dil seçicisinde aranır.
     ("Türkçe", "site", ['name:"Türkçe"']),
@@ -269,9 +299,9 @@ TASARIM_METNI = [
     "İşletmenizin toptan alımını yerinizden yaparsınız.",
     "Altı nedeni var.",
     "Yola çıkmazsınız",
-    "Karşınızdaki doğrulanmıştır",
+    "Kimin doğrulandığını görürsünüz",
     "Koşulu önceden görürsünüz",
-    "Ödemeniz doğru hesaba gider",
+    "Hangi hesaba ödeyeceğinizi bilirsiniz",
     "Sorun çıkarsa muhatabınız vardır",
     "Sektörünüzü seçin.",
     "Üreticiyi bulun.",
@@ -294,7 +324,11 @@ TASARIM_METNI = [
     "Rozet üretici kartında ve ürün kartında durur.",
     "Para birimini sayfanın altından değiştirirsiniz.",
     "Fiyatlar seçtiğiniz para biriminde gösterilir.",
-    "Her bağlantının yanında canlı sitedeki sonuç sayısı yazar.",
+    # Betik yokken para birimi seçilemez. O durumda sayfa bu cümleyi gösterir. Para birimi PARA_VARSAYILAN değeridir.
+    "Fiyatlar ABD doları olarak gösterilir.",
+    # Tutarlar build.py içinde Türk lirası fiyatından, canlı sitenin kuruyla çevrilir.
+    "Bu sayfa tutarları Türk lirası fiyatından çevirir.",
+    "Bağlantının yanındaki sayı, canlı sitedeki sonuç sayısıdır.",
     # Dizin gruplarının açıklamaları
     "Kategori ağacındaki ürün grupları.",
     "Ürünün yapıldığı malzeme.",
@@ -342,7 +376,7 @@ ETIKETLER = [
     "İçeriğe atlayın", "Sipariş takibi", "Ticaret güvencesi", "Yardım Merkezi", "Satıcı Merkezi", "Giriş yapın", "Teklif isteyin",
     "Tüm kategoriler", "Kategorinin tümü", "Çok satanlar", "Yeni ürünler", "Teklif isteği", "Satışa başlayın", "Ana sayfa",
     # Bölüm adları
-    "Alıcılar için", "Satıcılar için", "Sipariş süreci", "Sık sorulanlar", "Örnek sipariş", "Sık arananlar", "Satıcı yolu",
+    "Alıcılar için", "Satıcılar için", "Sipariş süreci", "Sık sorulanlar", "Örnek sipariş", "Örnek aramalar", "Satıcı yolu",
     # Sayıların ve koşulların etiketleri
     "toptan ürün", "doğrulanmış mağaza", "para birimi", "adet başına", "KDV hariç", "En az sipariş adedi", "En az sipariş tutarı", "Hazırlık süresi",
     "Birim fiyat", "Ödeme yöntemleri", "Dil ve para birimi", "Sepetiniz boş",
@@ -357,6 +391,21 @@ ETIKETLER = [
     # Alt bölüm
     "Kişiye göre", "İçerik türüne göre", "Kullanım koşulları", "Gizlilik politikası", "Çerez tercihleri",
 ]
+
+# Görünmeyen metinler: ekran okuyucunun okuduğu adlar (aria-label), alan içi örnekler (placeholder),
+# görsel adları (alt), sayfa başlığı ve yalnız ekran okuyucuya okunan metinler (sr-only).
+# En az iki kelimeli her görünmeyen metin burada kayıtlıdır. Sayılar ve tutarlar # ile yazılır.
+# Görünen bir etiketin yinelemesi (örneğin bölüm adı) ayrıca yazılmaz, ETIKETLER listesinden tanınır.
+# Bu metinler olgu bildirmez. build.py kayıtsız bir görünmeyen metin bulursa sayfayı üretmez.
+OZNITELIK_METNI = [
+    "iStoc: Üreticiden toptan alım | B2B toptan pazaryeri",
+    "iStoc ana sayfa", "Ürün arayın", "Kategori menüsü", "Bölümleri geri kaydırın", "Bölümleri ileri kaydırın",
+    "Arama türü", "Örnek: saklama kabı", "Örnek: #", "Ürünleri süzün", "Süzgeçleri geri kaydırın", "Süzgeçleri ileri kaydırın",
+    "Önceki kartlar", "Sonraki kartlar", "# adet azaltın", "# adet artırın", "Para birimi", "Ana gezinme",
+    "Canlı sepeti açın. Örnek sepette # ürün var.", "Toplam #",
+]
+# Yalnız önizleme derlemesinde bulunan görünmeyen metin
+ONIZLEME_OZNITELIK = ["Öneri notu"]
 
 # Yalnız önizleme derlemesinde görünen metinler. Yayın derlemesinde sayfada bulunmazlar.
 ONIZLEME_ETIKET = ["Canlı siteye gidin", "Planlanan içerik türleri", "Sektör verileri", "Kontrol listeleri"]

@@ -11,8 +11,8 @@ Bu depo, istoc.com ana sayfası için bir tasarım önerisi içerir. Sayfa canl�
 - Değer önerisi, arama ve hızlı teklif isteği ilk ekrandadır.
 - Sekiz numaralı bölüm alıcının soru sırasını izler.
 - Dizin bölümü, ürünleri dokuz ayrı yoldan bulur. Her öğe canlı sitede çalışan bir adrese gider.
-- Alt bölüm beş katmandır. Dil, para birimi ve ödeme yöntemleri görsel kutularla durur.
-- Para birimi seçimi sayfadaki fiyatları değiştirir.
+- Alt bölüm beş katmandır. Dil ve para birimi görsel kutularla seçilir. Ödeme yöntemleri piktogramı ve adıyla durur.
+- Para birimi seçimi sayfadaki fiyatları değiştirir. `build.py` tutarları Türk lirası fiyatından canlı sitenin kuruyla çevirir.
 - Yazı tipi Ubuntu'dur.
 
 ## Sayfa nasıl üretilir?
@@ -22,11 +22,16 @@ Bu depo, istoc.com ana sayfası için bir tasarım önerisi içerir. Sayfa canl�
 
 Önizleme derlemesi arama motorlarına kapalıdır. Yayın derlemesi için `python3 build.py --yayin` komutunu kullanın.
 
-`veri.py` üç şeyi de denetler. Bir denetim başarısız olursa hiçbir dosyayı yazmaz.
+`veri.py` şunları da denetler. Bir denetim başarısız olursa hiçbir dosyayı yazmaz.
 
 - Sayfadaki her kaynaklı cümlenin kanıtı canlı sitede duruyor mu?
-- Sayfanın bağlantı verdiği her canlı sayfa açılıyor mu?
+- Sayfanın bağlantı verdiği her canlı sayfa açılıyor mu? Var olmayan bir adres açılmıyor mu?
+- Ürün ve mağaza adresleri canlı sitenin site haritasında var mı?
+- Bağlantıdaki değişken adlarını canlı sayfanın kodu tanıyor mu?
+- Fiyat Türk lirası ve KDV hariç mi?
 - Dizindeki her arama sonuç veriyor mu?
+
+`veri.py` dosyaları tek koşuda yazar ve koşunun özetini `data/kosu.json` dosyasına koyar. Özet tutmazsa `build.py` sayfayı üretmez.
 
 ## Sayfa nasıl denetlenir?
 
@@ -37,6 +42,8 @@ Bu depo, istoc.com ana sayfası için bir tasarım önerisi içerir. Sayfa canl�
 Tarayıcı testi Playwright ister. Test Playwright'ı önce bu klasörde arar.
 
 Kapı ve test kendini de sınar. Bunun için iki komuta `--sinama` seçeneğini ekleyin.
+
+Büyütülmüş yazı ve zorlanmış renk denetimleri yalnız Chromium'da çalışır. WebKit bu iki ayarı öykünmez. Test çıktısı bunu `NOT_RUN` satırıyla yazar.
 
 ## Notlar
 

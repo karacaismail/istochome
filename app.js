@@ -46,14 +46,16 @@
     })(t0);
   }
   /* Para birimi. Tutarlar sayfada dört para biriminde hazır durur (build.py yazar).
-     Betik yalnız seçili para birimindeki hazır değeri gösterir, kendi kur hesabı yapmaz. */
+     Betik kendi kur hesabı yapmaz. Birim fiyatı hazır değerden gösterir.
+     Toplamı, sayfadaki yuvarlanmamış birim tutarı adetle çarparak bulur (data-unit-usd gibi öznitelikler).
+     build.py en az sipariş tutarını aynı işlemle hesaplar. Bu yüzden karttaki tutar ile sepetin toplamı aynıdır. */
   var para = (function () {
     var on = $('[data-tercih="para"] [aria-checked="true"]');
     return { code: on ? on.dataset.deger : "USD", sym: on ? $(".pref__mark", on).textContent : "$" };
   })();
   /* Tutar Türkçe sayı biçimiyle yazılır: binlik ayırıcı nokta, ondalık ayırıcı virgül. Örnek: $1.234,50. */
   function money(n) { return para.sym + n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  /* Öğenin seçili para birimindeki birim fiyatı: data-unit-usd, data-unit-try gibi özniteliklerden okunur. */
+  /* Öğenin seçili para birimindeki yuvarlanmamış birim tutarı: data-unit-usd, data-unit-try gibi özniteliklerden okunur. */
   function unitOf(el) { return parseFloat(el.dataset["unit" + para.code.charAt(0) + para.code.slice(1).toLowerCase()]); }
   function paintPrices() {
     $$("[data-para]").forEach(function (el) { el.textContent = money(parseFloat(el.dataset[para.code.toLowerCase()])); });
@@ -61,6 +63,23 @@
   function tr(n) { return Math.round(n).toLocaleString("tr-TR"); }
   var status = $("#durum");
   function announce(text) { if (status) status.textContent = text; }
+
+  /* Kaydırma kareleri. Kaydırmaya bağlı bütün işler tek bir karede çalışır: önce hepsi ölçer, sonra hepsi yazar.
+     Ölçüm ile yazma art arda gelseydi tarayıcı aynı karede yerleşimi birkaç kez yeniden hesaplardı. */
+  var frame = (function () {
+    var jobs = [];
+    var ticking = false;
+    function run() {
+      ticking = false;
+      var i;
+      for (i = 0; i < jobs.length; i++) jobs[i].state = jobs[i].read();
+      for (i = 0; i < jobs.length; i++) jobs[i].write(jobs[i].state);
+    }
+    function request() { if (!ticking) { ticking = true; requestAnimationFrame(run); } }
+    window.addEventListener("scroll", request, { passive: true });
+    window.addEventListener("resize", request);
+    return { add: function (read, write) { jobs.push({ read: read, write: write, state: null }); }, run: run };
+  })();
 
   /* 0. Kaydırma şeritleri. Kural: kaydırılan her alan bunu durağan halde gösterir.
      data-scroll değeri (none, start, middle, end) kenar solmasını, okları ve konum çubuğunu yönetir. */
@@ -157,18 +176,15 @@
     var slot = $(".header__search", header);
     var heroSearch = $(".hero .search");
     var bar = $("[data-progress]", header);
-    var ticking = false;
-    /* Konum çubuğu sayfanın ne kadarının geçildiğini gösterir. Değer kaydırmaya bağlıdır, geçiş kullanmaz. */
-    function stuck() {
-      ticking = false;
-      header.classList.toggle("is-stuck", window.scrollY > 8);
+    /* Konum çubuğu sayfanın ne kadarının geçildiğini gösterir. Değer kaydırmaya bağlıdır, geçiş kullanmaz.
+       Değer 0 ile 1 arasında tutulur. Sayfa kenarında esneyen kaydırma (iOS) eksi değer üretmez. */
+    frame.add(function () {
       var max = root.scrollHeight - window.innerHeight;
-      if (bar) bar.style.setProperty("--p", (max > 0 ? Math.min(1, window.scrollY / max) : 0).toFixed(4));
-    }
-    function request() { if (!ticking) { ticking = true; requestAnimationFrame(stuck); } }
-    stuck();
-    window.addEventListener("scroll", request, { passive: true });
-    window.addEventListener("resize", request);
+      return { stuck: window.scrollY > 8, p: max > 0 ? Math.max(0, Math.min(1, window.scrollY / max)) : 0 };
+    }, function (now) {
+      header.classList.toggle("is-stuck", now.stuck);
+      if (bar) bar.style.setProperty("--p", now.p.toFixed(4));
+    });
     /* Gözlemci yoksa üst arama kapalı kalır. Karşılama araması sayfada durur. */
     if (!("IntersectionObserver" in window) || !heroSearch) return;
     var past = false;
@@ -413,13 +429,18 @@
     var bar = $("[data-cartbar]");
     var unitsEl = $("[data-cart-units]");
     var totalEl = $("[data-cart-total]");
+    var shown = 0;
     function paint(instant) {
       var keys = Object.keys(lines);
       var units = 0, total = 0;
       keys.forEach(function (k) { units += lines[k].qty; total += lines[k].qty * unitOf(lines[k].src); });
+      /* Sayaç yalnız ürün sayısı değişince zıplar. Para birimi ya da adet değişince zıplamaz. */
+      var changed = keys.length !== shown;
+      shown = keys.length;
       badges.forEach(function (b) {
         b.textContent = keys.length;
         b.hidden = keys.length === 0;
+        if (!changed) return;
         b.classList.remove("is-bump");
         void b.offsetWidth;
         b.classList.add("is-bump");
@@ -564,22 +585,20 @@
     if (!box) return;
     var rail = $(".tl__rail", box);
     var steps = $$(".tl > li", box);
-    var ticking = false;
-    function update() {
-      ticking = false;
+    frame.add(function () {
       var line = window.innerHeight * 0.62;
       var r = rail.getBoundingClientRect();
-      var p = Math.max(0, Math.min(1, (line - r.top) / r.height));
-      rail.style.setProperty("--p", p.toFixed(4));
-      steps.forEach(function (li) {
-        var m = li.firstElementChild.getBoundingClientRect();
-        li.classList.toggle("is-on", m.top + m.height / 2 < line);
-      });
-    }
-    function request() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
-    window.addEventListener("scroll", request, { passive: true });
-    window.addEventListener("resize", request);
-    update();
+      return {
+        p: r.height > 0 ? Math.max(0, Math.min(1, (line - r.top) / r.height)) : 0,
+        on: steps.map(function (li) {
+          var m = li.firstElementChild.getBoundingClientRect();
+          return m.top + m.height / 2 < line;
+        })
+      };
+    }, function (now) {
+      rail.style.setProperty("--p", now.p.toFixed(4));
+      steps.forEach(function (li, i) { li.classList.toggle("is-on", now.on[i]); });
+    });
   })();
 
   /* 10. Sık sorulanlar: tek tek açılır. Kapalı yanıt klavye ve okuyucudan gizlenir. */
@@ -595,30 +614,69 @@
     });
   });
 
-  /* 11. Katlanan gruplar: alt bölüm sütunları ve dizin grupları.
-     Dar ekranda grup kapalı başlar ve başlığına dokununca açılır. Geniş ekranda hep açıktır.
-     Sınır genişliği grubun kendi özniteliğinde yazar (data-fold). İlk dizin grubu dar ekranda da açık başlar. */
+  /* 11. Katlanan gruplar: dizin grupları ve alt bölüm sütunları.
+     Dar ekranda başlık bir düğmedir. Grup onunla açılır ve kapanır. Durumu data-open ve aria-expanded taşır.
+     Geniş ekranda ve kâğıtta başlık düz yazıdır ve grup hep açıktır. Bunu CSS yapar, betik yalnız durumu yazar.
+     Durum ekran genişliğine bağlı değildir. Kullanıcının açtığı grup, ekran dönüp yeniden daralınca da açık kalır. */
   (function () {
-    var groups = $$("details[data-fold]").map(function (el) {
-      return { el: el, mq: window.matchMedia("(min-width: " + el.dataset.fold + "px)"), first: el.hasAttribute("data-ilk") };
+    var groups = $$("[data-fold]").map(function (el) {
+      var g = { el: el, btn: $(".fold__btn", el), panel: $(".fold__panel", el) };
+      /* Başlığın metni sayfada bir kez yazılıdır (düz başlık). Düğme o metnin kopyasını betikle alır.
+         Böylece arama motoru ve okuma modu başlığı bir kez okur. Betik yokken düğme zaten görünmez. */
+      var copy = $(".fold__label", el).cloneNode(true);
+      var chev = g.btn.firstChild;
+      while (copy.firstChild) g.btn.insertBefore(copy.firstChild, chev);
+      return g;
     });
-    function sync(g) {
-      g.el.open = g.mq.matches || g.first;
-      /* Geniş ekranda başlık bir düğme değildir. Klavyeyle de kapatılamaz. */
-      $("summary", g.el).tabIndex = g.mq.matches ? -1 : 0;
+    /* Kapalı grubun içi klavyeden ve ekran okuyucudan hemen gizlenir (inert). Kapanma geçişi sürerken de içine odak girmez.
+       Bu yalnız başlığın düğme olduğu düzende geçerlidir. Geniş ekranda grup hep açıktır ve hiçbir bölüm gizlenmez. */
+    function sync(g) { g.panel.inert = g.btn.getClientRects().length > 0 && g.el.dataset.open !== "true"; }
+    function set(g, open) {
+      g.el.dataset.open = open ? "true" : "false";
+      g.btn.setAttribute("aria-expanded", open ? "true" : "false");
+      sync(g);
     }
-    function syncAll() { groups.forEach(sync); }
+    function shown(el) { return el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden"; }
     groups.forEach(function (g) {
-      $("summary", g.el).addEventListener("click", function (e) { if (g.mq.matches) e.preventDefault(); });
-      g.mq.addEventListener("change", function () { sync(g); });
+      g.btn.addEventListener("click", function () { set(g, g.el.dataset.open !== "true"); });
     });
-    syncAll();
-    /* Kâğıtta kapalı grup basılmaz. Yazdırırken bütün gruplar açılır, sonra eski haline döner. */
-    var paper = window.matchMedia("print");
-    function openAll() { groups.forEach(function (g) { g.el.open = true; }); }
-    paper.addEventListener("change", function () { if (paper.matches) openAll(); else syncAll(); });
-    window.addEventListener("beforeprint", openAll);
-    window.addEventListener("afterprint", syncAll);
+    /* Ekran genişleyince düğme gizlenir. Odak düğmedeyse grubun ilk bağlantısına geçer.
+       Ekran daralınca kapalı bir grubun içindeki odak da kaybolmaz: o grup açılır ve odak yerinde kalır.
+       Tarayıcı gizlenen öğedeki odağı bırakabilir. Bu yüzden son odaklanan öğe izlenir.
+       Kullanıcı odağı kendisi bırakırsa (boş bir yere dokunursa) izlenen öğe unutulur.
+       Odak, öğe gizlendiği için düştüyse izlenen öğe kalır ve denetim bir sonraki karede yinelenir. */
+    var last = null;
+    document.addEventListener("focusin", function (e) { last = e.target; });
+    document.addEventListener("focusout", function (e) {
+      if (e.relatedTarget) return;
+      if (shown(e.target)) last = null;
+      else requestAnimationFrame(keep);
+    });
+    function keep() {
+      var active = document.activeElement;
+      var away = !active || active === document.body || active === root;
+      var from = away ? last : active;
+      if (from) groups.forEach(function (g) {
+        var button = g.btn.getClientRects().length > 0;
+        if (from === g.btn && !button) {
+          var first = $("a", g.panel);
+          if (first) first.focus();
+        } else if (button && g.el.dataset.open !== "true" && g.panel.contains(from)) {
+          set(g, true);
+          /* Odak düştüyse bölüm görünür olunca geri verilir. Bölüm bir sonraki karede görünür. */
+          if (away) requestAnimationFrame(function () { requestAnimationFrame(function () { from.focus(); }); });
+        }
+      });
+      /* Odak işlendikten sonra kapalı bölümler gizlenir. Önce gizlenseydi odaktaki bağlantı düşerdi. */
+      groups.forEach(sync);
+    }
+    groups.forEach(sync);
+    /* Düğme görünür ya da gizli olunca boyutu değişir. Gözlemci bunu yerleşim kurulduktan sonra bildirir.
+       Böylece denetim, tarayıcının yeni genişliğe göre kurduğu yerleşimle yapılır. */
+    if ("ResizeObserver" in window) {
+      var watch = new ResizeObserver(keep);
+      groups.forEach(function (g) { watch.observe(g.btn); });
+    }
   })();
 
   /* 12. Dil ve para birimi: her grup bir radyo grubudur. Ok tuşları seçimi ve odağı birlikte taşır.
@@ -630,7 +688,16 @@
     function writeLabel() {
       var lang = chosen("dil"), cur = chosen("para");
       if (!lang || !cur) return;
-      labels.forEach(function (el) { el.textContent = lang.dataset.ad + ", " + cur.dataset.deger; });
+      labels.forEach(function (el) {
+        /* Dil adı kendi dilinde yazılıdır (örneğin Русский). Ekran okuyucu adı doğru dille okusun diye dil kodu eklenir. */
+        var name = document.createElement("span");
+        name.lang = lang.dataset.deger;
+        name.dir = "auto";
+        name.textContent = lang.dataset.ad;
+        el.textContent = "";
+        el.appendChild(name);
+        el.appendChild(document.createTextNode(", " + cur.dataset.deger));
+      });
     }
     $$("[data-tercih]").forEach(function (group) {
       var kind = group.dataset.tercih;
@@ -664,25 +731,39 @@
   })();
 
   /* 13. İşaretçi ışığı. Koyu bantta ışık işaretçiyi izler, kartın üstünde yumuşak bir ışık belirir.
-     Betik yalnız işaretçinin yerini yazar (--mx, --my, --gx, --gy). Geçişi CSS, merkezi eğriyle yapar.
+     Betik yalnız işaretçinin yerini yazar. Geçişi CSS, merkezi eğriyle yapar.
+     Değerler bandın bütününe değil, ışık katmanına yazılır (.spot). Böylece bandın içeriği her karede yeniden hesaplanmaz.
+     --mx ve --my ızgaranın aydınlanan yerini, --dx ve --dy ışığın durağan yerinden ne kadar kaydığını bildirir.
      Dokunmatik ekranda ve hareket azaltma tercihinde ışık sabit durur. */
   (function () {
     var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
     var last = null;
     var ticking = false;
-    function place(el, e, x, y) {
-      var r = el.getBoundingClientRect();
-      el.style.setProperty(x, Math.round(e.clientX - r.left) + "px");
-      el.style.setProperty(y, Math.round(e.clientY - r.top) + "px");
-    }
     function flush() {
       ticking = false;
       var e = last;
       if (!e || !e.target || !e.target.closest) return;
       var band = e.target.closest("[data-spot]");
       var card = e.target.closest("[data-glow]");
-      if (band) place(band, e, "--mx", "--my");
-      if (card) place(card, e, "--gx", "--gy");
+      var spot = band ? band.querySelector(":scope > .spot") : null;
+      var light = spot ? $("i", spot) : null;
+      /* Önce ölçülür, sonra yazılır. */
+      var b = spot ? spot.getBoundingClientRect() : null;
+      var c = card ? card.getBoundingClientRect() : null;
+      var restX = light ? light.offsetLeft + light.offsetWidth / 2 : 0;
+      var restY = light ? light.offsetTop + light.offsetHeight / 2 : 0;
+      if (spot) {
+        var x = Math.round(e.clientX - b.left);
+        var y = Math.round(e.clientY - b.top);
+        spot.style.setProperty("--mx", x + "px");
+        spot.style.setProperty("--my", y + "px");
+        spot.style.setProperty("--dx", Math.round(x - restX) + "px");
+        spot.style.setProperty("--dy", Math.round(y - restY) + "px");
+      }
+      if (card) {
+        card.style.setProperty("--gx", Math.round(e.clientX - c.left) + "px");
+        card.style.setProperty("--gy", Math.round(e.clientY - c.top) + "px");
+      }
     }
     document.addEventListener("pointermove", function (e) {
       if (e.pointerType === "touch" || !fine.matches || reduce.matches) return;
@@ -692,20 +773,27 @@
   })();
 
   /* 14. Koyu bandın ızgarası. Yatay çizgiler sayfa kaydıkça içerikten yavaş kayar (--sy).
-     Değer kaydırmaya bağlıdır, geçiş kullanmaz. Hareket azaltma tercihinde ızgara sabit durur. */
+     Değer kaydırmaya bağlıdır, geçiş kullanmaz. Değer ışık katmanına yazılır, bandın bütününe değil.
+     Hareket azaltma tercihi her karede yeniden okunur. Tercih sonradan açılırsa ızgara yerine döner ve durur. */
   (function () {
-    var bands = $$(".band--ink");
-    if (!bands.length || reduce.matches) return;
-    var ticking = false;
-    function update() {
-      ticking = false;
-      bands.forEach(function (b) {
-        var r = b.getBoundingClientRect();
-        if (r.bottom < 0 || r.top > window.innerHeight) return;
-        b.style.setProperty("--sy", Math.round(r.top * -0.12) + "px");
+    var spots = $$(".band--ink > .spot");
+    if (!spots.length) return;
+    frame.add(function () {
+      if (reduce.matches) return null;
+      var h = window.innerHeight;
+      return spots.map(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom < 0 || r.top > h ? null : Math.round(r.top * -0.12);
       });
-    }
-    window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-    update();
+    }, function (list) {
+      spots.forEach(function (el, i) {
+        if (!list) el.style.removeProperty("--sy");
+        else if (list[i] !== null) el.style.setProperty("--sy", list[i] + "px");
+      });
+    });
   })();
+
+  /* Kaydırmaya bağlı değerlerin ilk hali. */
+  frame.run();
+  window.addEventListener("load", frame.run);
 })();

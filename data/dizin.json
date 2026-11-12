@@ -1,5 +1,5 @@
 {
- "alindi": "2026-11-10",
+ "alindi": "2026-11-12",
  "urun_gruplari": [
   {
    "ad": "Saklama Kabı",
@@ -623,139 +623,239 @@
  "sayfalar": {
   "/": {
    "durum": 200,
-   "son": "/"
+   "son": "/",
+   "kabuk": false
   },
   "/urunler": {
    "durum": 200,
-   "son": "/urunler"
+   "son": "/urunler",
+   "kabuk": false
   },
   "/ureticiler": {
    "durum": 200,
-   "son": "/ureticiler"
+   "son": "/ureticiler",
+   "kabuk": false
   },
   "/kategoriler": {
    "durum": 200,
-   "son": "/kategoriler"
+   "son": "/kategoriler",
+   "kabuk": false
   },
   "/firsatlar": {
    "durum": 200,
-   "son": "/firsatlar"
+   "son": "/firsatlar",
+   "kabuk": false
   },
   "/cok-satanlar": {
    "durum": 200,
-   "son": "/cok-satanlar"
+   "son": "/cok-satanlar",
+   "kabuk": false
   },
   "/cok-satanlar/kategori": {
    "durum": 200,
-   "son": "/cok-satanlar/kategori"
+   "son": "/cok-satanlar/kategori",
+   "kabuk": false
   },
   "/ticaret-guvencesi": {
    "durum": 200,
-   "son": "/ticaret-guvencesi"
+   "son": "/ticaret-guvencesi",
+   "kabuk": false
   },
   "/ticaret-guvencesi-detay": {
    "durum": 200,
-   "son": "/ticaret-guvencesi-detay"
+   "son": "/ticaret-guvencesi-detay",
+   "kabuk": false
   },
   "/odeme-secenekleri": {
    "durum": 200,
-   "son": "/odeme-secenekleri"
+   "son": "/odeme-secenekleri",
+   "kabuk": false
   },
   "/kargo-lojistik": {
    "durum": 200,
-   "son": "/kargo-lojistik"
+   "son": "/kargo-lojistik",
+   "kabuk": false
   },
   "/satis-sonrasi": {
    "durum": 200,
-   "son": "/satis-sonrasi"
+   "son": "/satis-sonrasi",
+   "kabuk": false
   },
   "/iade-politikasi": {
    "durum": 200,
-   "son": "/iade-politikasi"
+   "son": "/iade-politikasi",
+   "kabuk": false
   },
   "/iade-kosullari": {
    "durum": 200,
-   "son": "/iade-kosullari"
+   "son": "/iade-kosullari",
+   "kabuk": false
   },
   "/yardim-merkezi": {
    "durum": 200,
-   "son": "/yardim-merkezi"
+   "son": "/yardim-merkezi",
+   "kabuk": false
   },
   "/yardim/merkez": {
    "durum": 200,
-   "son": "/yardim/merkez"
+   "son": "/yardim/merkez",
+   "kabuk": false
   },
   "/sss": {
    "durum": 200,
-   "son": "/sss"
+   "son": "/sss",
+   "kabuk": false
   },
   "/satici-ol": {
    "durum": 200,
-   "son": "/satici-ol"
+   "son": "/satici-ol",
+   "kabuk": false
   },
   "/satici-hizmet-sozlesmesi": {
    "durum": 200,
-   "son": "/satici-hizmet-sozlesmesi"
+   "son": "/satici-hizmet-sozlesmesi",
+   "kabuk": false
   },
   "/urun-listeleme-kurallari": {
    "durum": 200,
-   "son": "/urun-listeleme-kurallari"
+   "son": "/urun-listeleme-kurallari",
+   "kabuk": false
   },
   "/erisilebilirlik": {
    "durum": 200,
-   "son": "/erisilebilirlik"
+   "son": "/erisilebilirlik",
+   "kabuk": false
   },
   "/kullanim-kosullari": {
    "durum": 200,
-   "son": "/kullanim-kosullari"
+   "son": "/kullanim-kosullari",
+   "kabuk": false
   },
   "/gizlilik": {
    "durum": 200,
-   "son": "/gizlilik"
+   "son": "/gizlilik",
+   "kabuk": false
   },
   "/cerezler": {
    "durum": 200,
-   "son": "/cerezler"
+   "son": "/cerezler",
+   "kabuk": false
   },
   "/panel/": {
    "durum": 200,
-   "son": "/panel/"
+   "son": "/panel/",
+   "kabuk": true
   },
   "/hesabim/siparisler": {
    "durum": 200,
-   "son": "/hesabim/siparisler"
+   "son": "/hesabim/siparisler",
+   "kabuk": false
   },
   "/hesabim/mesajlar": {
    "durum": 200,
-   "son": "/hesabim/mesajlar"
+   "son": "/hesabim/mesajlar",
+   "kabuk": false
   },
   "/destek/taleplerim": {
    "durum": 200,
-   "son": "/destek/taleplerim"
+   "son": "/destek/taleplerim",
+   "kabuk": false
   },
   "/destek/yeni": {
    "durum": 200,
-   "son": "/destek/yeni"
+   "son": "/destek/yeni",
+   "kabuk": false
   },
   "/pages/dashboard/rfq.html": {
    "durum": 200,
-   "son": "/pages/dashboard/rfq.html"
+   "son": "/pages/dashboard/rfq.html",
+   "kabuk": false
   },
   "/pages/dashboard/kyc.html": {
    "durum": 200,
-   "son": "/pages/dashboard/kyc.html"
+   "son": "/pages/dashboard/kyc.html",
+   "kabuk": false
   },
   "/pages/cart.html": {
    "durum": 200,
-   "son": "/pages/cart.html"
+   "son": "/pages/cart.html",
+   "kabuk": false
   },
   "/pages/auth/login.html": {
    "durum": 200,
-   "son": "/pages/auth/login.html"
+   "son": "/pages/auth/login.html",
+   "kabuk": false
   },
   "/pages/auth/register.html": {
    "durum": 200,
-   "son": "/pages/auth/register.html"
+   "son": "/pages/auth/register.html",
+   "kabuk": false
   }
+ },
+ "site_haritasi": {
+  "magaza": [
+   "/magaza/acero-home",
+   "/magaza/acero-home/dukkan",
+   "/magaza/alkan-plastik",
+   "/magaza/alkan-plastik/dukkan",
+   "/magaza/asel-elektrik",
+   "/magaza/asel-elektrik/dukkan",
+   "/magaza/avcilar-plastik",
+   "/magaza/avcilar-plastik/dukkan",
+   "/magaza/bursev-plastik",
+   "/magaza/bursev-plastik/dukkan",
+   "/magaza/cankaya-plastik",
+   "/magaza/cankaya-plastik/dukkan",
+   "/magaza/cetin-plastik",
+   "/magaza/cetin-plastik/dukkan",
+   "/magaza/egemen-plastik",
+   "/magaza/egemen-plastik/dukkan",
+   "/magaza/harman-hirdavat",
+   "/magaza/kastamonu-plastik",
+   "/magaza/kastamonu-plastik/dukkan",
+   "/magaza/lalezar-mutfak-esyalari",
+   "/magaza/moi-plastik",
+   "/magaza/moi-plastik/dukkan",
+   "/magaza/mugiss",
+   "/magaza/mugiss/dukkan",
+   "/magaza/mustafa-akhan",
+   "/magaza/ozgen-plastik",
+   "/magaza/ozgen-plastik/dukkan",
+   "/magaza/solingen-bicak",
+   "/magaza/solingen-bicak/dukkan",
+   "/magaza/thoptan",
+   "/magaza/thoptan/dukkan",
+   "/magaza/timex-plastik",
+   "/magaza/timex-plastik/dukkan",
+   "/magaza/urve-plastik",
+   "/magaza/urve-plastik/dukkan"
+  ],
+  "marka": [
+   "/marka/ozgen-plastik"
+  ],
+  "urun": [
+   "/urun/ayarlanabilir-paslanmaz-kek-kalibi",
+   "/urun/fresh-box-kilitli-organizer-5-lt",
+   "/urun/kristal-slim-aski-10-lu",
+   "/urun/miknatisli-baharatlik",
+   "/urun/mikrofiber-kurulama-bezi-5-li-paket",
+   "/urun/renkli-sapli-meyve-bicagi",
+   "/urun/softline-lavabo-ve-kuvet-fircasi",
+   "/urun/suzgecli-ve-bolmeli-organizer-5-lt"
+  ]
+ },
+ "sosyal": [
+  "https://www.instagram.com/istoc_com",
+  "https://www.facebook.com/istoccom",
+  "https://x.com/istoc_com",
+  "https://www.linkedin.com/company/istoc-com",
+  "https://youtube.com/@istoccom"
+ ],
+ "kabuk": [
+  "/panel"
+ ],
+ "gorseller": {
+  "paylasim": "/images/og-default.jpg",
+  "logo": "/images/istoc-logo.png"
  }
 }
